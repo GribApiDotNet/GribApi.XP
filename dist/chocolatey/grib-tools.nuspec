@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!-- Do not remove this test for UTF-8: if “Ω” doesn’t appear as greek uppercase omega letter enclosed in quotation marks, you should use an editor that supports UTF-8, not this one. -->
+<package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
+  <metadata>
+    <!-- Read this before publishing packages to chocolatey.org: https://github.com/chocolatey/chocolatey/wiki/CreatePackages -->
+    <id>grib-tools</id>
+    <title>grib-tools (Install)</title>
+    <version>1.14.5</version>
+    <authors>European Centre for Medium-Range Weather Forecasts (ECMWF)</authors>
+    <owners>Eric Millin</owners>
+    <summary>Command line tools for interactive and batch processing of GRIB 1 and 2 data.</summary>
+    <description>Command line tools for interactive and batch processing of GRIB data. They provide a ready and tested solution for many situations and their use will avoid the need to write new code and thus will speed up your work.
+    </description>
+    <projectUrl>https://software.ecmwf.int/wiki/display/GRIB</projectUrl>
+    <packageSourceUrl>https://github.com/0x1mason/GribApi.XP</packageSourceUrl>
+	<docsUrl>https://software.ecmwf.int/wiki/display/GRIB/Documentation</docsUrl>
+    <tags>Geospatial Geo GIS GRIB Weather Forecast Meteorology</tags>
+    <copyright>2016</copyright>
+    <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <dependencies>
+      <dependency id="vcredist2013" version="12.0.30501.20150616" />
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="tools\**" target="tools" />
+  </files>
+</package>
