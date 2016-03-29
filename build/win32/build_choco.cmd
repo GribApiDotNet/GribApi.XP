@@ -1,4 +1,4 @@
-:: build_nuget.cmd [x.x.x] [Release|Debug]
+:: build_choco.cmd [x.x.x] [Release|Debug]
 
 SET _VERSION=%1
 SET _CONFIG=%2
@@ -13,8 +13,8 @@ del "%_OUT%\grib-tools-x86.7z"
 
 for %%s in (%~dp0..\..\bin\x86\%_CONFIG%\grib_*.exe) do (
  echo @ECHO OFF >> %_OUT%\%%~ns.cmd
- echo SET GRIB_DEFINITION_PATH="%%~dp0%_CONFIG%\definitions" >> %_OUT%\%%~ns.cmd
- echo SET GRIB_SAMPLES_PATH="%%~dp0%_CONFIG%\samples" >> %_OUT%\%%~ns.cmd
+ echo SET GRIB_DEFINITION_PATH=%%~dp0%_CONFIG%\definitions\ >> %_OUT%\%%~ns.cmd
+ echo SET GRIB_SAMPLES_PATH=%%~dp0%_CONFIG%\samples\ >> %_OUT%\%%~ns.cmd
  echo CALL "%%~dp0%_CONFIG%\%%~ns%%~xs" %%* >> %_OUT%\%%~ns.cmd
 )
 
