@@ -4,7 +4,7 @@
   <metadata>
     <!-- Read this before publishing packages to chocolatey.org: https://github.com/chocolatey/chocolatey/wiki/CreatePackages -->
     <id>grib-tools</id>
-    <title>grib-tools (Install)</title>
+    <title>grib-tools</title>
     <version>1.14.5</version>
     <authors>European Centre for Medium-Range Weather Forecasts (ECMWF)</authors>
     <owners>Eric Millin</owners>
@@ -19,7 +19,7 @@
     <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <dependencies>
-      <dependency id="vcredist2013" version="12.0.30501.20150616" />
+      <dependency id="vcredist2013" version="12.0.30501.0" />
     </dependencies>
   </metadata>
   <files>
