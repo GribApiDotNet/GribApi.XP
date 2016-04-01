@@ -11,11 +11,11 @@ To install the GRIB tools from [Chocolatey](https://chocolatey.org/packages/grib
 C:\> choco install grib-tools
 ```
 
-### Changes from Vanilla 1.14.5
+##### Changes from Vanilla 1.14.5 for Windows
 * PNG compression support
 * Pre-built `definitions` and `samples`
 * Thread safety for Windows via OpenMP
 * `grib_exit` and `grib_assert` hooks for custom handling of fatal errors (details coming soon)
 
-### Building
+##### Building
 You can build directly with Visual Studio using `./build/Grib.Api.Master.sln`.
