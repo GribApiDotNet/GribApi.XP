@@ -9,7 +9,7 @@
     <authors>European Centre for Medium-Range Weather Forecasts (ECMWF)</authors>
     <owners>Eric Millin</owners>
     <summary>Command line tools for interactive and batch processing of GRIB 1 and 2 data.</summary>
-    <description>Command line tools for interactive and batch processing of GRIB data. These tools provide a ready and tested solution for many situations and their use will speed up your work by obviating the need for new code. Use with an enhanced terminal such as [ConEmu](https://chocolatey.org/packages/ConEmu) or [Cmder](https://chocolatey.org/packages/Cmder) is recommended.
+    <description>Command line tools use [GRIB API](https://software.ecmwf.int/wiki/display/GRIB/Home) for interactive and batch processing of GRIB data. These tools provide a ready and tested solution for many situations and their use will speed up your work by obviating the need for new code. Use with an enhanced terminal such as [ConEmu](https://chocolatey.org/packages/ConEmu) or [Cmder](https://chocolatey.org/packages/Cmder) is recommended.
 
 This distribution includes:
 * [grib\_compare](https://software.ecmwf.int/wiki/display/GRIB/grib\_compare)
@@ -24,8 +24,8 @@ This distribution includes:
     <projectUrl>https://software.ecmwf.int/wiki/display/GRIB</projectUrl>
     <packageSourceUrl>https://github.com/0x1mason/GribApi.XP</packageSourceUrl>
 	<docsUrl>https://software.ecmwf.int/wiki/display/GRIB/GRIB+tools</docsUrl>
+	<iconUrl>https://cdn.rawgit.com/0x1mason/GribApi.XP/master/build/GRIB.png</iconUrl>
     <tags>Geospatial Geo GIS GRIB Weather Forecast Meteorology</tags>
-    <copyright>2016</copyright>
     <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
     <requireLicenseAcceptance>true</requireLicenseAcceptance>
     <dependencies>
