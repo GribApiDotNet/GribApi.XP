@@ -1,4 +1,4 @@
-$packageName = 'cmder.portable'
+$packageName = 'grib-tools'
 $toolsPath = "$(Split-Path -parent $MyInvocation.MyCommand.Definition)"
 $unPath = Join-Path $toolsPath 'Uninstall-ChocolateyPath.psm1'
 $installPath = "$env:ChocolateyInstall\bin\grib-tools"
