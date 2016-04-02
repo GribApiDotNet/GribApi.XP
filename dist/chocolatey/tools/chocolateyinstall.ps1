@@ -10,4 +10,4 @@ Install-ChocolateyZipPackage -PackageName "$packageName" `
 
 
 Write-Verbose "Adding `'$installPath`' to path"
-Install-ChocolateyPath "$installPath"
+Install-ChocolateyPath "$installPath" "User"

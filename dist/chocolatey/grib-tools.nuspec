@@ -9,15 +9,25 @@
     <authors>European Centre for Medium-Range Weather Forecasts (ECMWF)</authors>
     <owners>Eric Millin</owners>
     <summary>Command line tools for interactive and batch processing of GRIB 1 and 2 data.</summary>
-    <description>Command line tools for interactive and batch processing of GRIB data. They provide a ready and tested solution for many situations and their use will avoid the need to write new code and thus will speed up your work.
+    <description>Command line tools for interactive and batch processing of GRIB data. These tools provide a ready and tested solution for many situations and their use will speed up your work by obviating the need for new code. Use with an enhanced terminal such as [ConEmu](https://chocolatey.org/packages/ConEmu) or [Cmder](https://chocolatey.org/packages/Cmder) is recommended.
+
+This distribution includes:
+* [grib\_compare](https://software.ecmwf.int/wiki/display/GRIB/grib\_compare)
+* [grib\_copy](https://software.ecmwf.int/wiki/display/GRIB/grib\_copy)
+* [grib\_dump](https://software.ecmwf.int/wiki/display/GRIB/grib\_dump)
+* [grib\_filter](https://software.ecmwf.int/wiki/display/GRIB/grib\_filter)
+* [grib\_get](https://software.ecmwf.int/wiki/display/GRIB/grib\_get)
+* [grib\_get\_data](https://software.ecmwf.int/wiki/display/GRIB/grib\_get\_data)
+* [grib\_ls](https://software.ecmwf.int/wiki/display/GRIB/grib\_ls)
+* [grib\_set](https://software.ecmwf.int/wiki/display/GRIB/grib\_set)
     </description>
     <projectUrl>https://software.ecmwf.int/wiki/display/GRIB</projectUrl>
     <packageSourceUrl>https://github.com/0x1mason/GribApi.XP</packageSourceUrl>
-	<docsUrl>https://software.ecmwf.int/wiki/display/GRIB/Documentation</docsUrl>
+	<docsUrl>https://software.ecmwf.int/wiki/display/GRIB/GRIB+tools</docsUrl>
     <tags>Geospatial Geo GIS GRIB Weather Forecast Meteorology</tags>
     <copyright>2016</copyright>
     <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
-    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <requireLicenseAcceptance>true</requireLicenseAcceptance>
     <dependencies>
       <dependency id="vcredist2013" version="12.0.30501.0" />
     </dependencies>
