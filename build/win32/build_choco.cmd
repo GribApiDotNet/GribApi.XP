@@ -11,10 +11,12 @@ SET _GRIB_API=%~dp0..\..\grib_api
 del "%_OUT%\grib-tools-*.7z"
 
 for %%s in (%~dp0..\..\bin\x86\%_CONFIG%\grib_*.exe) do (
- echo @ECHO OFF >> %_OUT%\%%~ns.cmd
- echo SET GRIB_DEFINITION_PATH=%%~dp0%_CONFIG%\definitions\ >> %_OUT%\%%~ns.cmd
- echo SET GRIB_SAMPLES_PATH=%%~dp0%_CONFIG%\samples\ >> %_OUT%\%%~ns.cmd
- echo CALL "%%~dp0%_CONFIG%\%%~ns%%~xs" %%* >> %_OUT%\%%~ns.cmd
+ >%_OUT%\%%~ns.cmd (
+  echo ^@ECHO OFF
+  echo ^SET GRIB_DEFINITION_PATH=%%~dp0%_CONFIG%\definitions\
+  echo ^SET GRIB_SAMPLES_PATH=%%~dp0%_CONFIG%\samples\
+  echo ^CALL "%%~dp0%_CONFIG%\%%~ns%%~xs" %%*
+ )
 )
 
 xcopy %_GRIB_API%\definitions %~dp0..\..\bin\x64\%_CONFIG%\definitions\ /S /d /I /Q
