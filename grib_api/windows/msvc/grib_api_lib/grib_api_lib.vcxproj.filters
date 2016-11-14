@@ -147,6 +147,9 @@
     <ClCompile Include="..\..\..\src\grib_accessor_class_change_scanning_direction.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\src\grib_accessor_class_check_internal_version.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\src\grib_accessor_class_codeflag.c">
       <Filter>Source Files</Filter>
     </ClCompile>

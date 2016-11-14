@@ -66,26 +66,26 @@
     <_ProjectFileVersion>12.0.30501.0</_ProjectFileVersion>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <OutDir>..\..\..\..\lib\$(PlatformTarget)\$(Configuration)\</OutDir>
+    <OutDir>$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <OutDir>..\..\..\..\lib\$(PlatformTarget)\$(Configuration)\</OutDir>
+    <OutDir>$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>..\..\..\..\lib\$(PlatformTarget)\$(Configuration)\</OutDir>
+    <OutDir>$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <OutDir>..\..\..\..\lib\$(PlatformTarget)\$(Configuration)\</OutDir>
+    <OutDir>$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..\..\..\src;..\..\..\tools;..\..\..\..\ext\jasper-1.900.1\src\libjasper\include;..\..\..\..\ext\lpng;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_CRT_SECURE_NO_WARNINGS;HAVE_LIBPNG;HAVE_LIBPNG_DEBUG;GRIB_OMP_THREADS;HAVE_JPEG;USE_JPEG2000;JAS_WIN_MSVC_BUILD;HAVE_LIBJASPER;_DEBUG;_LIB;IEEE;JAS_WIN_MSVC_BUILD;HAVE_STRING_H;YY_NO_UNISTD_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\..\src;..\..\..\tools;..\..\..\jasper-1.900.1\src\libjasper\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;IEEE;JAS_WIN_MSVC_BUILD;HAVE_STRING_H;YY_NO_UNISTD_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>false</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -97,12 +97,7 @@
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <DisableSpecificWarnings>4996;4273;4018;4244;4101;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <OpenMPSupport>true</OpenMPSupport>
     </ClCompile>
-    <Lib>
-      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>..\..\..\..\lib\$(PlatformTarget)\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-    </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Midl>
@@ -110,8 +105,8 @@
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..\..\..\src;..\..\..\tools;..\..\..\..\ext\jasper-1.900.1\src\libjasper\include;..\..\..\..\ext\lpng;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_CRT_SECURE_NO_WARNINGS;HAVE_LIBPNG;HAVE_LIBPNG_DEBUG;GRIB_OMP_THREADS;HAVE_JPEG;USE_JPEG2000;JAS_WIN_MSVC_BUILD;HAVE_LIBJASPER;_WIN64;_DEBUG;_LIB;IEEE;HAVE_STRING_H;YY_NO_UNISTD_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\..\src;..\..\..\tools;..\..\..\jasper-1.900.1\src\libjasper\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_WIN64;_DEBUG;_LIB;IEEE;HAVE_STRING_H;YY_NO_UNISTD_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>false</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -123,19 +118,14 @@
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <DisableSpecificWarnings>4996;4273;4018;4244;4101;4267;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <OpenMPSupport>true</OpenMPSupport>
     </ClCompile>
-    <Lib>
-      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>..\..\..\..\lib\$(PlatformTarget)\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-    </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <AdditionalIncludeDirectories>..\..\..\src;..\..\..\tools;..\..\..\..\ext\jasper-1.900.1\src\libjasper\include;..\..\..\..\ext\lpng;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_CRT_SECURE_NO_WARNINGS;HAVE_LIBPNG;GRIB_OMP_THREADS;HAVE_JPEG;USE_JPEG2000;JAS_WIN_MSVC_BUILD;HAVE_LIBJASPER;NDEBUG;_LIB;IEEE;JAS_WIN_MSVC_BUILD;HAVE_STRING_H;YY_NO_UNISTD_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\..\src;..\..\..\tools;..\..\..\jasper-1.900.1\src\libjasper\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;IEEE;JAS_WIN_MSVC_BUILD;HAVE_STRING_H;YY_NO_UNISTD_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>false</MinimalRebuild>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -146,12 +136,7 @@
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <DisableSpecificWarnings>4996;4273;4018;4244;4101;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <OpenMPSupport>true</OpenMPSupport>
     </ClCompile>
-    <Lib>
-      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>..\..\..\..\lib\$(PlatformTarget)\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-    </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Midl>
@@ -160,8 +145,8 @@
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <AdditionalIncludeDirectories>..\..\..\src;..\..\..\tools;..\..\..\..\ext\jasper-1.900.1\src\libjasper\include;..\..\..\..\ext\lpng;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_CRT_SECURE_NO_WARNINGS;HAVE_LIBPNG;GRIB_OMP_THREADS;HAVE_JPEG;USE_JPEG2000;JAS_WIN_MSVC_BUILD;HAVE_LIBJASPER;_WIN64;NDEBUG;_LIB;IEEE;HAVE_STRING_H;YY_NO_UNISTD_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\..\src;..\..\..\tools;..\..\..\jasper-1.900.1\src\libjasper\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_WIN64;NDEBUG;_LIB;IEEE;HAVE_STRING_H;YY_NO_UNISTD_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>false</MinimalRebuild>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -172,12 +157,7 @@
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <DisableSpecificWarnings>4996;4273;4018;4244;4101;4267;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <OpenMPSupport>true</OpenMPSupport>
     </ClCompile>
-    <Lib>
-      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>..\..\..\..\lib\$(PlatformTarget)\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-    </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\src\action.c" />
@@ -224,6 +204,7 @@
     <ClCompile Include="..\..\..\src\grib_accessor_class_budgdate.c" />
     <ClCompile Include="..\..\..\src\grib_accessor_class_bytes.c" />
     <ClCompile Include="..\..\..\src\grib_accessor_class_change_scanning_direction.c" />
+    <ClCompile Include="..\..\..\src\grib_accessor_class_check_internal_version.c" />
     <ClCompile Include="..\..\..\src\grib_accessor_class_codeflag.c" />
     <ClCompile Include="..\..\..\src\grib_accessor_class_codetable.c" />
     <ClCompile Include="..\..\..\src\grib_accessor_class_codetable_title.c" />
@@ -507,14 +488,6 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\..\..\ext\jasper-1.900.1\src\msvc\libjasper.vcxproj">
-      <Project>{5053cd4d-1e0c-4720-8546-2982bddc9bec}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\..\ext\lpng\projects\vstudio\libpng\libpng.vcxproj">
-      <Project>{d6973076-9317-4ef2-a0b8-b7a18ac0713e}</Project>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
