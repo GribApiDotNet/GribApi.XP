@@ -40,7 +40,7 @@ PS > dir -Recurse *.vcproj | ForEach-Object { devenv /upgrade /q $_.FullName}
 5. From a Bash prompt (e.g., `Git Bash` or `Bash on Windows`)
 ```shell
 $ cd root/grib_api/src
-$ perl -pi -e 's/exit(?=\(\w)/grib_exit/g' *.c
+$ perl -pi -e 's/\sexit(?=\(\w)/ grib_exit/g' *.c
 $ rm *.bak && git checkout grib_dumper_class_c_code.c grib_lex.c md5.c
 $ git am --ignore-whitespace ../../build/grib_errors_c.patch
 $ git am --ignore-whitespace ../../build/grib_api_h.patch
