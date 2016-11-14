@@ -216,7 +216,6 @@ static int unpack_double_element(grib_accessor* a, size_t idx, double* val)
     double s = 0;
     double d = 0;
     long pos = 0;
-    size_t o = 0;
 
     n_vals = 0;
     err=grib_value_count(a,&n_vals);
@@ -247,22 +246,22 @@ static int unpack_double_element(grib_accessor* a, size_t idx, double* val)
         return GRIB_SUCCESS;
     }
 
+    Assert(idx < n_vals);
     s = grib_power(binary_scale_factor,2);
     d = grib_power(-decimal_scale_factor,10) ;
 
     grib_context_log(a->parent->h->context, GRIB_LOG_DEBUG,
-            "grib_accessor_data_simple_packing : unpack_double : creating %s, %d values",
-            a->name, n_vals);
+            "grib_accessor_data_simple_packing: unpack_double_element: creating %s, %d values (idx=%ld)",
+            a->name, n_vals, idx);
 
     buf += grib_byte_offset(a);
 
-    Assert(((bits_per_value*n_vals)/8) < (1<<29));
-    /*ensure that the bit pointer is not overflown*/
+    /*Assert(((bits_per_value*n_vals)/8) < (1<<29));*/   /* See GRIB-787 */
 
     if(bits_per_value%8)
     {
         grib_context_log(a->parent->h->context, GRIB_LOG_DEBUG,
-                "unpack_double : calling outline function : bpv %d, rv : %g, sf : %d, dsf : %d ",
+                "unpack_double_element: calling outline function : bpv %d, rv : %g, sf : %d, dsf : %d ",
                 bits_per_value,reference_value,binary_scale_factor, decimal_scale_factor);
         pos=idx*bits_per_value;
         *val= (double) (((
@@ -272,7 +271,8 @@ static int unpack_double_element(grib_accessor* a, size_t idx, double* val)
     }
     else
     {
-        int bc;
+        int bc = 0;
+        size_t octet = 0;
         long lvalue = 0;
         int l = bits_per_value/8;
 
@@ -280,11 +280,11 @@ static int unpack_double_element(grib_accessor* a, size_t idx, double* val)
         buf+=pos;
         lvalue  = 0;
         lvalue  <<= 8;
-        lvalue |= buf[o++] ;
+        lvalue |= buf[octet++] ;
 
         for ( bc=1; bc<l; bc++ ) {
             lvalue <<= 8;
-            lvalue |= buf[o++] ;
+            lvalue |= buf[octet++] ;
         }
         *val = (double) (((lvalue*s)+reference_value)*d);
     }
@@ -369,16 +369,15 @@ static int  _unpack_double(grib_accessor* a, double* val, size_t *len,unsigned c
     d = grib_power(-decimal_scale_factor,10) ;
 
     grib_context_log(a->parent->h->context, GRIB_LOG_DEBUG,
-            "grib_accessor_data_simple_packing : unpack_double : creating %s, %d values",
+            "grib_accessor_data_simple_packing: unpack_double : creating %s, %d values",
             a->name, n_vals);
 
     buf += grib_byte_offset(a);
 
-    Assert(((bits_per_value*n_vals)/8) < (1<<29));
-    /*ensure that the bit pointer is not overflown*/
+    /*Assert(((bits_per_value*n_vals)/8) < (1<<29));*/    /* See GRIB-787 */
 
     grib_context_log(a->parent->h->context, GRIB_LOG_DEBUG,
-            "unpack_double : calling outline function : bpv %d, rv : %g, sf : %d, dsf : %d ",
+            "unpack_double: calling outline function : bpv %d, rv : %g, sf : %d, dsf : %d ",
             bits_per_value,reference_value,binary_scale_factor, decimal_scale_factor);
     grib_decode_double_array(buf,&pos,bits_per_value,reference_value,s,d,n_vals,val);
 
@@ -433,6 +432,27 @@ static int unpack_double(grib_accessor* a, double* val, size_t *len) {
 #include "minmax_val.c"
 #undef restrict
 #endif
+
+/* Return true(1) if large constant fields are to be created, otherwise false(0) */
+static int producing_large_constant_fields(const grib_context* c, grib_handle* h, int edition)
+{
+    /* GRIB-802: If override key is set, ignore env. var and produce compressed fields */
+    if (c->large_constant_fields) {  /* This is set by the environment variable */
+        /* check the override key */
+        int err = 0;
+        long override_large_constant_fields = 0;
+        err = grib_get_long_internal(h, "override_large_constant_fields", &override_large_constant_fields);
+        if (err == GRIB_SUCCESS && override_large_constant_fields) {
+            return 0;
+        }
+        return 1;
+    }
+    if (c->gribex_mode_on==1 && edition==1) {
+        return 1;
+    }
+
+    return 0;
+}
 
 static int pack_double(grib_accessor* a, const double* val, size_t *len)
 {
@@ -496,6 +516,7 @@ static int pack_double(grib_accessor* a, const double* val, size_t *len)
 
     /* constant field only reference_value is set and bits_per_value=0 */
     if(max==min) {
+        int large_constant_fields = 0;
         if (grib_get_nearest_smaller_value(a->parent->h,self->reference_value,val[0],&reference_value)
                 !=GRIB_SUCCESS) {
             grib_context_log(a->parent->h->context,GRIB_LOG_ERROR,
@@ -515,7 +536,8 @@ static int pack_double(grib_accessor* a, const double* val, size_t *len)
             Assert(ref == reference_value);
         }
 
-        if (c->large_constant_fields || (c->gribex_mode_on==1 && self->edition==1)) {
+        large_constant_fields = producing_large_constant_fields(c, a->parent->h, self->edition);
+        if (large_constant_fields) {
             if((err = grib_set_long_internal(a->parent->h,self->binary_scale_factor, 0)) !=
                     GRIB_SUCCESS)
                 return err;

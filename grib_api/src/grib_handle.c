@@ -15,32 +15,25 @@
  ***************************************************************************/
 #include "grib_api_internal.h"
 
-/* This is the internal version number of our definition files. We need to change it whenever an older engine */
-/* will not be able to work with the current definitions. See the key "internalVersion" in boot,def  */
-#define LATEST_VERSION  22
-
-/* #if GRIB_PTHREADS */
 #if 0
-static pthread_once_t once  = PTHREAD_ONCE_INIT;
-static pthread_mutex_t mutex1 = PTHREAD_MUTEX_INITIALIZER;
-static pthread_mutex_t mutex2 = PTHREAD_MUTEX_INITIALIZER;
-
-static void init() {
+/* #if GRIB_PTHREADS */
+ static pthread_once_t once  = PTHREAD_ONCE_INIT;
+ static pthread_mutex_t mutex1 = PTHREAD_MUTEX_INITIALIZER;
+ static pthread_mutex_t mutex2 = PTHREAD_MUTEX_INITIALIZER;
+ static void init() {
     pthread_mutexattr_t attr;
     pthread_mutexattr_init(&attr);
     pthread_mutexattr_settype(&attr,PTHREAD_MUTEX_RECURSIVE);
     pthread_mutex_init(&mutex1,&attr);
     pthread_mutex_init(&mutex2,&attr);
     pthread_mutexattr_destroy(&attr);
-
-}
-/* #elif GRIB_OMP_THREADS */
-static int once = 0;
-static omp_nest_lock_t mutex1;
-static omp_nest_lock_t mutex2;
-
-static void init()
-{
+ }
+ /* #elif GRIB_OMP_THREADS */
+ static int once = 0;
+ static omp_nest_lock_t mutex1;
+ static omp_nest_lock_t mutex2;
+ static void init()
+ {
     GRIB_OMP_CRITICAL(lock_grib_handle_c)
     {
         if (once == 0)
@@ -50,9 +43,8 @@ static void init()
             once = 1;
         }
     }
-}
+ }
 #endif
-
 
 static grib_handle* grib_handle_new_from_file_no_multi ( grib_context* c, FILE* f,int headers_only,int *error );
 static grib_handle* grib_handle_new_from_file_multi ( grib_context* c, FILE* f,int *error );
@@ -61,8 +53,7 @@ static int grib2_has_next_section ( unsigned char* msgbegin,size_t msglen,unsign
 static void grib2_build_message ( grib_context* context,unsigned char* sections[],size_t sections_len[],void** data,size_t* msglen );
 static grib_multi_support* grib_get_multi_support ( grib_context* c, FILE* f );
 static grib_multi_support* grib_multi_support_new ( grib_context* c );
-static grib_handle* grib_handle_new_multi ( grib_context* c,unsigned char** idata,
-        size_t *buflen,int* error );
+static grib_handle* grib_handle_new_multi ( grib_context* c,unsigned char** idata,size_t *buflen,int* error );
 
 grib_section* grib_section_create ( grib_handle* h,grib_accessor* owner )
 {
@@ -130,7 +121,6 @@ void grib_empty_section ( grib_context   *c,grib_section* b )
         current = next;
     }
     b->block->first = b->block->last = 0;
-
 }
 
 void grib_section_delete ( grib_context   *c, grib_section* b )
@@ -141,7 +131,6 @@ void grib_section_delete ( grib_context   *c, grib_section* b )
     grib_context_free ( c,b->block );
     grib_context_free ( c,b );
 }
-
 
 int grib_handle_delete ( grib_handle* h )
 {
@@ -171,13 +160,11 @@ int grib_handle_delete ( grib_handle* h )
     return GRIB_SUCCESS;
 }
 
-
 grib_handle* grib_new_handle ( grib_context* c )
 {
     grib_handle    *g = NULL;
     if ( c == NULL ) c = grib_context_get_default();
     g = ( grib_handle* ) grib_context_malloc_clear ( c,sizeof ( grib_handle ) );
-
 
     if ( g == NULL ) {
         grib_context_log ( c,GRIB_LOG_ERROR,"grib_new_handle: cannot allocate handle" );
@@ -188,23 +175,6 @@ grib_handle* grib_new_handle ( grib_context* c )
     grib_context_log ( c,GRIB_LOG_DEBUG,"grib_new_handle: allocated handle %p",g );
 
     return g;
-}
-
-static void check_definitions_version(grib_handle* h)
-{
-    /* Check version of definition files is compatible with the engine */
-    int ret = 0;
-    long defs_file_version = 0;
-    if (grib_is_defined(h, "internalVersion")) {
-        ret = grib_get_long_internal(h, "internalVersion", &defs_file_version);
-        if (ret == GRIB_SUCCESS && (defs_file_version > LATEST_VERSION)) {
-            grib_context_log(h->context, GRIB_LOG_FATAL,
-                    "Definition files version (%d) is greater than engine version (%d)!\n"
-                    "These definition files are for a later version of the grib api engine.\n",
-                    defs_file_version, LATEST_VERSION);
-
-        }
-    }
 }
 
 static grib_handle* grib_handle_create ( grib_handle  *gl, grib_context* c,void* data, size_t buflen )
@@ -260,10 +230,7 @@ static grib_handle* grib_handle_create ( grib_handle  *gl, grib_context* c,void*
 
     grib_section_post_init ( gl->root );
 
-    check_definitions_version(gl);
-
     return gl;
-
 }
 
 grib_handle* grib_handle_new_from_template ( grib_context* c, const char* name )
@@ -277,8 +244,8 @@ grib_handle* grib_handle_new_from_samples ( grib_context* c, const char* name )
 {
     grib_handle* g = 0;
     if ( c == NULL ) c = grib_context_get_default();
-    c->handle_file_count=0;
-    c->handle_total_count=0;
+    grib_context_set_handle_file_count(c,0);
+    grib_context_set_handle_total_count(c,0);
 
     /*
 	   g = grib_internal_template(c,name);
@@ -330,16 +297,14 @@ grib_handle* grib_handle_clone ( grib_handle* h )
     return grib_handle_new_from_message_copy ( h->context, h->buffer->data, h->buffer->ulength );
 }
 
-
 grib_handle* grib_handle_new_from_message_copy ( grib_context* c, const void* data, size_t size )
 {
     grib_handle *g = NULL;
     void* copy =NULL;
     if ( c == NULL ) c = grib_context_get_default();
 
-
-    c->handle_file_count=0;
-    c->handle_total_count=0;
+    grib_context_set_handle_file_count(c,0);
+    grib_context_set_handle_total_count(c,0);
     copy = grib_context_malloc ( c,size );
     if ( !copy ) {
         return NULL;
@@ -358,8 +323,8 @@ grib_handle* grib_handle_new_from_partial_message_copy ( grib_context* c, const 
     grib_handle *g = NULL;
     void* copy =NULL;
     if ( c == NULL ) c = grib_context_get_default();
-    c->handle_file_count=0;
-    c->handle_total_count=0;
+    grib_context_set_handle_file_count(c,0);
+    grib_context_set_handle_total_count(c,0);
     copy = grib_context_malloc ( c,size );
     if ( !copy )
         return NULL;
@@ -376,8 +341,8 @@ grib_handle* grib_handle_new_from_partial_message ( grib_context* c,void* data, 
 {
     grib_handle  *gl = NULL;
     if ( c == NULL ) c = grib_context_get_default();
-    c->handle_file_count=0;
-    c->handle_total_count=0;
+    grib_context_set_handle_file_count(c,0);
+    grib_context_set_handle_total_count(c,0);
     gl = grib_new_handle ( c );
     gl->partial = 1;
     return grib_handle_create ( gl,  c, data,  buflen );
@@ -392,8 +357,6 @@ grib_handle* grib_handle_new_from_message ( grib_context* c,void* data, size_t b
     h=grib_handle_create ( gl,  c, data,  buflen );
     return h;
 }
-
-
 
 grib_handle* grib_handle_new_from_multi_message ( grib_context* c,void** data,
         size_t *buflen,int* error )
@@ -415,8 +378,6 @@ grib_handle* grib_handle_new_from_multi_message ( grib_context* c,void** data,
 
     return h;
 }
-
-
 
 grib_handle* grib_handle_new_from_file ( grib_context* c, FILE* f,int *error )
 {
@@ -485,7 +446,7 @@ static grib_handle* grib_handle_new_multi ( grib_context* c,unsigned char** data
                 {
                     if ( !gm->bitmap_section )
                     {
-                        grib_context_log ( gl->context, GRIB_LOG_ERROR,
+                        grib_context_log ( c, GRIB_LOG_ERROR,
                                 "grib_handle_new_from_file : cannot create handle, missing bitmap\n" );
                         return NULL;
                     }
@@ -547,8 +508,8 @@ static grib_handle* grib_handle_new_multi ( grib_context* c,unsigned char** data
     }
 
     gl->buffer->property = GRIB_MY_BUFFER;
-    c->handle_file_count++;
-    c->handle_total_count++;
+    grib_context_increment_handle_file_count(c);
+    grib_context_increment_handle_total_count(c);
 
     return gl;
 }
@@ -643,7 +604,7 @@ static grib_handle* grib_handle_new_from_file_multi ( grib_context* c, FILE* f,i
                 {
                     if ( !gm->bitmap_section )
                     {
-                        grib_context_log ( gl->context, GRIB_LOG_ERROR, "grib_handle_new_from_file : cannot create handle, missing bitmap\n" );
+                        grib_context_log ( c, GRIB_LOG_ERROR, "grib_handle_new_from_file : cannot create handle, missing bitmap\n" );
                         grib_context_free ( c,data );
                         return NULL;
                     }
@@ -706,8 +667,8 @@ static grib_handle* grib_handle_new_from_file_multi ( grib_context* c, FILE* f,i
 
     gl->offset=gm->offset;
     gl->buffer->property = GRIB_MY_BUFFER;
-    c->handle_file_count++;
-    c->handle_total_count++;
+    grib_context_increment_handle_file_count(c);
+    grib_context_increment_handle_total_count(c);
 
     if ( c->gts_header_on && gtslen >=8 )
     {
@@ -731,7 +692,7 @@ grib_handle* eccode_grib_new_from_file ( grib_context* c, FILE* f,int headers_on
     if ( c->multi_support_on ) h=grib_handle_new_from_file_multi ( c,f,error );
     else h=grib_handle_new_from_file_no_multi ( c,f,headers_only,error );
 
-    if ( h && h->offset == 0 ) c->handle_file_count=1;
+    if ( h && h->offset == 0 ) grib_context_set_handle_file_count(c,1);
 
     if ( !c->no_fail_on_wrong_length && *error == GRIB_WRONG_LENGTH )
     {
@@ -741,7 +702,6 @@ grib_handle* eccode_grib_new_from_file ( grib_context* c, FILE* f,int headers_on
 
     return h;
 }
-
 
 grib_handle* eccode_gts_new_from_file ( grib_context* c, FILE* f,int headers_only,int *error )
 {
@@ -778,8 +738,8 @@ grib_handle* eccode_gts_new_from_file ( grib_context* c, FILE* f,int headers_onl
 
     gl->offset=offset;
     gl->buffer->property = GRIB_MY_BUFFER;
-    c->handle_file_count++;
-    c->handle_total_count++;
+    grib_context_increment_handle_file_count(c);
+    grib_context_increment_handle_total_count(c);
 
     return gl;
 }
@@ -819,8 +779,8 @@ grib_handle* eccode_bufr_new_from_file ( grib_context* c, FILE* f,int headers_on
 
     gl->offset=offset;
     gl->buffer->property = GRIB_MY_BUFFER;
-    c->handle_file_count++;
-    c->handle_total_count++;
+    grib_context_increment_handle_file_count(c);
+    grib_context_increment_handle_total_count(c);
 
     return gl;
 }
@@ -860,8 +820,8 @@ grib_handle* eccode_any_new_from_file ( grib_context* c, FILE* f,int headers_onl
 
     gl->offset=offset;
     gl->buffer->property = GRIB_MY_BUFFER;
-    c->handle_file_count++;
-    c->handle_total_count++;
+    grib_context_increment_handle_file_count(c);
+    grib_context_increment_handle_total_count(c);
 
     return gl;
 }
@@ -925,8 +885,8 @@ static grib_handle* grib_handle_new_from_file_no_multi ( grib_context* c,FILE* f
     gl->offset=offset;
     gl->buffer->property = GRIB_MY_BUFFER;
 
-    c->handle_file_count++;
-    c->handle_total_count++;
+    grib_context_increment_handle_file_count(c);
+    grib_context_increment_handle_total_count(c);
 
     if ( c->gts_header_on && gtslen >=8 )
     {
@@ -1086,15 +1046,16 @@ int grib_get_message_copy ( grib_handle* h ,  void* message,size_t *len )
     return GRIB_SUCCESS;
 }
 
-int grib_get_message_offset ( grib_handle* h,off_t* offset ) {
-
+int grib_get_message_offset ( grib_handle* h,off_t* offset )
+{
     if (h) *offset=h->offset;
     else return GRIB_INTERNAL_ERROR;
 
     return 0;
 }
 
-int grib_get_message_size ( grib_handle* h,size_t* size ) {
+int grib_get_message_size ( grib_handle* h,size_t* size )
+{
     long totalLength=0;
     int ret=0;
     *size =  h->buffer->ulength;
@@ -1172,8 +1133,6 @@ grib_handle *grib_handle_new ( grib_context* c )
 
     h->header_mode=1;
 
-    check_definitions_version(h);
-
     return h;
 }
 
@@ -1228,7 +1187,6 @@ int grib_handle_prepare_action ( grib_handle* h,grib_action* a )
 
 static int grib2_get_next_section ( unsigned char* msgbegin,size_t msglen,unsigned char** secbegin,size_t* seclen,int* secnum,int* err )
 {
-
     if ( !grib2_has_next_section ( msgbegin,msglen,*secbegin,*seclen,err ) )
         return 0;
 
@@ -1268,7 +1226,6 @@ static void grib2_build_message ( grib_context* context,unsigned char* sections[
 {
     int i=0;
     char* theEnd="7777";
-    unsigned char* sec0;
     unsigned char* p=0;
     size_t msglen=0;
     long bitp=64;
@@ -1277,7 +1234,7 @@ static void grib2_build_message ( grib_context* context,unsigned char* sections[
         *data=NULL;
         return;
     }
-    sec0=sections[0];
+    
     for ( i=0;i<8;i++ ) msglen+= sections_len[i];
     msglen+=4;
     if ( *len<msglen ) msglen=*len;
@@ -1356,7 +1313,6 @@ void grib_gribex_mode_off ( grib_context* c )
     if ( !c ) c=grib_context_get_default();
     c->gribex_mode_on=0;
 }
-
 
 static grib_multi_support* grib_get_multi_support ( grib_context* c, FILE* f )
 {

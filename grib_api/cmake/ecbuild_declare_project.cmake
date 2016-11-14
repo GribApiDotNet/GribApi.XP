@@ -1,4 +1,4 @@
-# (C) Copyright 1996-2015 ECMWF.
+# (C) Copyright 1996-2016 ECMWF.
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -28,24 +28,27 @@
 # :<PNAME>_MINOR_VERSION:  minor version number
 # :<PNAME>_PATCH_VERSION:  patch version number
 # :INSTALL_BIN_DIR:        relative install directory for executables
-#                          (default: ``bin``)
 # :INSTALL_LIB_DIR:        relative install directory for libraries
-#                          (default: ``lib``)
 # :INSTALL_INCLUDE_DIR:    relative install directory for include files
-#                          (default: ``include``)
 # :INSTALL_DATA_DIR:       relative install directory for data
-#                          (default: ``share/<project_name>``)
 # :INSTALL_CMAKE_DIR:      relative install directory for CMake files
-#                          (default: ``share/<project_name>/cmake``)
+#
+# Customising install locations
+# -----------------------------
 #
 # The relative installation directories of components can be customised by
 # setting the following CMake variables on the command line or in cache:
 #
-# :<PNAME>_INSTALL_BIN_DIR:     directory for installing executables
-# :<PNAME>_INSTALL_LIB_DIR:     directory for installing libraries
-# :<PNAME>_INSTALL_INCLUDE_DIR: directory for installing include files
-# :<PNAME>_INSTALL_DATA_DIR:    directory for installing data
-# :<PNAME>_INSTALL_CMAKE_DIR:   directory for installing CMake files
+# :INSTALL_BIN_DIR:        directory for installing executables
+#                          (default: ``bin``)
+# :INSTALL_LIB_DIR:        directory for installing libraries
+#                          (default: ``lib``)
+# :INSTALL_INCLUDE_DIR:    directory for installing include files
+#                          (default: ``include``)
+# :INSTALL_DATA_DIR:       directory for installing data
+#                          (default: ``share/<project_name>``)
+# :INSTALL_CMAKE_DIR:      directory for installing CMake files
+#                          (default: ``share/<project_name>/cmake``)
 #
 # Using *relative* paths is recommended, which are interpreted relative to the
 # ``CMAKE_INSTALL_PREFIX``. Using absolute paths makes the build
@@ -69,10 +72,10 @@ macro( ecbuild_declare_project )
     get_git_head_revision( GIT_REFSPEC ${PNAME}_GIT_SHA1 )
     if( ${PNAME}_GIT_SHA1 )
       string( SUBSTRING "${${PNAME}_GIT_SHA1}" 0 7 ${PNAME}_GIT_SHA1_SHORT )
-      #     debug_var( ${PNAME}_GIT_SHA1 )
-      #     debug_var( ${PNAME}_GIT_SHA1_SHORT )
+      #     ecbuild_debug_var( ${PNAME}_GIT_SHA1 )
+      #     ecbuild_debug_var( ${PNAME}_GIT_SHA1_SHORT )
     else()
-      message( STATUS "Could not get git-sha1 for project ${PNAME}")
+      ecbuild_debug( "Could not get git-sha1 for project ${PNAME}")
     endif()
   endif()
 
@@ -101,19 +104,30 @@ macro( ecbuild_declare_project )
   set( ${PNAME}_VERSION_STR "${${PROJECT_NAME}_VERSION_STR}"
        CACHE INTERNAL "package ${PNAME} version string" ) # ignore caps
 
-  #    debug_var( ${PNAME}_VERSION )
-  #    debug_var( ${PNAME}_VERSION_STR )
-  #    debug_var( ${PNAME}_MAJOR_VERSION )
-  #    debug_var( ${PNAME}_MINOR_VERSION )
-  #    debug_var( ${PNAME}_PATCH_VERSION )
+  #    ecbuild_debug_var( ${PNAME}_VERSION )
+  #    ecbuild_debug_var( ${PNAME}_VERSION_STR )
+  #    ecbuild_debug_var( ${PNAME}_MAJOR_VERSION )
+  #    ecbuild_debug_var( ${PNAME}_MINOR_VERSION )
+  #    ecbuild_debug_var( ${PNAME}_PATCH_VERSION )
 
   # install dirs for this project
 
-  set( INSTALL_BIN_DIR bin )
-  set( INSTALL_LIB_DIR lib )
-  set( INSTALL_INCLUDE_DIR include )
-  set( INSTALL_DATA_DIR share/${PROJECT_NAME} )
-  set( INSTALL_CMAKE_DIR share/${PROJECT_NAME}/cmake )
+  # Use defaults unless values are already present in cache
+  if( NOT INSTALL_BIN_DIR )
+    set( INSTALL_BIN_DIR bin )
+  endif()
+  if( NOT INSTALL_LIB_DIR )
+    set( INSTALL_LIB_DIR lib )
+  endif()
+  if( NOT INSTALL_INCLUDE_DIR )
+    set( INSTALL_INCLUDE_DIR include )
+  endif()
+  if( NOT INSTALL_DATA_DIR )
+    set( INSTALL_DATA_DIR share/${PROJECT_NAME} )
+  endif()
+  if( NOT INSTALL_CMAKE_DIR )
+    set( INSTALL_CMAKE_DIR share/${PROJECT_NAME}/cmake )
+  endif()
 
   mark_as_advanced( INSTALL_BIN_DIR )
   mark_as_advanced( INSTALL_LIB_DIR )
@@ -121,10 +135,11 @@ macro( ecbuild_declare_project )
   mark_as_advanced( INSTALL_DATA_DIR )
   mark_as_advanced( INSTALL_CMAKE_DIR )
 
-  # overrides of install dirs
+  # overrides of install dirs (deprecated in ecBuild 2.4.0)
 
   foreach( p LIB BIN INCLUDE DATA CMAKE )
     if( ${PNAME}_INSTALL_${p}_DIR )
+      ecbuild_deprecate( "Use of ${PNAME}_INSTALL_${p}_DIR is deprecated and will be removed in a future release. Use INSTALL_${p}_DIR instead." )
       set( INSTALL_${p}_DIR ${${PNAME}_INSTALL_${p}_DIR} )
     endif()
   endforeach()
@@ -133,7 +148,7 @@ macro( ecbuild_declare_project )
 
   foreach( p LIB BIN INCLUDE DATA CMAKE )
     if( IS_ABSOLUTE ${INSTALL_${p}_DIR} )
-      message( WARNING "Defining INSTALL_${p}_DIR as absolute path '${INSTALL_${p}_DIR}' makes this build non-relocatable, possibly breaking the installation of RPMS and DEB packages" )
+      ecbuild_warn( "Defining INSTALL_${p}_DIR as absolute path '${INSTALL_${p}_DIR}' makes this build non-relocatable, possibly breaking the installation of RPMS and DEB packages" )
     endif()
   endforeach()
 
@@ -146,12 +161,12 @@ macro( ecbuild_declare_project )
       set( ${PNAME}_FULL_INSTALL_${p}_DIR "${CMAKE_INSTALL_PREFIX}/${${var}}"
            CACHE INTERNAL "${PNAME} ${p} full install path" )
     else()
-      message( WARNING "Setting an absolute path for ${VAR} in project ${PNAME}, breakes generation of relocatable binary packages (rpm,deb,...)" )
+      ecbuild_warn( "Setting an absolute path for ${VAR} in project ${PNAME}, breakes generation of relocatable binary packages (rpm,deb,...)" )
       set( ${PNAME}_FULL_INSTALL_${p}_DIR "${${var}}"
            CACHE INTERNAL "${PNAME} ${p} full install path" )
     endif()
 
-    #        debug_var( ${PNAME}_FULL_INSTALL_${p}_DIR )
+    #        ecbuild_debug_var( ${PNAME}_FULL_INSTALL_${p}_DIR )
 
   endforeach()
 
@@ -162,7 +177,7 @@ macro( ecbuild_declare_project )
     if( ENABLE_RELATIVE_RPATHS )
 
       file( RELATIVE_PATH relative_rpath ${${PNAME}_FULL_INSTALL_BIN_DIR} ${${PNAME}_FULL_INSTALL_LIB_DIR} )
-      # debug_var( relative_rpath )
+      # ecbuild_debug_var( relative_rpath )
 
       ecbuild_append_to_rpath( ${relative_rpath} )
 
@@ -171,23 +186,23 @@ macro( ecbuild_declare_project )
       if( IS_ABSOLUTE ${INSTALL_LIB_DIR} )
         ecbuild_append_to_rpath( "${INSTALL_LIB_DIR}" )
       else()
-        ecbuild_append_to_rpath( "${CMAKE_INSTALL_PREFIX}/${INSTALL_LIB_DIR}" ) 
+        ecbuild_append_to_rpath( "${CMAKE_INSTALL_PREFIX}/${INSTALL_LIB_DIR}" )
       endif()
 
     endif()
 
   endif()
 
-  # debug_var( CMAKE_INSTALL_RPATH )
+  # ecbuild_debug_var( CMAKE_INSTALL_RPATH )
 
   # print project header
 
   message( STATUS "---------------------------------------------------------" )
 
   if( ${PNAME}_GIT_SHA1_SHORT )
-    message( STATUS "[${PROJECT_NAME}] (${${PNAME}_VERSION_STR}) [${${PNAME}_GIT_SHA1_SHORT}]" )
+    ecbuild_info( "[${PROJECT_NAME}] (${${PNAME}_VERSION_STR}) [${${PNAME}_GIT_SHA1_SHORT}]" )
   else()
-    message( STATUS "[${PROJECT_NAME}] (${${PNAME}_VERSION_STR})" )
+    ecbuild_info( "[${PROJECT_NAME}] (${${PNAME}_VERSION_STR})" )
   endif()
 
 endmacro( ecbuild_declare_project )

@@ -119,12 +119,14 @@ int grib_tool_init(grib_runtime_options* options)
                 options->latlon_mask=strdup(p);
             }
         }
-
     }
 
     if (options->latlon && options->latlon_mask) {
         FILE* f=NULL;
         grib_handle* hh;
+        int idx=0, land_found=0;
+        double min_overall = 0.0;
+        int idx_overall = -1;
         f=fopen(options->latlon_mask,"r");
         if(!f) {
             perror(options->latlon_mask);
@@ -139,18 +141,30 @@ int grib_tool_init(grib_runtime_options* options)
                 options->lats,options->lons,options->mask_values,options->distances,options->indexes,&size),0);
         grib_nearest_delete(n);
         n=NULL;
-        grib_handle_delete( hh);
+        grib_handle_delete(hh);
 
         options->latlon_idx=-1;
         max=options->distances[0];
         for (i=0;i<4;i++)
             if (max<options->distances[i]) {max=options->distances[i];}
         min=max;
+        min_overall=max;
+        /* See GRIB-213 */
         for (i=0;i<4;i++) {
-            if ((min >= options->distances[i]) && (options->mask_values[i] >= 0.5)) {
-                options->latlon_idx=i;
-                min = options->distances[i];
+            if (min_overall >= options->distances[i]) { /* find overall min and index ignoring mask */
+                min_overall = options->distances[i];
+                idx_overall = i;
             }
+            if ((min >= options->distances[i]) && (options->mask_values[i] >= 0.5)) {
+                land_found=1; /* found at least one point which is land */
+                min = options->distances[i];
+                idx = i;
+            }
+        }
+        if (land_found) {
+            options->latlon_idx=idx;
+        } else {
+            options->latlon_idx=idx_overall; /* all points were sea, so pick the min overall */
         }
 
         if (options->latlon_idx<0){

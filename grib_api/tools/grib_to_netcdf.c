@@ -32,7 +32,7 @@ static char argvString[2048];
 /*=====================================================================*/
 
 static grib_context* ctx = NULL;
-static double missing_value = 9999; /* TODO: Get from GRIBs */
+static double global_missing_value = 9.9692099683868690e+36; /* See GRIB-953 */
 
 /*===============================================================================*/
 /* request from mars client */
@@ -712,8 +712,8 @@ typedef struct field {
 
     /* missing fields/values */
 
-    boolean missing; /* field is missing */
-    boolean bitmap; /* field has missing values (= bitmap) */
+    /*boolean is_missing;*/ /* field is missing */
+    boolean has_bitmap; /* field has missing values (= bitmap) */
 
     field_request *r;
 
@@ -1080,7 +1080,7 @@ static err to_expand_mem(field *g)
 
         count = g->value_count;
 
-        if((e = grib_set_double(g->handle, "missingValue", missing_value)))
+        if((e = grib_set_double(g->handle, "missingValue", global_missing_value)))
         {
             grib_context_log(ctx, GRIB_LOG_ERROR, "grib_api: cannot set missingValue %s", grib_get_error_message(e));
             return e;
@@ -1102,7 +1102,7 @@ static err to_expand_mem(field *g)
             return e;
         }
 
-        g->bitmap = (bitmap != 0);
+        g->has_bitmap = (bitmap != 0);
 
 #ifdef COMEBACK
         set g->missing
@@ -1845,9 +1845,9 @@ ncoptions_t setup;
 
 #define NC_TYPES 7
 struct nc_types_values {
-    double max;
-    double min;
-    double missing;
+    double nc_type_max;
+    double nc_type_min;
+    double nc_type_missing;
 } nc_type_values[NC_TYPES] =
 {
         /* In some occasions, SHRT_MIN-2 for the minimum value, makes ncview display
@@ -2060,7 +2060,6 @@ static void get_nc_options(const request *user_r)
 
 static nc_type translate_nctype(const char *name)
 {
-
     if(!name)
         return NC_SHORT;
 
@@ -2099,7 +2098,6 @@ static void check_err(const int stat, const int line, const char *file)
 #define DIM_ID 1
 static int set_dimension(int ncid, const char *name, int n, int xtype, const char *units, const char *long_name)
 {
-
     int var_id = 0;
     int stat = 0;
     int dim_id = DIM_ID;
@@ -2175,6 +2173,7 @@ static int def_latlon(int ncid, fieldset *fs)
     /* g->purge_header = TRUE; */
     release_field(g);
 
+    (void)var_id; /* suppress gcc warning */
     return e;
 }
 
@@ -2333,12 +2332,12 @@ static int compute_scale(dataset_t *subset)
             return e;
         }
 
-        if(g->bitmap)
+        if(g->has_bitmap)
         {
             subset->bitmap = TRUE;
             for(j = 0; j < len; ++j)
             {
-                if(vals[j] != (double) missing_value)
+                if(vals[j] != (double) global_missing_value)
                 {
                     if(vals[j] > max)
                         max = vals[j];
@@ -2363,10 +2362,10 @@ static int compute_scale(dataset_t *subset)
 
     median = (max + min) / 2.0;
 
-    grib_context_log(ctx, GRIB_LOG_DEBUG, "grib_to_netcdf: max_int: %lf, min_int: %lf", nc_type_values[idx].max, nc_type_values[idx].min);
+    grib_context_log(ctx, GRIB_LOG_DEBUG, "grib_to_netcdf: max_int: %lf, min_int: %lf", nc_type_values[idx].nc_type_max, nc_type_values[idx].nc_type_min);
 
-    sf = (double) ((max - min) / (double) (nc_type_values[idx].max - nc_type_values[idx].min));
-    ao = ((max + min) - sf * (nc_type_values[idx].min + nc_type_values[idx].max)) / 2;
+    sf = (double) ((max - min) / (double) (nc_type_values[idx].nc_type_max - nc_type_values[idx].nc_type_min));
+    ao = ((max + min) - sf * (nc_type_values[idx].nc_type_min + nc_type_values[idx].nc_type_max)) / 2;
 
     if (min == max) {
         sf = 1.0; /* Prevent divide by zero later. Constant field grib has max == min */
@@ -2486,45 +2485,55 @@ static void scale_bitmap(double *vals, long n, void *data, dataset_t *subset)
     case NC_BYTE:
     {
         unsigned char *vscaled = (unsigned char *) data;
-        for(i = 0; i < n; ++i)
-            if(vals[i] == missing_value)
+        for(i = 0; i < n; ++i){
+            if(vals[i] == global_missing_value){
                 vscaled[i] = (unsigned char) subset->missing;
+            }
+        }
         break;
     }
 
     case NC_SHORT:
     {
         short int *vscaled = (short int *) data;
-        for(i = 0; i < n; ++i)
-            if(vals[i] == missing_value)
+        for(i = 0; i < n; ++i){
+            if(vals[i] == global_missing_value){
                 vscaled[i] = (short int) subset->missing;
+            }
+        }
         break;
     }
 
     case NC_INT:
     {
         int *vscaled = (int *) data;
-        for(i = 0; i < n; ++i)
-            if(vals[i] == missing_value)
+        for(i = 0; i < n; ++i){
+            if(vals[i] == global_missing_value){
                 vscaled[i] = (int) subset->missing;
+            }
+        }
         break;
     }
 
     case NC_FLOAT:
     {
         float *vscaled = (float *) data;
-        for(i = 0; i < n; ++i)
-            if(vals[i] == missing_value)
+        for(i = 0; i < n; ++i){
+            if(vals[i] == global_missing_value){
                 vscaled[i] = (float) subset->missing;
+            }
+        }
         break;
     }
 
     case NC_DOUBLE:
     {
         double *vscaled = (double *) data;
-        for(i = 0; i < n; ++i)
-            if(vals[i] == missing_value)
+        for(i = 0; i < n; ++i){
+            if(vals[i] == global_missing_value){
                 vscaled[i] = (double) subset->missing;
+            }
+        }
         break;
     }
 
@@ -2532,7 +2541,6 @@ static void scale_bitmap(double *vals, long n, void *data, dataset_t *subset)
         grib_context_log(ctx, GRIB_LOG_ERROR, "scale(...): Unknown netcdf type %d", nctype);
         break;
     }
-
 }
 
 static void scale(double *vals, long n, void *data, dataset_t *g)
@@ -2557,10 +2565,10 @@ static void scale(double *vals, long n, void *data, dataset_t *g)
         unsigned char *vscaled = (unsigned char *) data;
         for(i = 0; i < n; ++i)
         {
-            if(!g->bitmap || (vals[i] != missing_value))
+            if(!g->bitmap || (vals[i] != global_missing_value))
             {
                 double d = rint((vals[i] - add_offset) / scale_factor);
-                Assert(d >= nc_type_values[nctype].min && d <= nc_type_values[nctype].max);
+                Assert(d >= nc_type_values[nctype].nc_type_min && d <= nc_type_values[nctype].nc_type_max);
                 vscaled[i] = d;
             }
         }
@@ -2572,12 +2580,12 @@ static void scale(double *vals, long n, void *data, dataset_t *g)
         short int *vscaled = (short int *) data;
         for(i = 0; i < n; ++i)
         {
-            if(!g->bitmap || (vals[i] != missing_value))
+            if(!g->bitmap || (vals[i] != global_missing_value))
             {
                 double d = 0;
                 Assert(scale_factor>0);
                 d = rint((vals[i] - add_offset) / scale_factor);
-                Assert(d >= nc_type_values[nctype].min && d <= nc_type_values[nctype].max);
+                Assert(d >= nc_type_values[nctype].nc_type_min && d <= nc_type_values[nctype].nc_type_max);
                 vscaled[i] = d;
             }
         }
@@ -2589,10 +2597,10 @@ static void scale(double *vals, long n, void *data, dataset_t *g)
         int *vscaled = (int *) data;
         for(i = 0; i < n; ++i)
         {
-            if(!g->bitmap || (vals[i] != missing_value))
+            if(!g->bitmap || (vals[i] != global_missing_value))
             {
                 double d = rint((vals[i] - add_offset) / scale_factor);
-                Assert(d >= nc_type_values[nctype].min && d <= nc_type_values[nctype].max);
+                Assert(d >= nc_type_values[nctype].nc_type_min && d <= nc_type_values[nctype].nc_type_max);
                 vscaled[i] = d;
             }
         }
@@ -2604,10 +2612,10 @@ static void scale(double *vals, long n, void *data, dataset_t *g)
         float *vscaled = (float *) data;
         for(i = 0; i < n; ++i)
         {
-            if(!g->bitmap || (vals[i] != missing_value))
+            if(!g->bitmap || (vals[i] != global_missing_value))
             {
                 double d = vals[i];
-                Assert(d >= nc_type_values[nctype].min && d <= nc_type_values[nctype].max);
+                Assert(d >= nc_type_values[nctype].nc_type_min && d <= nc_type_values[nctype].nc_type_max);
                 vscaled[i] = d;
             }
         }
@@ -2619,10 +2627,10 @@ static void scale(double *vals, long n, void *data, dataset_t *g)
         double *vscaled = (double *) data;
         for(i = 0; i < n; ++i)
         {
-            if(!g->bitmap || (vals[i] != missing_value))
+            if(!g->bitmap || (vals[i] != global_missing_value))
             {
                 double d = vals[i];
-                Assert(d >= nc_type_values[nctype].min && d <= nc_type_values[nctype].max);
+                Assert(d >= nc_type_values[nctype].nc_type_min && d <= nc_type_values[nctype].nc_type_max);
                 vscaled[i] = d;
             }
         }
@@ -3008,9 +3016,9 @@ static int define_netcdf_dimensions(hypercube *h, fieldset *fs, int ncid, datase
             check_err(stat, __LINE__, __FILE__);
         }
 
-        stat = nc_put_att_type(ncid, var_id, "_FillValue", subsets[i].att.nctype, 1, nc_type_values[subsets[i].att.nctype].missing);
+        stat = nc_put_att_type(ncid, var_id, "_FillValue", subsets[i].att.nctype, 1, nc_type_values[subsets[i].att.nctype].nc_type_missing);
         check_err(stat, __LINE__, __FILE__);
-        stat = nc_put_att_type(ncid, var_id, "missing_value", subsets[i].att.nctype, 1, nc_type_values[subsets[i].att.nctype].missing);
+        stat = nc_put_att_type(ncid, var_id, "missing_value", subsets[i].att.nctype, 1, nc_type_values[subsets[i].att.nctype].nc_type_missing);
         check_err(stat, __LINE__, __FILE__);
 
         if(subsets[i].att.units)
@@ -3552,7 +3560,7 @@ static int split_fieldset(fieldset *fs, request *data_r, dataset_t **subsets, co
             {
                 const char *p;
                 set_field(filters[j].fset, f, filters[j].count++);
-                filters[j].bitmap |= f->bitmap;
+                filters[j].bitmap |= f->has_bitmap;
                 if((p = get_value(f->r->r, "_units", 0)) != NULL)
                 {
                     filters[j].att.units = grib_context_strdup(ctx, p);
@@ -3585,7 +3593,7 @@ static int split_fieldset(fieldset *fs, request *data_r, dataset_t **subsets, co
     {
         filters[i].att.nctype = nctype;
         filters[i].scale = TRUE;
-        filters[i].missing = nc_type_values[nctype].missing;
+        filters[i].missing = nc_type_values[nctype].nc_type_missing;
         find_nc_attributes(filters[i].filter_request, user_r, &(filters[i].att), config_r, data_r);
         grib_context_log(ctx, GRIB_LOG_DEBUG, "grib_to_netcdf: filter[%d] found.- Var. name '%s', nctype: %d, found nctype: %d", i, filters[i].att.name, nctype, filters[i].att.nctype);
 
@@ -4098,10 +4106,15 @@ int grib_tool_new_filename_action(grib_runtime_options* options, const char* fil
             {
                 grib_context_log(ctx, GRIB_LOG_ERROR, "Wrong number of fields");
                 grib_context_log(ctx, GRIB_LOG_ERROR, "File contains %d GRIBs, %d left in internal description, %d in request", i, fs->count, cnt);
+                grib_context_log(ctx, GRIB_LOG_ERROR, "The fields are not considered distinct!\n");
                 /*grib_context_log(ctx, GRIB_LOG_ERROR, "MARS description");*/
                 /*print_all_requests(setup.mars_description);*/
-                grib_context_log(ctx, GRIB_LOG_ERROR, "Internal description");
-                print_all_requests(temp_data_r);
+                if (ctx->debug) {
+                    grib_context_log(ctx, GRIB_LOG_ERROR, "Internal description");
+                    print_all_requests(temp_data_r);
+                }
+                grib_context_log(ctx, GRIB_LOG_ERROR, "Hint: This may be due to several fields having the same validity time.");
+                grib_context_log(ctx, GRIB_LOG_ERROR, "Try using the -T option (Do not use time of validity)");
                 exit(1);
             }
         }
@@ -4175,7 +4188,7 @@ int grib_tool_finalise_action(grib_runtime_options* options)
 
     /* Create netcdf file */
 
-    printf("%s: Creating netcdf file '%s'\n", grib_tool_name, options->outfile->name);
+    printf("%s: Creating netCDF file '%s'\n", grib_tool_name, options->outfile->name);
     printf("%s: NetCDF library version: %s\n", grib_tool_name, nc_inq_libvers());
 
     creation_mode = get_creation_mode(option_kind);
@@ -4239,8 +4252,6 @@ int main(int argc, char** argv)
     printf("grib_to_netcdf:\n");
     printf("\n");
     printf(" GRIB API was not compiled with NETCDF enabled\n");
-    printf(" Please rerun configure with --with-netcdf=PATH_TO_NETCDF_INSTALLATION\n");
-    printf(" and re-install the software.\n");
     printf("\n");
     exit(1);
 }

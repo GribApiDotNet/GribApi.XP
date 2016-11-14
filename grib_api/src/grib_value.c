@@ -13,7 +13,8 @@
  ***************************************************************************/
 #include "grib_api_internal.h"
 
-GRIB_INLINE static int grib_inline_strcmp(const char* a,const char* b) {
+GRIB_INLINE static int grib_inline_strcmp(const char* a,const char* b)
+{
     if (*a != *b) return 1;
     while((*a!=0 && *b!=0) &&  *(a) == *(b) ) {a++;b++;}
     return (*a==0 && *b==0) ? 0 : 1;
@@ -21,7 +22,8 @@ GRIB_INLINE static int grib_inline_strcmp(const char* a,const char* b) {
 
 #define SWAP(a,b) temp=(a);(a)=(b);(b)=temp;
 
-int grib_set_expression(grib_handle* h, const char* name,grib_expression* e) {
+int grib_set_expression(grib_handle* h, const char* name,grib_expression* e)
+{
     grib_accessor* a = grib_find_accessor(h, name);
     int ret = GRIB_SUCCESS;
 
@@ -39,7 +41,8 @@ int grib_set_expression(grib_handle* h, const char* name,grib_expression* e) {
     return GRIB_NOT_FOUND;
 }
 
-int grib_set_expression_internal(grib_handle* h, const char* name,grib_expression* e) {
+int grib_set_expression_internal(grib_handle* h, const char* name,grib_expression* e)
+{
     grib_accessor* a = grib_find_accessor(h, name);
 
     int ret = GRIB_SUCCESS;
@@ -53,7 +56,8 @@ int grib_set_expression_internal(grib_handle* h, const char* name,grib_expressio
     return GRIB_NOT_FOUND;
 }
 
-int grib_set_long_internal(grib_handle* h, const char* name, long val) {
+int grib_set_long_internal(grib_handle* h, const char* name, long val)
+{
     grib_context* c=h->context;
     int ret = GRIB_SUCCESS;
     grib_accessor* a =NULL;
@@ -79,7 +83,8 @@ int grib_set_long_internal(grib_handle* h, const char* name, long val) {
     return GRIB_NOT_FOUND;
 }
 
-int grib_set_long(grib_handle* h, const char* name, long val) {
+int grib_set_long(grib_handle* h, const char* name, long val)
+{
     int ret = GRIB_SUCCESS;
     grib_accessor* a =NULL;
     size_t l = 1;
@@ -102,7 +107,8 @@ int grib_set_long(grib_handle* h, const char* name, long val) {
     return GRIB_NOT_FOUND;
 }
 
-int grib_set_double_internal(grib_handle* h, const char* name, double val) {
+int grib_set_double_internal(grib_handle* h, const char* name, double val)
+{
     int ret = GRIB_SUCCESS;
     grib_accessor* a =NULL;
     size_t l = 1;
@@ -134,7 +140,8 @@ struct grib_key_err {
     grib_key_err* next;
 };
 
-int grib_copy_namespace(grib_handle* dest, const char* name, grib_handle* src) {
+int grib_copy_namespace(grib_handle* dest, const char* name, grib_handle* src)
+{
     int *err=0;
     int type;
     size_t len;
@@ -145,7 +152,6 @@ int grib_copy_namespace(grib_handle* dest, const char* name, grib_handle* src) {
     grib_key_err* key_err=NULL;
     grib_key_err* first=NULL;
     int todo=1,count=0;
-
 
     grib_keys_iterator* iter=NULL;
 
@@ -291,8 +297,8 @@ int grib_copy_namespace(grib_handle* dest, const char* name, grib_handle* src) {
     return *err;
 }
 
-
-int grib_set_double(grib_handle* h, const char* name, double val) {
+int grib_set_double(grib_handle* h, const char* name, double val)
+{
     int ret = GRIB_SUCCESS;
     grib_accessor* a =NULL;
     size_t l = 1;
@@ -345,18 +351,32 @@ int grib_set_string_internal(grib_handle* h, const char* name,
 int grib_set_string(grib_handle* h, const char* name, const char* val, size_t *length)
 {
     int ret=0;
-    grib_accessor* a;
+    grib_accessor* a = NULL;
 
-#if 1
-    /*second order doesn't have a proper representation for constant fields
-  the best is not to do the change of packing type if bitsPerValue=0
-     */
-    if (!grib_inline_strcmp(name,"packingType") && !grib_inline_strcmp(val,"grid_second_order")) {
+    /* Second order doesn't have a proper representation for constant fields.
+       So best not to do the change of packing type.
+       Use strncmp to catch all flavours of second order packing e.g. grid_second_order_boustrophedonic
+    */
+    if (!grib_inline_strcmp(name,"packingType") && !strncmp(val,"grid_second_order", 17)) {
         long bitsPerValue=0;
+        size_t numCodedVals = 0;
         grib_get_long(h,"bitsPerValue",&bitsPerValue);
-        if (bitsPerValue==0) return 0;
+        if (bitsPerValue==0) {
+            if (h->context->debug) {
+                printf("GRIB_API DEBUG grib_set_string packingType: Constant field cannot be encoded in second order. Packing not changed\n");
+            }
+            return 0;
+        }
+
+        /* GRIB-883: check if there are enough coded values */
+        ret = grib_get_size(h, "codedValues", &numCodedVals);
+        if (ret == GRIB_SUCCESS && numCodedVals < 3) {
+            if (h->context->debug) {
+                printf("GRIB_API DEBUG grib_set_string packingType: not enough coded values for second order. Packing not changed\n");
+            }
+            return 0;
+        }
     }
-#endif
 
     a = grib_find_accessor(h, name);
 
@@ -437,7 +457,8 @@ int grib_clear(grib_handle* h, const char* name)
     return GRIB_NOT_FOUND;
 }
 
-int grib_set_missing_internal(grib_handle* h, const char* name) {
+int grib_set_missing_internal(grib_handle* h, const char* name)
+{
     int ret=0;
     grib_accessor* a =NULL;
 
@@ -472,6 +493,7 @@ int grib_set_missing(grib_handle* h, const char* name)
             return GRIB_READ_ONLY;
 
         if(a->flags & GRIB_ACCESSOR_FLAG_CAN_BE_MISSING) {
+            if (h->context->debug) printf("GRIB_API DEBUG grib_set_missing %s\n",name);
             ret=grib_pack_missing(a);
             if(ret == GRIB_SUCCESS)
                 return grib_dependency_notify_change(a);
@@ -510,7 +532,8 @@ int grib_is_defined(grib_handle* h, const char* name)
     return (a ? 1 : 0);
 }
 
-int grib_set_flag(grib_handle *h,const char* name,unsigned long flag) {
+int grib_set_flag(grib_handle *h,const char* name,unsigned long flag)
+{
     grib_accessor* a=grib_find_accessor(h,name);
 
     if (!a) return GRIB_NOT_FOUND;
@@ -633,15 +656,22 @@ static int __grib_set_double_array(grib_handle* h, const char* name, const doubl
 
             grib_get_string(h,"packingType",packingType,&slen);
             if (!strcmp(packingType,"grid_second_order") ||
-                    !strcmp(packingType,"grid_second_order_no_SPD") ||
-                    !strcmp(packingType,"grid_second_order_SPD1") ||
-                    !strcmp(packingType,"grid_second_order_SPD2") ||
-                    !strcmp(packingType,"grid_second_order_SPD3")
+                !strcmp(packingType,"grid_second_order_no_SPD") ||
+                !strcmp(packingType,"grid_second_order_SPD1") ||
+                !strcmp(packingType,"grid_second_order_SPD2") ||
+                !strcmp(packingType,"grid_second_order_SPD3")
             ) {
+                int ret = 0;
                 slen=11; /*length of 'grid_simple' */
-                if (h->context->debug)
-                    printf("GRIB_API DEBUG grib_set_double_array forcing grid_simple\n");
-                grib_set_string(h,"packingType","grid_simple",&slen);
+                if (h->context->debug) {
+                    printf("GRIB_API DEBUG __grib_set_double_array: Cannot use second order packing for constant fields. Using simple packing\n");
+                }
+                ret = grib_set_string(h,"packingType","grid_simple",&slen);
+                if (ret != GRIB_SUCCESS) {
+                    if (h->context->debug) {
+                        printf("GRIB_API DEBUG __grib_set_double_array: could not switch to simple packing!\n");
+                    }
+                }
             }
         }
     }
@@ -813,7 +843,6 @@ int grib_get_double_elements(grib_handle* h, const char* name, int* i, long len,
     int j=0;
     grib_accessor* act =NULL;
 
-
     act= grib_find_accessor(h, name);
 
     ret=_grib_get_size(h,act,&size);
@@ -852,7 +881,6 @@ int grib_get_string_internal(grib_handle* h, const char* name, char* val, size_t
     return ret;
 }
 
-
 int grib_get_string(grib_handle* h, const char* name, char* val, size_t *length)
 {
     grib_accessor* act = grib_find_accessor(h, name);
@@ -860,7 +888,6 @@ int grib_get_string(grib_handle* h, const char* name, char* val, size_t *length)
         return grib_unpack_string(act, val, length);
     return GRIB_NOT_FOUND;
 }
-
 
 int grib_get_bytes_internal(grib_handle* h, const char* name, unsigned char* val, size_t *length)
 {
@@ -915,7 +942,6 @@ int _grib_get_double_array_internal(grib_handle* h,grib_accessor* a,double* val,
         }
 
         return err;
-
     }
     else {
         return GRIB_SUCCESS;
@@ -943,7 +969,6 @@ int grib_get_double_array(grib_handle* h, const char* name, double* val, size_t 
     *length = 0;
     return _grib_get_double_array_internal(h,a,val,len,length);
 }
-
 
 int grib_get_string_length(grib_handle* h, const char* name,size_t* size)
 {
@@ -986,7 +1011,6 @@ int grib_get_count(grib_handle* h, const char* name,size_t* size)
     return GRIB_SUCCESS;
 }
 
-
 int _grib_get_size(grib_handle* h, grib_accessor* a,size_t* size)
 {
     long count=0;
@@ -1016,7 +1040,6 @@ int grib_get_offset(grib_handle* h, const char* key,size_t* val)
     }
     return GRIB_NOT_FOUND;
 }
-
 
 int _grib_get_long_array_internal(grib_handle* h,grib_accessor* a,long* val, size_t buffer_len,size_t *decoded_length)
 {
@@ -1059,7 +1082,8 @@ int grib_get_long_array(grib_handle* h, const char* name, long* val, size_t *len
     return _grib_get_long_array_internal(h,a,val,len,length);
 }
 
-static void grib_clean_key_value(grib_context* c,grib_key_value_list* kv) {
+static void grib_clean_key_value(grib_context* c,grib_key_value_list* kv)
+{
     if (kv->long_value) grib_context_free(c,kv->long_value);
     kv->long_value=NULL;
     if (kv->double_value) grib_context_free(c,kv->double_value);
@@ -1073,7 +1097,8 @@ static void grib_clean_key_value(grib_context* c,grib_key_value_list* kv) {
     kv->size=0;
 }
 
-static int grib_get_key_value(grib_handle* h,grib_key_value_list* kv) {
+static int grib_get_key_value(grib_handle* h,grib_key_value_list* kv)
+{
     int ret=0;
     size_t size=0;
     grib_keys_iterator* iter=NULL;
@@ -1134,7 +1159,8 @@ static int grib_get_key_value(grib_handle* h,grib_key_value_list* kv) {
     return ret;
 }
 
-grib_key_value_list* grib_key_value_list_clone(grib_context* c,grib_key_value_list* list) {
+grib_key_value_list* grib_key_value_list_clone(grib_context* c,grib_key_value_list* list)
+{
     grib_key_value_list* next=list;
     grib_key_value_list* clone=(grib_key_value_list*)grib_context_malloc_clear(c,sizeof(grib_key_value_list));
     grib_key_value_list* p=clone;
@@ -1147,7 +1173,8 @@ grib_key_value_list* grib_key_value_list_clone(grib_context* c,grib_key_value_li
     return clone;
 }
 
-void grib_key_value_list_delete(grib_context* c,grib_key_value_list* kvl) {
+void grib_key_value_list_delete(grib_context* c,grib_key_value_list* kvl)
+{
     grib_key_value_list* next=kvl;
     grib_key_value_list* p=NULL;
     while (next) {
@@ -1161,7 +1188,8 @@ void grib_key_value_list_delete(grib_context* c,grib_key_value_list* kvl) {
     }
 }
 
-int grib_get_key_value_list(grib_handle* h,grib_key_value_list* list) {
+int grib_get_key_value_list(grib_handle* h,grib_key_value_list* list)
+{
     int ret=0;
     grib_key_value_list* kvl=list;
     while (kvl) {
@@ -1171,7 +1199,8 @@ int grib_get_key_value_list(grib_handle* h,grib_key_value_list* list) {
     return ret;
 }
 
-int grib_get_values(grib_handle* h,grib_values* args,size_t count) {
+int grib_get_values(grib_handle* h,grib_values* args,size_t count)
+{
     int ret=0;
     int i=0;
 
@@ -1200,12 +1229,14 @@ int grib_get_values(grib_handle* h,grib_values* args,size_t count) {
         case GRIB_TYPE_STRING:
             args[i].error = grib_get_string(h,args[i].name,buff,&len);
             args[i].string_value=strdup(buff);
+            Assert(args[i].string_value);
             if (args[i].error != GRIB_SUCCESS) ret=args[i].error;
             break;
 
         default:
             args[i].error = grib_get_string(h,args[i].name,buff,&len);
             args[i].string_value=strdup(buff);
+            Assert(args[i].string_value);
             if (args[i].error != GRIB_SUCCESS) ret=args[i].error;
             break;
         }
@@ -1273,7 +1304,6 @@ int grib_set_values(grib_handle* h,grib_values* args,size_t count)
         }
     }
 
-
     h->values[stack]       = NULL;
     h->values_count[stack] = 0;
 
@@ -1316,7 +1346,8 @@ void grib_print_values(grib_values* values,int count)
     }
 }
 
-int grib_values_check(grib_handle* h, grib_values* values, int count) {
+int grib_values_check(grib_handle* h, grib_values* values, int count)
+{
     int i=0;
     long long_value;
     double double_value;
@@ -1376,4 +1407,3 @@ int grib_values_check(grib_handle* h, grib_values* values, int count) {
 
     return 0;
 }
-

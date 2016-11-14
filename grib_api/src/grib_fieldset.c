@@ -48,7 +48,8 @@ static int grib_fieldset_set_order_by(grib_fieldset* set,grib_order_by* ob);
 
 
 /* --------------- grib_column functions ------------------*/
-int grib_fieldset_new_column(grib_fieldset* set,int id,char* key,int type) {
+int grib_fieldset_new_column(grib_fieldset* set,int id,char* key,int type)
+{
   grib_column* column=0;
   grib_context* c;
   int err=0;
@@ -109,7 +110,8 @@ int grib_fieldset_new_column(grib_fieldset* set,int id,char* key,int type) {
   return err;
 }
 
-static void grib_fieldset_delete_columns(grib_fieldset* set) {
+static void grib_fieldset_delete_columns(grib_fieldset* set)
+{
   int i=0;
   grib_context* c;
 
@@ -139,7 +141,8 @@ static void grib_fieldset_delete_columns(grib_fieldset* set) {
   grib_context_free(c,set->columns);
 }
 
-static int grib_fieldset_columns_resize(grib_fieldset* set,size_t newsize) {
+static int grib_fieldset_columns_resize(grib_fieldset* set,size_t newsize)
+{
   double* newdoubles;
   long* newlongs;
   char** newstrings;
@@ -199,7 +202,8 @@ static int grib_fieldset_columns_resize(grib_fieldset* set,size_t newsize) {
   return GRIB_SUCCESS;
 }
 
-int grib_fieldset_column_copy_from_handle(grib_handle* h,grib_fieldset* set,int i) {
+int grib_fieldset_column_copy_from_handle(grib_handle* h,grib_fieldset* set,int i)
+{
   int err=0;
   long lval=0;
   double dval=0;
@@ -235,7 +239,8 @@ int grib_fieldset_column_copy_from_handle(grib_handle* h,grib_fieldset* set,int 
 /* --------------- grib_fieldset functions ------------------*/
 grib_fieldset* grib_fieldset_new_from_files(grib_context* c,char* filenames[],
             int nfiles, char** keys,int nkeys,
-            char* where_string,char* order_by_string,int* err) {
+            char* where_string,char* order_by_string,int* err)
+{
    int i=0;
    int ret=GRIB_SUCCESS;
    grib_order_by* ob=NULL;
@@ -286,7 +291,8 @@ grib_fieldset* grib_fieldset_new_from_files(grib_context* c,char* filenames[],
 }
 
 static grib_fieldset* grib_fieldset_create_from_keys(grib_context* c,char** keys,int nkeys,
-                                           int* err) {
+                                           int* err)
+{
    grib_fieldset* set=0;
    size_t msize=0,size=0;
    int i=0;
@@ -346,11 +352,11 @@ static grib_fieldset* grib_fieldset_create_from_keys(grib_context* c,char** keys
    set->columns_size=nkeys;
 
    return set;
-
 }
 
 static grib_fieldset* grib_fieldset_create_from_order_by(grib_context* c,grib_order_by* ob,
-                                           int* err) {
+                                           int* err)
+{
   char** keys=NULL;
   size_t nkeys=0;
   int i=0;
@@ -371,7 +377,8 @@ static grib_fieldset* grib_fieldset_create_from_order_by(grib_context* c,grib_or
   return set;
 }
 
-int grib_fieldset_apply_where(grib_fieldset* set,const char* where_string) {
+int grib_fieldset_apply_where(grib_fieldset* set,const char* where_string)
+{
   int err=GRIB_NOT_IMPLEMENTED;
   grib_math* m=0;
 
@@ -384,7 +391,8 @@ int grib_fieldset_apply_where(grib_fieldset* set,const char* where_string) {
   return err;
 }
 
-int grib_fieldset_apply_order_by(grib_fieldset* set,const char* order_by_string) {
+int grib_fieldset_apply_order_by(grib_fieldset* set,const char* order_by_string)
+{
   int err=0;
   grib_order_by* ob=NULL;
 
@@ -406,19 +414,18 @@ int grib_fieldset_apply_order_by(grib_fieldset* set,const char* order_by_string)
   return err;
 }
 
-
-static int grib_fieldset_compare(grib_fieldset* set,int* i,int* j) {
+static int grib_fieldset_compare(grib_fieldset* set,int* i,int* j)
+{
   int ret=0;
   double d=0;
   int idkey=0;
   grib_order_by* ob=0;
   int ii=0,jj=0;
-  int *order=0,*filter=0;
+  int *order=0;
 
   if (!set || !set->order_by) return GRIB_INVALID_ARGUMENT;
   ob=set->order_by;
   order=set->order->el;
-  filter=set->filter->el;
 
   ii=*(set->filter->el+*(order+*i));
   jj=*(set->filter->el+*(order+*j));
@@ -456,7 +463,8 @@ static int grib_fieldset_compare(grib_fieldset* set,int* i,int* j) {
   return ret;
 }
 
-static void grib_fieldset_sort(grib_fieldset* set, int beg, int theEnd) {
+static void grib_fieldset_sort(grib_fieldset* set, int beg, int theEnd)
+{
    double temp;
    int l=0,r=0;
    if (theEnd > beg) {
@@ -485,7 +493,8 @@ static void grib_fieldset_sort(grib_fieldset* set, int beg, int theEnd) {
    }
 }
 
-void grib_fieldset_delete_order_by(grib_context* c,grib_order_by* order_by) {
+void grib_fieldset_delete_order_by(grib_context* c,grib_order_by* order_by)
+{
   grib_order_by* ob=order_by;
 
   if (!c) c=grib_context_get_default();
@@ -500,18 +509,17 @@ void grib_fieldset_delete_order_by(grib_context* c,grib_order_by* order_by) {
   return;
 }
 
-
-static grib_order_by* grib_fieldset_new_order_by(grib_context* c,char* obstr) {
+static grib_order_by* grib_fieldset_new_order_by(grib_context* c,char* obstr)
+{
   char *t1=0,*t2=0,*p=0;
   int id=0;
-  char *z=0,*zs=0;
+  char *z=0;
   int mode,mode_default=GRIB_ORDER_BY_ASC;
   grib_order_by *ob,*sob;
 
   if (!obstr) return NULL;
 
   z=grib_context_strdup(c,obstr);
-  zs=z;
   grib_trim(&z);
 
   if (strlen(z)==0) {return 0;}
@@ -559,8 +567,8 @@ static grib_order_by* grib_fieldset_new_order_by(grib_context* c,char* obstr) {
   return sob;
 }
 
-
-void grib_fieldset_delete(grib_fieldset* set) {
+void grib_fieldset_delete(grib_fieldset* set)
+{
   grib_context* c=0;
   if (!set) return;
 
@@ -575,13 +583,13 @@ void grib_fieldset_delete(grib_fieldset* set) {
   grib_context_free( c, set);
 }
 
-
-int grib_fieldset_add(grib_fieldset* set,char* filename) {
+int grib_fieldset_add(grib_fieldset* set,char* filename)
+{
    int ret=GRIB_SUCCESS;
    int err=0;
    int i=0;
    grib_handle* h=0;
-   int nkeys;
+   /* int nkeys; */
    grib_file* file;
    double offset=0;
    long length=0;
@@ -590,7 +598,7 @@ int grib_fieldset_add(grib_fieldset* set,char* filename) {
    if (!set || !filename ) return GRIB_INVALID_ARGUMENT;
    c=set->context;
 
-   nkeys=set->columns_size;
+   /* nkeys=set->columns_size; */
 
    file=grib_file_open(filename,"r",&err);
    if (!file || !file->handle) return err;
@@ -632,7 +640,8 @@ int grib_fieldset_add(grib_fieldset* set,char* filename) {
    return ret;
 }
 
-static int grib_fieldset_resize(grib_fieldset* set,size_t newsize) {
+static int grib_fieldset_resize(grib_fieldset* set,size_t newsize)
+{
   int err=0;
 
   err=grib_fieldset_resize_fields(set,newsize);
@@ -647,11 +656,13 @@ static int grib_fieldset_resize(grib_fieldset* set,size_t newsize) {
   return GRIB_SUCCESS;
 }
 
-void grib_fieldset_rewind(grib_fieldset* set) {
+void grib_fieldset_rewind(grib_fieldset* set)
+{
   if (set) set->current=0;
 }
 
-grib_handle* grib_fieldset_next_handle(grib_fieldset* set,int* err) {
+grib_handle* grib_fieldset_next_handle(grib_fieldset* set,int* err)
+{
   grib_handle* h;
   *err=GRIB_SUCCESS;
   h=grib_fieldset_retrieve(set,set->current,err);
@@ -661,11 +672,13 @@ grib_handle* grib_fieldset_next_handle(grib_fieldset* set,int* err) {
   return h;
 }
 
-int grib_fieldset_count(grib_fieldset* set) {
+int grib_fieldset_count(grib_fieldset* set)
+{
   return set->size;
 }
 
-grib_handle* grib_fieldset_retrieve(grib_fieldset* set,int i,int* err) {
+grib_handle* grib_fieldset_retrieve(grib_fieldset* set,int i,int* err)
+{
    grib_handle* h=0;
    grib_field* field=0;
    *err=GRIB_SUCCESS;
@@ -688,7 +701,8 @@ grib_handle* grib_fieldset_retrieve(grib_fieldset* set,int i,int* err) {
    return h;
 }
 
-static grib_int_array* grib_fieldset_create_int_array(grib_context* c,size_t size) {
+static grib_int_array* grib_fieldset_create_int_array(grib_context* c,size_t size)
+{
   grib_int_array* a;
   int i=0;
 
@@ -718,7 +732,8 @@ static grib_int_array* grib_fieldset_create_int_array(grib_context* c,size_t siz
   return a;
 }
 
-static int grib_fieldset_resize_int_array(grib_int_array* a,size_t newsize) {
+static int grib_fieldset_resize_int_array(grib_int_array* a,size_t newsize)
+{
   int* el;
   int err=0;
   if (!a) return GRIB_INVALID_ARGUMENT;
@@ -745,10 +760,10 @@ static void grib_fieldset_delete_int_array(grib_int_array* f)
 
   grib_context_free(c,f->el);
   grib_context_free(c,f);
-
 }
 
-static grib_field** grib_fieldset_create_fields(grib_context* c,size_t size) {
+static grib_field** grib_fieldset_create_fields(grib_context* c,size_t size)
+{
   int i;
   grib_field** fields=(grib_field**)grib_context_malloc_clear(c,size*sizeof(grib_field*));
   if (!fields) return NULL;
@@ -756,7 +771,8 @@ static grib_field** grib_fieldset_create_fields(grib_context* c,size_t size) {
   return fields;
 }
 
-static int grib_fieldset_resize_fields(grib_fieldset* set,size_t newsize) {
+static int grib_fieldset_resize_fields(grib_fieldset* set,size_t newsize)
+{
   int err=0;
   int i;
   grib_field** fields;
@@ -777,7 +793,8 @@ static int grib_fieldset_resize_fields(grib_fieldset* set,size_t newsize) {
   return err;
 }
 
-static void grib_fieldset_delete_fields(grib_fieldset* set) {
+static void grib_fieldset_delete_fields(grib_fieldset* set)
+{
   int i;
   for (i=0;i<set->size;i++) {
    if (!set->fields[i]) continue;
@@ -787,7 +804,8 @@ static void grib_fieldset_delete_fields(grib_fieldset* set) {
  grib_context_free(set->context,set->fields);
 }
 
-static void grib_trim(char** x) {
+static void grib_trim(char** x)
+{
   char* p=0;
   while (**x == ' ' && **x != '\0' ) (*x)++;
   if (**x == '\0') return;
@@ -796,7 +814,8 @@ static void grib_trim(char** x) {
   if ( *p == ' ' ) *p='\0';
 }
 
-static int grib_fieldset_set_order_by(grib_fieldset* set,grib_order_by* ob) {
+static int grib_fieldset_set_order_by(grib_fieldset* set,grib_order_by* ob)
+{
   grib_order_by* next=ob;
   char* p=NULL;
   int i=0;
@@ -823,6 +842,4 @@ static int grib_fieldset_set_order_by(grib_fieldset* set,grib_order_by* ob) {
   set->order_by=ob;
 
   return GRIB_SUCCESS;
-
 }
-

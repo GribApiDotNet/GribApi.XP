@@ -1,4 +1,4 @@
-# (C) Copyright 1996-2015 ECMWF.
+# (C) Copyright 1996-2016 ECMWF.
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -23,7 +23,7 @@ function( ecbuild_get_cxx11_flags CXX11_FLAGS )
 
   include(CheckCXXCompilerFlag)
 
-  # On older cmake versions + newer compilers, 
+  # On older cmake versions + newer compilers,
   # the given version of CheckCXXCompilerFlags does not quite work.
   if(CMAKE_VERSION VERSION_LESS 2.8.9)
     macro (CHECK_CXX_COMPILER_FLAG _FLAG _RESULT)
@@ -52,7 +52,8 @@ function( ecbuild_get_cxx11_flags CXX11_FLAGS )
 
   check_cxx_compiler_flag(-std=c++11 has_std_cpp11)
   check_cxx_compiler_flag(-std=c++0x has_std_cpp0x)
-  if(MINGW) 
+  check_cxx_compiler_flag(-hstd=c++11 has_hstd_cpp11)
+  if(MINGW)
     check_cxx_compiler_flag(-std=gnu++11 has_std_gnupp11)
     check_cxx_compiler_flag(-std=gnu++0x has_std_gnupp0x)
   endif(MINGW)
@@ -60,12 +61,14 @@ function( ecbuild_get_cxx11_flags CXX11_FLAGS )
     set(${CXX11_FLAGS} "-std=gnu++11" PARENT_SCOPE)
   elseif(has_std_gnupp0x)
     set(${CXX11_FLAGS} "-std=gnu++0x" PARENT_SCOPE)
-  elseif(has_std_cpp11) 
+  elseif(has_hstd_cpp11)
+    set(${CXX11_FLAGS} "-hstd=c++11" PARENT_SCOPE)
+  elseif(has_std_cpp11)
     set(${CXX11_FLAGS} "-std=c++11" PARENT_SCOPE)
   elseif(has_std_cpp0x)
     set(${CXX11_FLAGS} "-std=c++0x" PARENT_SCOPE)
   else()
-    message(FATAL ERROR "Could not detect C++11 flags")
+    ecbuild_critical("Could not detect C++11 flags")
   endif(has_std_gnupp11)
 
 endfunction()

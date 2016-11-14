@@ -3,6 +3,7 @@
 # Configure the file which all CMake tests will include
 configure_file( include.ctest.sh.in  include.ctest.sh  @ONLY )
 
+execute_process( COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_SOURCE_DIR}/include.sh ${CMAKE_CURRENT_BINARY_DIR} )
 
 # Build the executables used by test scripts
 ################################################
@@ -30,7 +31,6 @@ list( APPEND test_bins
       iterator_bitmap
       large_grib1
       clone
-      check_gaussian_grid
       ensemble_index
 )
 foreach( tool ${test_bins} )
@@ -59,21 +59,20 @@ list( APPEND tests
    clone
    sections_copy
    set_pv
-   check_gaussian_grids
+   set_bitmap
 )
 foreach( test ${tests} )
-    ecbuild_add_test( TARGET c_${test}
+    ecbuild_add_test( TARGET grib_api_c_${test}
                   TYPE       SCRIPT
                   COMMAND    ${CMAKE_CURRENT_SOURCE_DIR}/${test}.sh
-                  RESOURCES  include.sh
-                  TEST_DEPENDS get_gribs
+                  TEST_DEPENDS grib_api_download_gribs
     )
 endforeach()
 
 
 #############################################
 # Tests with no script
-ecbuild_add_test( TARGET    c_new_sample
+ecbuild_add_test( TARGET    grib_api_c_new_sample
                   SOURCES   new_sample.c
                   LIBS      grib_api
                   ARGS      "out.new_sample.grib"

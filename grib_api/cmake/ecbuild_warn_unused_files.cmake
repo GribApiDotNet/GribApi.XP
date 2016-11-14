@@ -1,4 +1,4 @@
-# (C) Copyright 1996-2015 ECMWF.
+# (C) Copyright 1996-2016 ECMWF.
 # 
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0. 
@@ -48,24 +48,24 @@ macro( ecbuild_warn_unused_files )
           # if unused files where found, put the list on the file
           if( EC_UNUSED_FILES )
     
-            message( STATUS "")
-            message( STATUS " !!!--- ${UNUSED_FILES_LEVEL} ---!!! ")
-            message( STATUS " !!!--- ${UNUSED_FILES_LEVEL} ---!!! ")
-            message( STATUS "")
-            message( STATUS " Unused source files found:")
+            ecbuild_info("")
+            ecbuild_info(" !!!--- ${UNUSED_FILES_LEVEL} ---!!! ")
+            ecbuild_info(" !!!--- ${UNUSED_FILES_LEVEL} ---!!! ")
+            ecbuild_info("")
+            ecbuild_info(" Unused source files found:")
             foreach( AFILE ${EC_UNUSED_FILES} )
-              message( STATUS "     ${AFILE}")
+              ecbuild_info("     ${AFILE}")
               file( APPEND ${UNUSED_FILE} "${AFILE}\n" )
             endforeach()
-            message( STATUS "")
-            message( STATUS " List dumped to ${UNUSED_FILE}")
-            message( STATUS "")
-            message( STATUS " !!!--- ${UNUSED_FILES_LEVEL} ---!!! ")
-            message( STATUS " !!!--- ${UNUSED_FILES_LEVEL} ---!!! ")
-            message( STATUS "")
+            ecbuild_info("")
+            ecbuild_info(" List dumped to ${UNUSED_FILE}")
+            ecbuild_info("")
+            ecbuild_info(" !!!--- ${UNUSED_FILES_LEVEL} ---!!! ")
+            ecbuild_info(" !!!--- ${UNUSED_FILES_LEVEL} ---!!! ")
+            ecbuild_info("")
     
             if( UNUSED_FILES_LEVEL STREQUAL "ERROR" )
-                message( FATAL_ERROR "\n Aborted build system configuration. \n Add unused files to the build system or remove them." )
+              ecbuild_critical( "\n Aborted build system configuration. \n Add unused files to the build system or remove them." )
             endif()
     
           endif()

@@ -1,4 +1,4 @@
-# © Copyright 1996-2015 ECMWF.
+# © Copyright 1996-2016 ECMWF.
 # 
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0. 
@@ -27,8 +27,10 @@ foreach( lib ${xl_libs} )
 endforeach()
 
 include(FindPackageHandleStandardArgs)
-
-find_package_handle_standard_args( LIBXLFORTRAN DEFAULT_MSG xlf_all_libs_found XLFORTRAN_LIBRARIES  )
+# handle the QUIET and REQUIRED arguments and set XLFORTRANLIBS_FOUND to TRUE
+# if all listed variables are valid
+# Note: capitalisation of the package name must be the same as in the file name
+find_package_handle_standard_args( XLFortranLibs DEFAULT_MSG xlf_all_libs_found XLFORTRAN_LIBRARIES  )
 
 # HACK for support libraries
 

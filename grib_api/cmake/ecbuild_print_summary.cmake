@@ -1,4 +1,4 @@
-# (C) Copyright 1996-2015 ECMWF.
+# (C) Copyright 1996-2016 ECMWF.
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -28,9 +28,9 @@ macro( ecbuild_print_summary )
 
   if( EXISTS ${PROJECT_SOURCE_DIR}/project_summary.cmake )
 
-    message( STATUS "---------------------------------------------------------" )
-    message( STATUS "Project ${PROJECT_NAME} summary" )
-    message( STATUS "---------------------------------------------------------" )
+    ecbuild_info( "---------------------------------------------------------" )
+    ecbuild_info( "Project ${PROJECT_NAME} summary" )
+    ecbuild_info( "---------------------------------------------------------" )
 
     include( ${PROJECT_SOURCE_DIR}/project_summary.cmake )
 
@@ -38,58 +38,62 @@ macro( ecbuild_print_summary )
 
   if( PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME )
 
-    ecbuild_define_links_target()
-
     get_property( langs GLOBAL PROPERTY ENABLED_LANGUAGES )
 
-    message( STATUS "---------------------------------------------------------" )
+    ecbuild_info( "---------------------------------------------------------" )
     if( NOT ${DEVELOPER_MODE} )
-      message( STATUS "Build summary" )
+      ecbuild_info( "Build summary" )
     else()
-      message( STATUS "Build summary -- ( DEVELOPER_MODE )" )
+      ecbuild_info( "Build summary -- ( DEVELOPER_MODE )" )
     endif()
-    message( STATUS "---------------------------------------------------------" )
+    ecbuild_info( "---------------------------------------------------------" )
 
-    message( STATUS "system : [${BUILD_SITE}] [${CMAKE_SYSTEM}] [${EC_OS_NAME}.${EC_OS_BITS}]" )
-    message( STATUS "processor        : [${CMAKE_SYSTEM_PROCESSOR}]" )
+    ecbuild_info( "system : [${BUILD_SITE}] [${CMAKE_SYSTEM}] [${EC_OS_NAME}.${EC_OS_BITS}]" )
+    ecbuild_info( "processor        : [${CMAKE_SYSTEM_PROCESSOR}]" )
     if( EC_BIG_ENDIAN )
-      message( STATUS "endiness         : Big Endian -- IEEE [${IEEE_BE}]" )
+      ecbuild_info( "endiness         : Big Endian -- IEEE [${IEEE_BE}]" )
     endif()
     if( EC_LITTLE_ENDIAN )
-      message( STATUS "endiness         : Little Endian -- IEEE [${IEEE_LE}]" )
+      ecbuild_info( "endiness         : Little Endian -- IEEE [${IEEE_LE}]" )
     endif()
-    message( STATUS "build type       : [${CMAKE_BUILD_TYPE}]" )
-    message( STATUS "timestamp        : [${EC_BUILD_TIMESTAMP}]" )
-    message( STATUS "install prefix   : [${CMAKE_INSTALL_PREFIX}]" )
+    ecbuild_info( "build type       : [${CMAKE_BUILD_TYPE}]" )
+    ecbuild_info( "timestamp        : [${EC_BUILD_TIMESTAMP}]" )
+    ecbuild_info( "install prefix   : [${CMAKE_INSTALL_PREFIX}]" )
+    ecbuild_info( "  bin dir        : [${${PNAME}_FULL_INSTALL_BIN_DIR}]" )
+    ecbuild_info( "  lib dir        : [${${PNAME}_FULL_INSTALL_LIB_DIR}]" )
+    ecbuild_info( "  include dir    : [${${PNAME}_FULL_INSTALL_INCLUDE_DIR}]" )
+    ecbuild_info( "  data dir       : [${${PNAME}_FULL_INSTALL_DATA_DIR}]" )
+    ecbuild_info( "  cmake dir      : [${${PNAME}_FULL_INSTALL_CMAKE_DIR}]" )
     if( EC_LINK_DIR )
-      message( STATUS "links prefix     : [${EC_LINK_DIR}]" )
+      ecbuild_info( "links prefix     : [${EC_LINK_DIR}]" )
     endif()
-    message( STATUS "---------------------------------------------------------" )
+    ecbuild_info( "---------------------------------------------------------" )
 
     foreach( lang ${langs} )
-      message( STATUS "${lang} -- ${CMAKE_${lang}_COMPILER_ID} ${CMAKE_${lang}_COMPILER_VERSION}"  )
-      message( STATUS "    compiler   : ${CMAKE_${lang}_COMPILER} ${CMAKE_${lang}_FLAGS} ${CMAKE_${lang}_FLAGS_${CMAKE_BUILD_TYPE_CAPS}}" )
-      message( STATUS "    link flags : ${CMAKE_${lang}_LINK_FLAGS}" )
+      ecbuild_info( "${lang} -- ${CMAKE_${lang}_COMPILER_ID} ${CMAKE_${lang}_COMPILER_VERSION}"  )
+      ecbuild_info( "    compiler   : ${CMAKE_${lang}_COMPILER}" )
+      ecbuild_info( "    flags      : ${CMAKE_${lang}_FLAGS} ${CMAKE_${lang}_FLAGS_${CMAKE_BUILD_TYPE_CAPS}} ${${PNAME}_${lang}_FLAGS} ${${PNAME}_${lang}_FLAGS_${CMAKE_BUILD_TYPE_CAPS}}" )
+      ecbuild_info( "    link flags : ${CMAKE_${lang}_LINK_FLAGS}" )
     endforeach()
 
-    message( STATUS "linker : ${CMAKE_LINKER}")
-    message( STATUS "ar     : ${CMAKE_AR}")
-    message( STATUS "ranlib : ${CMAKE_RANLIB}")
-    message( STATUS "link flags" )
-    message( STATUS "    executable [${CMAKE_EXE_LINKER_FLAGS} ${CMAKE_EXE_LINKER_FLAGS_${CMAKE_BUILD_TYPE_CAPS}}]" )
-    message( STATUS "    shared lib [${CMAKE_SHARED_LINKER_FLAGS} ${CMAKE_SHARED_LINKER_FLAGS_${CMAKE_BUILD_TYPE_CAPS}}]" )
-    message( STATUS "    static lib [${CMAKE_MODULE_LINKER_FLAGS} ${CMAKE_MODULE_LINKER_FLAGS_${CMAKE_BUILD_TYPE_CAPS}}]" )
-    message( STATUS "install rpath  : ${CMAKE_INSTALL_RPATH}" )
+    ecbuild_info( "linker : ${CMAKE_LINKER}")
+    ecbuild_info( "ar     : ${CMAKE_AR}")
+    ecbuild_info( "ranlib : ${CMAKE_RANLIB}")
+    ecbuild_info( "link flags" )
+    ecbuild_info( "    executable [${CMAKE_EXE_LINKER_FLAGS} ${CMAKE_EXE_LINKER_FLAGS_${CMAKE_BUILD_TYPE_CAPS}}]" )
+    ecbuild_info( "    shared lib [${CMAKE_SHARED_LINKER_FLAGS} ${CMAKE_SHARED_LINKER_FLAGS_${CMAKE_BUILD_TYPE_CAPS}}]" )
+    ecbuild_info( "    static lib [${CMAKE_MODULE_LINKER_FLAGS} ${CMAKE_MODULE_LINKER_FLAGS_${CMAKE_BUILD_TYPE_CAPS}}]" )
+    ecbuild_info( "install rpath  : ${CMAKE_INSTALL_RPATH}" )
 
     get_directory_property( defs COMPILE_DEFINITIONS )
 
-    message( STATUS "common definitions: ${defs}" )
+    ecbuild_info( "common definitions: ${defs}" )
 
-    message( STATUS "---------------------------------------------------------" )
+    ecbuild_info( "---------------------------------------------------------" )
 
     ### FEATURE SUMMARY
 
-    # debug_var( CMAKE_VERSION )
+    # ecbuild_debug_var( CMAKE_VERSION )
     if( ${CMAKE_VERSION} VERSION_LESS "2.8.6" )
       feature_summary( WHAT ALL )
     else()
@@ -101,6 +105,6 @@ macro( ecbuild_print_summary )
     # issue warnings / errors in case there are unused project files
     ecbuild_warn_unused_files()
 
-  endif( PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME )
+  endif()
 
 endmacro( ecbuild_print_summary )

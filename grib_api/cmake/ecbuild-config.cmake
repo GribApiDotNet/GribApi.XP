@@ -1,11 +1,13 @@
 # Config file for the ecbuild package
 # Defines the following variables:
 #
-#  ECBUILD_INCLUDE_DIRS - include directories
-#  ECBUILD_DEFINITIONS  - preprocessor definitions
-#  ECBUILD_LIBRARIES    - libraries to link against
-#  ECBUILD_FEATURES     - list of enabled features
-#  ECBUILD_VERSION      - version of the package
+#  ECBUILD_INCLUDE_DIRS   - include directories
+#  ECBUILD_DEFINITIONS    - preprocessor definitions
+#  ECBUILD_LIBRARIES      - libraries to link against
+#  ECBUILD_FEATURES       - list of enabled features
+#  ECBUILD_VERSION        - version of the package
+#  ECBUILD_GIT_SHA1       - Git revision of the package
+#  ECBUILD_GIT_SHA1_SHORT - short Git revision of the package
 #
 # Also defines ecbuild third-party library dependencies:
 #  ECBUILD_TPLS             - package names of  third-party library dependencies
@@ -26,12 +28,16 @@ set( ECBUILD_TPL_INCLUDE_DIRS  "" )
 set( ECBUILD_TPL_DEFINITIONS   "" )
 set( ECBUILD_TPL_LIBRARIES     "" )
 
+set( ECBUILD_VERSION           "2.4.0" )
+set( ECBUILD_GIT_SHA1          "3f07644f712f9219706dbd63c87c6d017a99f8f0" )
+set( ECBUILD_GIT_SHA1_SHORT    "3f07644" )
+
 ### export include paths as absolute paths
 
 set( ECBUILD_INCLUDE_DIRS "" )
 foreach( path ${ECBUILD_SELF_INCLUDE_DIRS} )
-	get_filename_component( abspath ${path} ABSOLUTE )
-	list( APPEND ECBUILD_INCLUDE_DIRS ${abspath} )
+  get_filename_component( abspath ${path} ABSOLUTE )
+  list( APPEND ECBUILD_INCLUDE_DIRS ${abspath} )
 endforeach()
 list( APPEND ECBUILD_INCLUDE_DIRS ${ECBUILD_TPL_INCLUDE_DIRS} )
 
@@ -47,7 +53,7 @@ set( ECBUILD_LIBRARIES        ${ECBUILD_SELF_LIBRARIES}   ${ECBUILD_TPL_LIBRARIE
 
 set( ECBUILD_FEATURES    "TESTS;INSTALL" )
 foreach( _f ${ECBUILD_FEATURES} )
-	set( ECBUILD_HAVE_${_f} 1 )
+  set( ECBUILD_HAVE_${_f} 1 )
 endforeach()
 
 # Has this configuration been exported from a build tree?
@@ -58,21 +64,21 @@ if( EXISTS ${ECBUILD_CMAKE_DIR}/ecbuild-import.cmake )
   include( ${ECBUILD_IMPORT_FILE} )
 endif()
 
+# here goes the imports of the TPL's
+
+include( ${CMAKE_CURRENT_LIST_FILE}.tpls OPTIONAL )
+
 # insert definitions for IMPORTED targets
 
 if( NOT ecbuild_BINARY_DIR )
 
   if( ECBUILD_IS_BUILD_DIR_EXPORT )
-		include( "/tmp/metabuilds/ecflow-metab_5062/opensuse131/ecbuild/builds/ecbuild-targets.cmake" OPTIONAL )
-	else()
-		include( "${ECBUILD_CMAKE_DIR}/ecbuild-targets.cmake" )
-	endif()
+    include( "/tmp/metabuilds/ecflow-metab_5062/opensuse131/ecbuild/builds/ecbuild-targets.cmake" OPTIONAL )
+  else()
+    include( "${ECBUILD_CMAKE_DIR}/ecbuild-targets.cmake" )
+  endif()
 
 endif()
-
-# here goes the imports of the TPL's
-
-include( ${CMAKE_CURRENT_LIST_FILE}.tpls OPTIONAL )
 
 # publish this file as imported
 
@@ -82,9 +88,10 @@ mark_as_advanced( ECBUILD_IMPORT_FILE )
 # set ecbuild_BASE_DIR for final installations or build directories
 
 if( NOT ecbuild )
-	if( ECBUILD_IS_BUILD_DIR_EXPORT )
-		set( ecbuild_BASE_DIR /tmp/metabuilds/ecflow-metab_5062/opensuse131/ecbuild/builds )
-	else()
-		set( ecbuild_BASE_DIR /usr/local/apps/ecbuild/1.9.0 )
-	endif()
+  if( ECBUILD_IS_BUILD_DIR_EXPORT )
+    set( ecbuild_BASE_DIR /tmp/metabuilds/ecflow-metab_5062/opensuse131/ecbuild/builds )
+  else()
+    get_filename_component( abspath ${CMAKE_CURRENT_LIST_DIR}/../../.. ABSOLUTE )
+    set( ecbuild_BASE_DIR ${abspath} )
+  endif()
 endif()

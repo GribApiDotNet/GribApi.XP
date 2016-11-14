@@ -9,12 +9,14 @@
 #
 
 import traceback
-import sys,os
+import sys
+import os
 
 from gribapi import *
 
-INPUT='../../data/index.grib'
-VERBOSE=1 # verbose error reporting
+INPUT = '../../data/index.grib'
+VERBOSE = 1  # verbose error reporting
+
 
 def product(*args, **kwds):
     # product('ABCD', 'xy') --> Ax Ay Bx By Cx Cy Dx Dy
@@ -22,12 +24,13 @@ def product(*args, **kwds):
     pools = map(tuple, args) * kwds.get('repeat', 1)
     result = [[]]
     for pool in pools:
-        result = [x+[y] for x in result for y in pool]
+        result = [x + [y] for x in result for y in pool]
     for prod in result:
         yield tuple(prod)
 
+
 def example():
-    index_keys = ["shortName","level","number","step"]
+    index_keys = ["shortName", "level", "number", "step"]
     index_file = "my.idx"
 
     iid = None
@@ -35,47 +38,48 @@ def example():
     if (os.path.exists(index_file)):
         iid = grib_index_read(index_file)
     else:
-        iid = grib_index_new_from_file(INPUT,index_keys)
+        iid = grib_index_new_from_file(INPUT, index_keys)
 
         # multiple files can be added to an index:
         # grib_index_add_file(iid,"grib file to add")
 
-        grib_index_write(iid,index_file)
+        grib_index_write(iid, index_file)
 
     index_vals = []
 
     for key in index_keys:
         print "%sSize=%d" % (
             key,
-            grib_index_get_size(iid,key)
+            grib_index_get_size(iid, key)
         )
 
-        key_vals = grib_index_get(iid,key)
+        key_vals = grib_index_get(iid, key)
         print " ".join(key_vals)
 
         index_vals.append(key_vals)
 
     for prod in product(*index_vals):
         for i in range(len(index_keys)):
-            grib_index_select(iid,index_keys[i],prod[i])
+            grib_index_select(iid, index_keys[i], prod[i])
 
         while 1:
             gid = grib_new_from_index(iid)
-            if gid is None: break
-            print " ".join(["%s=%s" % (key,grib_get(gid,key)) for key in index_keys])
+            if gid is None:
+                break
+            print " ".join(["%s=%s" % (key, grib_get(gid, key)) for key in index_keys])
             grib_release(gid)
 
     grib_index_release(iid)
-    
+
 
 def main():
     try:
         example()
-    except GribInternalError,err:
+    except GribInternalError, err:
         if VERBOSE:
             traceback.print_exc(file=sys.stderr)
         else:
-            print >>sys.stderr,err.msg
+            print >>sys.stderr, err.msg
 
         return 1
 

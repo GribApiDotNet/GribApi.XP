@@ -3,6 +3,7 @@
 # Configure the file which all CMake tests will include
 configure_file( include.ctest.sh.in  include.ctest.sh  @ONLY )
 
+execute_process( COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_SOURCE_DIR}/include.sh ${CMAKE_CURRENT_BINARY_DIR} )
 
 # Build the executables used by test scripts
 ################################################
@@ -31,34 +32,16 @@ list( APPEND tests
       clone
 )
 
-# Simplify tests: no need to build executable and then test. All in one
-# TODO
-# ecbuild_add_test( TARGET test_f90_samples
-#   LINKER_LANGUAGE Fortran
-#   SOURCES samples.f90
-#   LIBS    grib_api_f90 grib_api
-#   COMMAND  ${CMAKE_CURRENT_SOURCE_DIR}/samples.sh
-#   CONDITION  HAVE_FORTRAN
-# )
-
 foreach( tool ${tests} )
 
-    # Build the Fortran executable
-    ecbuild_add_executable( TARGET    f_${tool}
-                            NOINSTALL
-                            SOURCES   ${tool}.f90
-                            CONDITION HAVE_FORTRAN
-                            LINKER_LANGUAGE Fortran
-                            LIBS      grib_api_f90 grib_api 
-    )
     # Add the test which depends on the above executable
-    ecbuild_add_test( TARGET f_${tool}_test
-                      TYPE SCRIPT
-                      DEPENDS f_${tool}
+    ecbuild_add_test( TARGET grib_api_f_${tool}
+                      SOURCES   ${tool}.f90
+                      LINKER_LANGUAGE Fortran
+                      LIBS   grib_api_f90 grib_api
                       CONDITION HAVE_FORTRAN
                       COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/${tool}.sh
-                      RESOURCES include.sh
-                      TEST_DEPENDS get_gribs
+                      TEST_DEPENDS grib_api_download_gribs
     )
 endforeach()
 
@@ -69,29 +52,27 @@ ecbuild_add_executable( TARGET    f_new_from_file
                         SOURCES   new_from_file.f90
                         CONDITION HAVE_FORTRAN
                         LINKER_LANGUAGE Fortran
-                        LIBS      grib_api_f90 grib_api 
+                        LIBS      grib_api_f90 grib_api
 )
 ecbuild_add_executable( TARGET    f_copy_namespace
                         NOINSTALL
                         SOURCES   copy_namespace.f90
                         CONDITION HAVE_FORTRAN
                         LINKER_LANGUAGE Fortran
-                        LIBS      grib_api_f90 grib_api 
+                        LIBS      grib_api_f90 grib_api
 )
 ecbuild_add_executable( TARGET    f_set_gvc
                         NOINSTALL
                         SOURCES   set_gvc.f90
                         CONDITION HAVE_FORTRAN
                         LINKER_LANGUAGE Fortran
-                        LIBS      grib_api_f90 grib_api 
+                        LIBS      grib_api_f90 grib_api
 )
 
 
 # # Note extra dependency
-# ecbuild_add_test( TARGET f_set_test
+# ecbuild_add_test( TARGET grib_api_f_set_test
 #                   TYPE SCRIPT
 #                   DEPENDS set_gvc set
 #                   COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/set.sh
-#                   RESOURCES include.sh
 # )
-# 

@@ -39,6 +39,9 @@ else
     GRIB_SAMPLES_PATH=$cpath/samples
     export GRIB_SAMPLES_PATH
     tools_dir=$cpath/tools/
+
+#tools_dir="valgrind --error-exitcode=1 -q $cpath/tools/"
+
     tigge_dir=$cpath/tigge/
     data_dir=$cpath/data
     test_dir=$cpath/tests

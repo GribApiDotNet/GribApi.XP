@@ -9,4 +9,4 @@
 
 . ./include.sh
 
-${examples_dir}f_nearest > /dev/null
+${examples_dir}grib_api_f_nearest > /dev/null

@@ -1,4 +1,4 @@
-# (C) Copyright 1996-2015 ECMWF.
+# (C) Copyright 1996-2016 ECMWF.
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -9,22 +9,33 @@
 ############################################################################################
 # check size of pointer
 
+# Re-check size of void pointer since for some compiler combinations this is not properly set
 ecbuild_cache_check_type_size( "void*" CMAKE_SIZEOF_VOID_P  )
+
+if( NOT CMAKE_C_COMPILER_LOADED AND ENABLE_OS_TESTS )
+
+  enable_language( C )
+  ecbuild_compiler_flags( C )
+
+endif()
 
 math( EXPR EC_OS_BITS "${CMAKE_SIZEOF_VOID_P} * 8" )
 
 # we only support 32 and 64 bit operating systems
 if( NOT EC_OS_BITS EQUAL "32" AND NOT EC_OS_BITS EQUAL "64" )
-	message( FATAL_ERROR "operating system ${CMAKE_SYSTEM} ${EC_OS_BITS} bits -- ecbuild only supports 32 or 64 bit OS's" )
+  ecbuild_critical( "operating system ${CMAKE_SYSTEM} ${EC_OS_BITS} bits -- ecbuild only supports 32 or 64 bit OS's" )
 endif()
-ecbuild_cache_var( EC_OS_BITS )
 
 ############################################################################################
 # For 64 bit architectures enable PIC (position-independent code)
 
-if( ${EC_OS_BITS} EQUAL 64 )
-	set( CMAKE_POSITION_INDEPENDENT_CODE ON )
+# Allow overriding the position independent code setting (ECBUILD-220)
+if( DEFINED ECBUILD_POSITION_INDEPENDENT_CODE )
+  set( CMAKE_POSITION_INDEPENDENT_CODE ${ECBUILD_POSITION_INDEPENDENT_CODE} )
+elseif( ${EC_OS_BITS} EQUAL 64 )
+  set( CMAKE_POSITION_INDEPENDENT_CODE ON )
 endif()
+
 
 ############################################################################################
 # check architecture
@@ -45,21 +56,21 @@ if( ENABLE_OS_TYPES_TEST )
 	ecbuild_cache_check_type_size( ssize_t        EC_SIZEOF_SSIZE_T     )
 	ecbuild_cache_check_type_size( off_t          EC_SIZEOF_OFF_T       )
 
-#	message( STATUS "sizeof void*  [${EC_SIZEOF_PTR}]" )
-#	message( STATUS "sizeof off_t  [${EC_SIZEOF_OFF_T}]" )
-#	message( STATUS "sizeof int    [${EC_SIZEOF_INT}]" )
-#	message( STATUS "sizeof short  [${EC_SIZEOF_SHORT}]" )
-#	message( STATUS "sizeof long   [${EC_SIZEOF_LONG}]" )
-#	message( STATUS "sizeof size_t [${EC_SIZEOF_SIZE_T}]" )
-#	message( STATUS "sizeof float  [${EC_SIZEOF_FLOAT}]" )
-#	message( STATUS "sizeof double [${EC_SIZEOF_DOUBLE}]" )
-#	message( STATUS "sizeof long long   [${EC_SIZEOF_LONG_LONG}]" )
-#	message( STATUS "sizeof long double [${EC_SIZEOF_LONG_DOUBLE}]" )
+#	ecbuild_info( "sizeof void*  [${EC_SIZEOF_PTR}]" )
+#	ecbuild_info( "sizeof off_t  [${EC_SIZEOF_OFF_T}]" )
+#	ecbuild_info( "sizeof int    [${EC_SIZEOF_INT}]" )
+#	ecbuild_info( "sizeof short  [${EC_SIZEOF_SHORT}]" )
+#	ecbuild_info( "sizeof long   [${EC_SIZEOF_LONG}]" )
+#	ecbuild_info( "sizeof size_t [${EC_SIZEOF_SIZE_T}]" )
+#	ecbuild_info( "sizeof float  [${EC_SIZEOF_FLOAT}]" )
+#	ecbuild_info( "sizeof double [${EC_SIZEOF_DOUBLE}]" )
+#	ecbuild_info( "sizeof long long   [${EC_SIZEOF_LONG_LONG}]" )
+#	ecbuild_info( "sizeof long double [${EC_SIZEOF_LONG_DOUBLE}]" )
 
-#	message( STATUS "system sizeof :" )
-#	message( STATUS "  void*  [${EC_SIZEOF_PTR}]  size_t [${EC_SIZEOF_SIZE_T}]  off_t  [${EC_SIZEOF_OFF_T}]   short  [${EC_SIZEOF_SHORT}]" )
-#	message( STATUS "  int    [${EC_SIZEOF_INT}]  long   [${EC_SIZEOF_LONG}]  long long   [${EC_SIZEOF_LONG_LONG}]" )
-#	message( STATUS "  float  [${EC_SIZEOF_FLOAT}]  double [${EC_SIZEOF_DOUBLE}]  long double [${EC_SIZEOF_LONG_DOUBLE}]" )
+#	ecbuild_info( "system sizeof :" )
+#	ecbuild_info( "  void*  [${EC_SIZEOF_PTR}]  size_t [${EC_SIZEOF_SIZE_T}]  off_t  [${EC_SIZEOF_OFF_T}]   short  [${EC_SIZEOF_SHORT}]" )
+#	ecbuild_info( "  int    [${EC_SIZEOF_INT}]  long   [${EC_SIZEOF_LONG}]  long long   [${EC_SIZEOF_LONG_LONG}]" )
+#	ecbuild_info( "  float  [${EC_SIZEOF_FLOAT}]  double [${EC_SIZEOF_DOUBLE}]  long double [${EC_SIZEOF_LONG_DOUBLE}]" )
 
 endif()
 
@@ -101,14 +112,19 @@ endif()
 if( ENABLE_OS_ENDINESS_TEST )
 
   if( NOT DEFINED EC_BIG_ENDIAN AND NOT DEFINED EC_LITTLE_ENDIAN )
+
   	test_big_endian( _BIG_ENDIAN )
 
   	if( _BIG_ENDIAN )
-  		set( EC_BIG_ENDIAN    1 )
+        set( EC_BIG_ENDIAN    1 )
+        set( EC_LITTLE_ENDIAN 0 )
   	else()
-  		set( EC_LITTLE_ENDIAN 1 )
+        set( EC_BIG_ENDIAN    0 )
+        set( EC_LITTLE_ENDIAN 1 )
   	endif()
+
   endif()
+
   ecbuild_cache_var( EC_BIG_ENDIAN )
   ecbuild_cache_var( EC_LITTLE_ENDIAN )
 
@@ -142,8 +158,14 @@ if( ENABLE_OS_ENDINESS_TEST )
   	if( "${IEEE_BE}" STREQUAL "" )
   		set( IEEE_BE 0 CACHE INTERNAL "Test IEEE_BE")
   	endif()
+
   endif()
+
   ecbuild_cache_var( IEEE_BE )
+
+  if( EC_BIG_ENDIAN AND NOT IEEE_BE )
+    ecbuild_critical("Failed to sanity check on endiness: OS should be Big-Endian but compiled code runs differently -- to ignore this pass -DIEEE_BE=0 to CMake/ecBuild")
+  endif()
 
     if( NOT DEFINED IEEE_LE )
   	check_c_source_runs(
@@ -172,11 +194,16 @@ if( ENABLE_OS_ENDINESS_TEST )
   		   return 0;
   		 }" IEEE_LE )
 
-  	if( "${IEEE_BE}" STREQUAL "" )
+  	if( "${IEEE_LE}" STREQUAL "" )
   		set( IEEE_LE 0 CACHE INTERNAL "Test IEEE_LE")
   	endif()
   endif()
+
   ecbuild_cache_var( IEEE_LE )
+
+  if( EC_LITTLE_ENDIAN AND NOT IEEE_LE )
+    ecbuild_critical("Failed to sanity check on endiness: OS should be Little-Endian but compiled code runs differently -- to ignore this pass -DIEEE_LE=0 to CMake/ecBuild")
+  endif()
 
 endif()
 
@@ -202,9 +229,9 @@ if( ENABLE_PROFILING )
     unset( _trust_flags )
 
     unset( _flags )
-  
+
   else()
-    message( WARNING "Profiling enabled but ecbuild doesn't know how to enable for this particular compiler ${CMAKE_C_COMPILER_ID}")
+    ecbuild_warn( "Profiling enabled but ecbuild doesn't know how to enable for this particular compiler ${CMAKE_C_COMPILER_ID}")
   endif()
 
 endif()
@@ -218,33 +245,41 @@ set( EC_OS_NAME "UNKNOWN" )
 
 if( UNIX )
 
-	### APPLE ###
+  ### APPLE ###
 
-	if( APPLE AND ${CMAKE_SYSTEM_NAME} MATCHES "Darwin" )
-		set( EC_OS_NAME "macosx" )
-	endif()
+  if( APPLE AND ${CMAKE_SYSTEM_NAME} MATCHES "Darwin" )
+    set( EC_OS_NAME "macosx" )
+  endif()
 
-	### Linux ###
+  ### Linux ###
 
-	if( ${CMAKE_SYSTEM_NAME} MATCHES "Linux" )
+  if( ${CMAKE_SYSTEM_NAME} MATCHES "Linux" )
 
-		set( EC_OS_NAME "linux" )
+    set( EC_OS_NAME "linux" )
 
-		# recent linkers default to --enable-new-dtags
-		# which then adds both RPATH and RUNPATH to executables
-		# thus invalidating RPATH setting, and making LD_LIBRARY_PATH take precedence
-		# to be sure, use tool 'readelf -a <exe> | grep PATH' to see what paths are built-in
-		# see:
-		#  * http://blog.qt.digia.com/blog/2011/10/28/rpath-and-runpath
-		#  * http://www.cmake.org/Wiki/CMake_RPATH_handling
-		#  * man ld
-		#  * http://blog.tremily.us/posts/rpath
-		#  * http://fwarmerdam.blogspot.co.uk/2010/12/rpath-runpath-and-ldlibrarypath.html
-		set(CMAKE_EXE_LINKER_FLAGS     "${CMAKE_EXE_LINKER_FLAGS}    -Wl,--disable-new-dtags")
-		set(CMAKE_SHARED_LINKER_FLAGS  "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--disable-new-dtags")
-		set(CMAKE_MODULE_LINKER_FLAGS  "${CMAKE_MODULE_LINKER_FLAGS} -Wl,--disable-new-dtags")
+    # The following option allows enabling the new dtags linker option
+    # (when set to OFF). ONLY SET TO OFF IF YOU KNOW WHAT YOU ARE DOING AND
+    # NEVER WHEN BUILDING PRODUCTION SOFTWARE. YOU HAVE BEEN WARNED!
+    option( ECBUILD_DISABLE_NEW_DTAGS "Set the linker flag --disable-new-dtags" ON )
+    mark_as_advanced( ECBUILD_DISABLE_NEW_DTAGS )
 
-	endif()
+    if( ECBUILD_DISABLE_NEW_DTAGS )
+      # recent linkers default to --enable-new-dtags
+      # which then adds both RPATH and RUNPATH to executables
+      # thus invalidating RPATH setting, and making LD_LIBRARY_PATH take precedence
+      # to be sure, use tool 'readelf -a <exe> | grep PATH' to see what paths are built-in
+      # see:
+      #  * http://blog.qt.digia.com/blog/2011/10/28/rpath-and-runpath
+      #  * http://www.cmake.org/Wiki/CMake_RPATH_handling
+      #  * man ld
+      #  * http://blog.tremily.us/posts/rpath
+      #  * http://fwarmerdam.blogspot.co.uk/2010/12/rpath-runpath-and-ldlibrarypath.html
+      set(CMAKE_EXE_LINKER_FLAGS     "${CMAKE_EXE_LINKER_FLAGS}    -Wl,--disable-new-dtags")
+      set(CMAKE_SHARED_LINKER_FLAGS  "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--disable-new-dtags")
+      set(CMAKE_MODULE_LINKER_FLAGS  "${CMAKE_MODULE_LINKER_FLAGS} -Wl,--disable-new-dtags")
+    endif()
+
+  endif()
 
 	### Solaris ###
 
@@ -350,7 +385,7 @@ endif()
 if( ${CMAKE_SYSTEM_NAME} MATCHES "CYGWIN" )
 
 	set( EC_OS_NAME "cygwin" )
-	message( WARNING "Building on Cygwin should work but is untested" )
+	ecbuild_warn( "Building on Cygwin should work but is untested" )
 
 endif()
 
@@ -359,11 +394,11 @@ endif()
 if( ${EC_OS_NAME} MATCHES "UNKNOWN" )
 
 	if( DISABLE_OS_CHECK )
-		message( WARNING "ecBuild is untested for this operating system: [${CMAKE_SYSTEM_NAME}]"
-						 " -- DISABLE_OS_CHECK is ON so proceeding at your own risk ..." )
+		ecbuild_warn( "ecBuild is untested for this operating system: [${CMAKE_SYSTEM_NAME}]"
+                  " -- DISABLE_OS_CHECK is ON so proceeding at your own risk ..." )
 	else()
-		message( FATAL_ERROR "ecBuild is untested for this operating system: [${CMAKE_SYSTEM_NAME}]"
-							 " -- refusing to continue. Disable this check with -DDISABLE_OS_CHECK=ON" )
+		ecbuild_critical( "ecBuild is untested for this operating system: [${CMAKE_SYSTEM_NAME}]"
+                      " -- refusing to continue. Disable this check with -DDISABLE_OS_CHECK=ON" )
 	endif()
 
 endif()

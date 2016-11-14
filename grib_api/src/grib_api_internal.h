@@ -22,7 +22,7 @@ extern "C" {
 #endif
 
 /* cmake config header */
-#ifdef HAVE_GRIB_API_CONFIG_H 
+#ifdef HAVE_GRIB_API_CONFIG_H
 #include "grib_api_config.h"
 #endif
 
@@ -64,43 +64,43 @@ extern "C" {
 #include "grib_api_windef.h"
 
 #ifndef GRIB_ON_WINDOWS
-#include <dirent.h>
-#include <unistd.h>
-#include <inttypes.h>
+   #include <dirent.h>
+   #include <unistd.h>
+   #include <inttypes.h>
 #else
-#include <direct.h>
-#include <io.h>
+   #include <direct.h>
+   #include <io.h>
 
-	/* Replace Unix rint() for Windows */
+   /* Replace C99/Unix rint() for Windows Visual C++ (only before VC++ 2013 versions) */
+   #if defined _MSC_VER && _MSC_VER < 1800
+      double rint(double x);
+   #endif
 
-#if _MSC_VER < 1800 /* Modified for compiling in Visual Studio 2013 which suppors Unix rint() */
-	double rint(double x);
-#endif
-#ifndef S_ISREG
-#define S_ISREG(mode) (mode & S_IFREG)
-#endif
+   #ifndef S_ISREG
+     #define S_ISREG(mode) (mode & S_IFREG)
+   #endif
 
-#ifndef S_ISDIR
-#define S_ISDIR(mode) (mode & S_IFDIR)
-#endif
+   #ifndef S_ISDIR
+     #define S_ISDIR(mode) (mode & S_IFDIR)
+   #endif
 
-#ifndef M_PI
-#define M_PI 3.14159265358979323846
-#endif
+   #ifndef M_PI
+   #define M_PI 3.14159265358979323846
+   #endif
 
-#define R_OK 04			/* Needed for Windows */
+   #define R_OK 04   /* Needed for Windows */
 
-#  ifndef F_OK
-#    define F_OK  0
-#  endif
+   #  ifndef F_OK
+   #    define F_OK  0
+   #  endif
 
-#  define mkdir(dirname,mode)   _mkdir(dirname)
+   #  define mkdir(dirname,mode)   _mkdir(dirname)
 
-#  ifdef _MSC_VER
-#    define access(path,mode)   _access(path,mode)
-#    define chmod(path,mode)    _chmod(path,mode)
-#    define strdup(str)         _strdup(str)
-#  endif
+   #  ifdef _MSC_VER
+   #    define access(path,mode)   _access(path,mode)
+   #    define chmod(path,mode)    _chmod(path,mode)
+   #    define strdup(str)         _strdup(str)
+   #  endif
 
 #endif
 
@@ -124,12 +124,12 @@ extern "C" {
 #if GRIB_PTHREADS
  #include <pthread.h>
  #define GRIB_MUTEX_INIT_ONCE(a,b) pthread_once(a,b);
- #define GRIB_MUTEX_LOCK(a) pthread_mutex_lock(a); 
+ #define GRIB_MUTEX_LOCK(a) pthread_mutex_lock(a);
  #define GRIB_MUTEX_UNLOCK(a) pthread_mutex_unlock(a);
-/*
-#define GRIB_MUTEX_LOCK(a) {pthread_mutex_lock(a); printf("MUTEX LOCK %p %s line %d\n",(void*)a,__FILE__,__LINE__);}
-#define GRIB_MUTEX_UNLOCK(a) {pthread_mutex_unlock(a);printf("MUTEX UNLOCK %p %s line %d\n",(void*)a,__FILE__,__LINE__);} 
-*/
+ /*
+ #define GRIB_MUTEX_LOCK(a) {pthread_mutex_lock(a); printf("MUTEX LOCK %p %s line %d\n",(void*)a,__FILE__,__LINE__);}
+ #define GRIB_MUTEX_UNLOCK(a) {pthread_mutex_unlock(a);printf("MUTEX UNLOCK %p %s line %d\n",(void*)a,__FILE__,__LINE__);}
+ */
 #elif GRIB_OMP_THREADS
  #include <omp.h>
  #ifdef _MSC_VER
@@ -139,8 +139,8 @@ extern "C" {
   #define GRIB_OMP_XSTR(a) GRIB_OMP_STR(a)
   #define GRIB_OMP_CRITICAL(a) _Pragma( GRIB_OMP_XSTR(omp critical (a) ) )
  #endif
- #define GRIB_MUTEX_INIT_ONCE(a,b) (*b)();
- #define GRIB_MUTEX_LOCK(a)  omp_set_nest_lock(a); 
+ #define GRIB_MUTEX_INIT_ONCE(a,b) (*(b))();
+ #define GRIB_MUTEX_LOCK(a)  omp_set_nest_lock(a);
  #define GRIB_MUTEX_UNLOCK(a)  omp_unset_nest_lock(a);
 #else
  #define GRIB_MUTEX_INIT_ONCE(a,b)
@@ -161,7 +161,13 @@ extern "C" {
 #define ftello ftell
 #endif
 
-#define Assert(a) {if(!(a)) grib_fail(#a,__FILE__,__LINE__);}
+#define Assert(a)       {if(!(a)) grib_fail(#a,__FILE__,__LINE__);}
+
+#ifndef NDEBUG
+ #define DebugAssert(a) Assert(a)
+#else
+ #define DebugAssert(a)
+#endif
 
 /* Compile time assertion - Thanks to Ralf Holly */
 #define COMPILE_TIME_ASSERT(e) \
@@ -169,10 +175,25 @@ extern "C" {
        enum { assert_static__ = 1/(e) }; \
       } while (0)
 
+#define AssertAccess(array, index, size) \
+   do { \
+    if (!((index) >= 0 && (index) < (size)) ) {printf("ARRAY ACCESS ERROR: array=%s idx=%ld size=%ld @ %s +%d \n", #array, index, size, __FILE__, __LINE__); abort();} \
+   } while(0)
+
+#ifndef NDEBUG
+ #define DebugAssertAccess(array, index, size) \
+   do { \
+    if (!((index) >= 0 && (index) < (size)) ) {printf("ARRAY ACCESS ERROR: array=%s idx=%ld size=%ld @ %s +%d \n", #array, index, size, __FILE__, __LINE__); abort();} \
+   } while(0)
+#else
+ #define DebugAssertAccess(array, index, size)
+#endif
+
+
 #include "grib_api.h"
 
 #define GRIB_UNKNOWN_VALUE   -9999.999
-#define GRIB_KEY_UNDEF	"undef"
+#define GRIB_KEY_UNDEF "undef"
 
 #define GRIB_HANDLE_BIG_ECMWF_GRIB1    1
 
@@ -369,16 +390,16 @@ struct grib_action
     grib_context             *context;/**  Context                                     */
     unsigned long            flags;
     char                    *defaultkey; /** name of the key used as default if not found  */
-	grib_arguments*         default_value; /** default expression as in .def file */
-	char*					set;
+    grib_arguments*         default_value; /** default expression as in .def file */
+    char*                   set;
     /* If you had something, don't forget to update grib_action_compile */
 };
 
 typedef struct grib_accessor_list grib_accessor_list;
 
 struct grib_accessor_list {
-	grib_accessor* accessor;
-	grib_accessor_list* next;
+   grib_accessor* accessor;
+   grib_accessor_list* next;
 };
 
 /* compile */
@@ -463,9 +484,9 @@ struct grib_buffer
 typedef struct grib_virtual_value grib_virtual_value;
 
 struct grib_virtual_value {
-  long     lval;       
-  double   dval;  
-  char*    cval; 
+  long     lval;
+  double   dval;
+  char*    cval;
   int      missing;
   int      length;
   int      type;
@@ -648,7 +669,7 @@ struct grib_nearest{
 struct grib_box {
    grib_box_class*             cclass;
    grib_context*               context;
-   grib_arguments              *args;      
+   grib_arguments              *args;
    grib_handle*                h;
    unsigned long               flags;
    grib_points*                points;
@@ -823,7 +844,7 @@ struct grib_concept_value {
   grib_concept_value*          next;
   char*                        name;
   grib_concept_condition*      conditions;
-  grib_trie*		           index;
+  grib_trie*                   index;
 };
 
 /* ----------*/
@@ -834,10 +855,10 @@ struct grib_context
     int                             debug;
     int                             write_on_fail;
     int                             no_abort;
-	int 							io_buffer_size;
-	int 							no_big_group_split;
-	int 							no_spd;
-	int 							keep_matrix;
+    int                             io_buffer_size;
+    int                             no_big_group_split;
+    int                             no_spd;
+    int                             keep_matrix;
     char*                           grib_definition_files_path;
     char*                           grib_samples_path;
     char*                           grib_concept_path;
@@ -884,11 +905,11 @@ struct grib_context
     int                             concepts_count;
     grib_concept_value*             concepts[MAX_NUM_CONCEPTS];
     grib_trie*                      def_files;
-    
+
     grib_string_list*                blacklist;
     int                             ieee_packing;
-	FILE*                           log_stream;
-	grib_trie*                      classes;
+    FILE*                           log_stream;
+    grib_trie*                      classes;
 #if GRIB_PTHREADS
     pthread_mutex_t                 mutex;
 #elif GRIB_OMP_THREADS
@@ -1022,29 +1043,29 @@ typedef struct grib_concept_entry grib_concept_entry;
 typedef struct grib_concept_key grib_concept_key;
 
 struct grib_concept_index_entry {
-  char* 	name;
-  char*		value;
+  char* name;
+  char* value;
   int type;
   grib_concept_entry* next;
 };
 
 struct grib_concept_index_key {
-  char* 	name;
+  char* name;
   int type;
   grib_concept_key* next;
 };
 
 struct grib_concept_index {
-	grib_context* context;
-	grib_concept_key* keys;
-	grib_conditions_tree* conditions;
+   grib_context* context;
+   grib_concept_key* keys;
+   grib_conditions_tree* conditions;
 };
 
 struct grib_conditions_tree {
-	char*   value;
-	void* 	object;
-	grib_conditions_tree* next;
-	grib_conditions_tree* next_key;
+   char*   value;
+   void*   object;
+   grib_conditions_tree* next;
+   grib_conditions_tree* next_key;
 };
 
 /* index structures */
@@ -1103,7 +1124,7 @@ struct grib_math{
   int         arity;
 };
 
-typedef double (*mathproc)();
+typedef double (*mathproc)(void);
 typedef int    (*funcproc)(grib_math*,mathproc);
 
 typedef struct func {

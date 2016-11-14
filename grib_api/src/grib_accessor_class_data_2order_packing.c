@@ -230,7 +230,8 @@ static const unsigned char left_mask[8]={0,0x80,0xc0, 0xe0, 0xf0, 0xf8, 0xfc, 0x
 static const unsigned char right_mask[8]={0,0x80,0xc0, 0xe0, 0xf0, 0xf8, 0xfc, 0xfe };
 
 static unsigned char* bitmap_pop_line(unsigned char* bitmap,long* bitmap_len,int *bit_offset,
-        long points_in_line,int *values_in_line) {
+                                      long points_in_line,int *values_in_line)
+{
     unsigned char* p=bitmap;
     int m=0,bits=0;
     int bytes=0;
@@ -263,7 +264,8 @@ static unsigned char* bitmap_pop_line(unsigned char* bitmap,long* bitmap_len,int
 }
 
 static int reverse_rows (unsigned long* data, long  len, long number_along_parallel,
-        unsigned char* bitmap,long bitmap_len){
+                         unsigned char* bitmap,long bitmap_len)
+{
     long count = 0;
     long i = 0;
     long left = 0;
@@ -334,18 +336,15 @@ static int reverse_rows (unsigned long* data, long  len, long number_along_paral
     return 0;
 }
 
-
-static int      spatial_difference (grib_context *c, unsigned long* vals, long  len, long order, long* bias){
-
+static int spatial_difference (grib_context *c, unsigned long* vals, long  len, long order, long* bias)
+{
     long j = 3;
-
     long *v = (long*)grib_context_malloc(c,(len)*sizeof(long));
 
     for(j = 0; j< len;j++)
         v[j] = vals[j];
 
     Assert(order == 2);
-
 
     *bias=v[order];
 
@@ -365,10 +364,9 @@ static int      spatial_difference (grib_context *c, unsigned long* vals, long  
     return 0;
 }
 
-static int      de_spatial_difference (grib_context *c, unsigned long* vals, long  len, long order, long bias){
-
+static int de_spatial_difference (grib_context *c, unsigned long* vals, long  len, long order, long bias)
+{
     long j = 0;
-
     long i_origin = 0;
     long i_first_diff = 0;
     long i_second_diff = 0;
@@ -415,7 +413,7 @@ static int      de_spatial_difference (grib_context *c, unsigned long* vals, lon
 second_order_packed* sd = NULL;
 #endif
 
-static int  unpack_double(grib_accessor* a, double* val, size_t *len)
+static int unpack_double(grib_accessor* a, double* val, size_t *len)
 {
     grib_accessor_data_2order_packing* self =  (grib_accessor_data_2order_packing*)a;
 
@@ -442,7 +440,6 @@ static int  unpack_double(grib_accessor* a, double* val, size_t *len)
     long  nbits_per_group_size =0;
     long  octet_start_group =0;
     long  width_spd_sp_desc =0;
-
 
     unsigned char* buf_size_of_groups = (unsigned char*)a->parent->h->buffer->data;
     unsigned char* buf_width_of_group = (unsigned char*)a->parent->h->buffer->data;
@@ -581,9 +578,10 @@ static int  unpack_double(grib_accessor* a, double* val, size_t *len)
     pointer_of_group_width    = 0;
     refsp   = 0;
 
-    for(i=0;i < n_sp_diff;i++)
+    for(i=0;i < n_sp_diff;i++) {
+        Assert( i < n_vals );
         sec_val[i] =  grib_decode_unsigned_long(buf_width_of_group,  &pointer_of_group_width,  width_spd_sp_desc);
-
+    }
 
     bias   =  grib_decode_signed_longb(buf_width_of_group,  &pointer_of_group_width,  width_spd_sp_desc);
 
@@ -618,6 +616,7 @@ static int  unpack_double(grib_accessor* a, double* val, size_t *len)
         }
 #endif
         for(j=0; j < f_size_of_group;j++){
+            Assert( (vcount+j) < n_vals);
             sec_val[vcount+j] = ref_vals + grib_decode_unsigned_long(bufvals,  &bitp, f_width_of_group);
         }
         vcount += f_size_of_group;
@@ -675,7 +674,7 @@ static int pack_double(grib_accessor* a, const double* val, size_t *len)
     double   reference_value;
     long     binary_scale_factor;
     long     bits_per_value;
-    long     bit_per_val_rectified_for_gribex;
+    /*long     bit_per_val_rectified_for_gribex;*/
     long     decimal_scale_factor;
     long     n1 = 0;
     long     n2 = 0;
@@ -775,12 +774,12 @@ static int pack_double(grib_accessor* a, const double* val, size_t *len)
     min *= d;
     max *= d;
 
-    bit_per_val_rectified_for_gribex = bits_per_value+8-bits_per_value%8;
+    /* bit_per_val_rectified_for_gribex = bits_per_value+8-bits_per_value%8; */
     if (grib_get_nearest_smaller_value(a->parent->h,self->reference_value,min,&reference_value)
             !=GRIB_SUCCESS) {
         grib_context_log(a->parent->h->context,GRIB_LOG_ERROR,
                 "unable to find nearest_smaller_value of %g for %s",min,self->reference_value);
-        grib_exit(GRIB_INTERNAL_ERROR);
+        exit(GRIB_INTERNAL_ERROR);
     }
 
     /*  the scale factor in Grib 1 is adjusted in gribex, for "normalization purpose" ... ?*/
@@ -938,7 +937,8 @@ static int pack_double(grib_accessor* a, const double* val, size_t *len)
     return GRIB_SUCCESS;
 }
 
-static int value_count(grib_accessor* a,long* count){
+static int value_count(grib_accessor* a,long* count)
+{
     int err=0;
     grib_accessor_data_2order_packing* self =  (grib_accessor_data_2order_packing*)a;
     long  two_ordr_spd = 0;

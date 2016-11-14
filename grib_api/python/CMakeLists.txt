@@ -1,7 +1,5 @@
 if( HAVE_PYTHON )
 
-    ecbuild_find_python( VERSION 2.5)
-
     #find_package( SWIG )
     #if( SWIG_FOUND )
     #    include( ${SWIG_USE_FILE} )
@@ -13,10 +11,10 @@ if( HAVE_PYTHON )
     ###############################################################################
     # swig python interface
 
-    #if( HAVE_PYTHON AND SWIG_FOUND AND PYTHONLIBS_FOUND )
-    if( HAVE_PYTHON AND PYTHONLIBS_FOUND )
+    #if( SWIG_FOUND AND PYTHONLIBS_FOUND )
+    if( PYTHONLIBS_FOUND )
 
-        set(PYTHON_DEST "${INSTALL_LIB_DIR}/python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}/site-packages/grib_api" )
+        set(PYTHON_DEST "${INSTALL_LIB_DIR}/python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}/site-packages/gribapi" )
 
 	    file( RELATIVE_PATH relative_rpath "${CMAKE_INSTALL_PREFIX}/${PYTHON_DEST}" "${${PNAME}_FULL_INSTALL_LIB_DIR}" )
 
@@ -78,6 +76,7 @@ if( HAVE_PYTHON )
                             LIBS      grib_api ${PYTHON_LIBRARIES} )
         # Don't use the lib prefix.  This is needed for the python case where a _modulename.so is generated
         set_target_properties(_gribapi_swig PROPERTIES PREFIX "")
+        # SET_TARGET_PROPERTIES(_gribapi_swig PROPERTIES SUFFIX ".so")
 
         # Copy the wrapper python file to build area
         set( _swig_py  gribapi_swig.py )
@@ -93,6 +92,10 @@ if( HAVE_PYTHON )
 
         install(FILES ${CMAKE_CURRENT_BINARY_DIR}/gribapi_swig.py  DESTINATION ${PYTHON_DEST})
         install(FILES gribapi.py DESTINATION ${PYTHON_DEST})
+        install(FILES __init__.py DESTINATION ${PYTHON_DEST})
+        #install(FILES gribfile.py DESTINATION ${PYTHON_DEST})
+        #install(FILES gribmessage.py DESTINATION ${PYTHON_DEST})
+        #install(FILES gribindex.py DESTINATION ${PYTHON_DEST})
 
     endif()
 

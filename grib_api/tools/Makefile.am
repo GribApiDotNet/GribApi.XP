@@ -17,7 +17,8 @@ bin_PROGRAMS = grib_keys grib_histogram grib_error grib_add big2gribex \
                grib2ppm grib_set grib_get grib_get_data grib_copy grib_repair \
                grib_packing grib_cmp grib_convert grib_distance grib_corruption_check\
                grib_compare grib_list_keys grib_parser grib_count grib_index_build grib1to2 \
-               gg_sub_area_check grib_moments grib_to_netcdf grib_to_json
+               gg_sub_area_check grib_moments grib_to_netcdf grib_to_json \
+               grib_check_gaussian_grid
 
 noinst_PROGRAMS =  gaussian grib_diff mars_request xref all_keys #compile #dumpload grib_compare_old
 
@@ -62,6 +63,8 @@ xref_SOURCES                  =  xref.c
 gaussian_SOURCES              =  gaussian.c
 gg_sub_area_check_SOURCES     =  gg_sub_area_check.c
 grib1to2_SOURCES              = grib1to2.in
+grib_check_gaussian_grid_SOURCES=grib_check_gaussian_grid.c
+
 
 INCLUDES =  -I$(top_builddir)/src
 

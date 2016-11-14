@@ -1,4 +1,4 @@
-# (C) Copyright 1996-2015 ECMWF.
+# (C) Copyright 1996-2016 ECMWF.
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -36,17 +36,24 @@ macro( ecbuild_enable_fortran )
   cmake_parse_arguments( _PAR "${options}" "${single_value_args}" "${multi_value_args}"  ${_FIRST_ARG} ${ARGN} )
 
   if(_PAR_UNPARSED_ARGUMENTS)
-    message(FATAL_ERROR "Unknown keywords given to ecbuild_enable_fortran(): \"${_PAR_UNPARSED_ARGUMENTS}\"")
+    ecbuild_critical("Unknown keywords given to ecbuild_enable_fortran(): \"${_PAR_UNPARSED_ARGUMENTS}\"")
   endif()
 
-  enable_language( Fortran )
+  if( NOT CMAKE_Fortran_COMPILER_LOADED )
+    enable_language( Fortran )
+    ecbuild_compiler_flags( Fortran )
+    if( ENABLE_WARNINGS AND CMAKE_Fortran_COMPILER_ID MATCHES "Intel" )
+      set( CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -warn all" )
+      ecbuild_debug( "Fortran FLAG [-warn all] added" )
+    endif()
+  endif()
 
   if( DEFINED _PAR_REQUIRED )
     if( CMAKE_Fortran_COMPILER_FORCED )
       set( CMAKE_Fortran_COMPILER_WORKS 1 )
     endif()
     if( NOT CMAKE_Fortran_COMPILER OR NOT CMAKE_Fortran_COMPILER_WORKS )
-      message( FATAL_ERROR "Fortran compiler required by project ${PROJECT_NAME} but does not seem to work" )
+      ecbuild_critical( "Fortran compiler required by project ${PROJECT_NAME} but does not seem to work" )
     endif()
   endif()
 

@@ -13,7 +13,8 @@ import sys
 
 from gribapi import *
 
-VERBOSE=1 # verbose error reporting
+VERBOSE = 1  # verbose error reporting
+
 
 def example():
     """
@@ -28,27 +29,28 @@ def example():
     numberOfCoefficients = 2 * (numberOfLevels + 1)
     assert(len(pv) == numberOfCoefficients)
 
-    fout = open('out.pv.grib1','w')
+    fout = open('out.pv.grib1', 'w')
     gid = grib_new_from_samples('reduced_gg_sfc_grib1')
 
-    grib_set(gid,'typeOfLevel','hybrid')
-    grib_set(gid,'level',2)
-    grib_set(gid,'PVPresent',1)
-    grib_set_array(gid,'pv',pv)
+    grib_set(gid, 'typeOfLevel', 'hybrid')
+    grib_set(gid, 'level', 2)
+    grib_set(gid, 'PVPresent', 1)
+    grib_set_array(gid, 'pv', pv)
 
-    grib_write(gid,fout)
+    grib_write(gid, fout)
 
     grib_release(gid)
     fout.close()
 
+
 def main():
     try:
         example()
-    except GribInternalError,err:
+    except GribInternalError, err:
         if VERBOSE:
             traceback.print_exc(file=sys.stderr)
         else:
-            print >>sys.stderr,err.msg
+            print >>sys.stderr, err.msg
 
         return 1
 

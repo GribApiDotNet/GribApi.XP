@@ -1,4 +1,4 @@
-# (C) Copyright 1996-2015 ECMWF.
+# (C) Copyright 1996-2016 ECMWF.
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -23,14 +23,19 @@
 # Options
 # -------
 #
-# FEATURES : optional, checks for all features if omitted
-#   list of features to check for
+# FEATURES : optional
+#   list of optional features to check for
 #
 # REQUIRED : optional
 #   list of required features to check for
 #
 # PRINT : optional
-#   print a summary of features check for, found and not found
+#   print a summary of features checked for, found and not found
+#
+# Note
+# ----
+#
+# If neither ``FEATURES`` nor ``REQUIRED`` are given, check for all features.
 #
 ##############################################################################
 
@@ -45,7 +50,7 @@ function( ecbuild_check_cxx11 )
 	cmake_parse_arguments( _p "${options}" "${single_value_args}" "${multi_value_args}"  ${_FIRST_ARG} ${ARGN} )
 
 	if(_PAR_UNPARSED_ARGUMENTS)
-		message(FATAL_ERROR "Unknown keywords given to ecbuild_check_cxx11(): \"${_PAR_UNPARSED_ARGUMENTS}\"")
+		ecbuild_critical("Unknown keywords given to ecbuild_check_cxx11(): \"${_PAR_UNPARSED_ARGUMENTS}\"")
 	endif()
 
 	include( ${ECBUILD_MACROS_DIR}/contrib/GreatCMakeCookOff/CheckCXX11Features.cmake )
@@ -86,7 +91,6 @@ function( ecbuild_check_cxx11 )
 	endif()
 
 	foreach( f ${CXX11_CHECKED_FEATURES} )
-		# message( "HAS_CXX11_${FEAT}" )
 		string( TOUPPER ${f} FEAT )
 		if( HAS_CXX11_${FEAT} )
 		   list( APPEND CXX11_SUPPORTED_FEATURES ${f} )
@@ -112,21 +116,21 @@ function( ecbuild_check_cxx11 )
 	if( _p_PRINT )
 		if( CXX11_CHECKED_FEATURES )
 			join( CXX11_CHECKED_FEATURES " " CXX11_CHECKED_FEATURES_STR )
-			message( STATUS "Checked C++11 features: ${CXX11_CHECKED_FEATURES_STR}" )
+			ecbuild_info( "Checked C++11 features: ${CXX11_CHECKED_FEATURES_STR}" )
 		else()
-			message( STATUS "Checked no C++11 features" )
+			ecbuild_info( "Checked no C++11 features" )
 		endif()
 		if( CXX11_SUPPORTED_FEATURES )
 			join( CXX11_SUPPORTED_FEATURES " " CXX11_SUPPORTED_FEATURES_STR )
-			message( STATUS "Found C++11 features: ${CXX11_SUPPORTED_FEATURES_STR}" )
+			ecbuild_info( "Found C++11 features: ${CXX11_SUPPORTED_FEATURES_STR}" )
 		else()
-			message( STATUS "Found no C++11 features" )
+			ecbuild_info( "Found no C++11 features" )
 		endif()
 		if( CXX11_NOT_SUPPORTED_FEATURES )
 			join( CXX11_NOT_SUPPORTED_FEATURES " " CXX11_NOT_SUPPORTED_FEATURES_STR )
-			message( STATUS "Not found C++11 features: ${CXX11_NOT_SUPPORTED_FEATURES_STR}" )
+			ecbuild_info( "Not found C++11 features: ${CXX11_NOT_SUPPORTED_FEATURES_STR}" )
 		else()
-			message( STATUS "Found all checked C++11 features" )
+			ecbuild_info( "Found all checked C++11 features" )
 		endif()
 	endif()
 

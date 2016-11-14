@@ -1,4 +1,4 @@
-# (C) Copyright 1996-2015 ECMWF.
+# (C) Copyright 1996-2016 ECMWF.
 # 
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0. 
@@ -35,12 +35,15 @@ endforeach()
 
 include(FindPackageHandleStandardArgs)
 
-find_package_handle_standard_args( LIBPGIFORTRAN DEFAULT_MSG pgi_fortran_all_libs_found PGIFORTRAN_LIBRARIES  )
+# Handle the QUIET and REQUIRED arguments and set PGIFORTRAN_FOUND to TRUE
+# if all listed variables are TRUE
+# Note: capitalisation of the package name must be the same as in the file name
+find_package_handle_standard_args( PGIFortran DEFAULT_MSG pgi_fortran_all_libs_found PGIFORTRAN_LIBRARIES  )
 
-if( LIBPGIFORTRAN_FOUND )
+if( PGIFORTRAN_FOUND )
 	find_package( Realtime )
 endif()
 
 if( REALTIME_FOUND )
-	set( LIBPGIFORTRAN_LIBRARIES ${PGIFORTRAN_LIBRARIES} ${RT_LIB} )
+	set( PGIFORTRAN_LIBRARIES ${PGIFORTRAN_LIBRARIES} ${RT_LIB} )
 endif()

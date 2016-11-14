@@ -63,6 +63,7 @@ libgrib_api_la_prototypes= \
 	grib_accessor_class_bytes.c \
 	grib_accessor_class.c \
 	grib_accessor_class_change_scanning_direction.c \
+	grib_accessor_class_check_internal_version.c \
 	grib_accessor_class_codeflag.c \
 	grib_accessor_class_codetable.c \
 	grib_accessor_class_codetable_units.c \

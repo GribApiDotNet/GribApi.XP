@@ -1,4 +1,4 @@
-# (C) Copyright 1996-2015 ECMWF.
+# (C) Copyright 1996-2016 ECMWF.
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -21,7 +21,7 @@
 macro( ecbuild_requires_macro_version req_vrs )
 
 	if( ECBUILD_MACRO_VERSION VERSION_LESS ${req_vrs} )
-		message( FATAL_ERROR "${PROJECT_NAME} needs ecbuild macro version >= ${req_vrs}" )
+		ecbuild_critical( "${PROJECT_NAME} needs ecbuild macro version >= ${req_vrs}" )
 	endif()
 
 endmacro()

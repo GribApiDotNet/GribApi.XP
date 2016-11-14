@@ -1,4 +1,4 @@
-# (C) Copyright 1996-2015 ECMWF.
+# (C) Copyright 1996-2016 ECMWF.
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -36,7 +36,7 @@ function( ecbuild_generate_config_headers )
   cmake_parse_arguments( _p "${options}" "${single_value_args}" "${multi_value_args}"  ${_FIRST_ARG} ${ARGN} )
 
   if(_PAR_UNPARSED_ARGUMENTS)
-    message(FATAL_ERROR "Unknown keywords given to ecbuild_generate_config_headers(): \"${_PAR_UNPARSED_ARGUMENTS}\"")
+    ecbuild_critical("Unknown keywords given to ecbuild_generate_config_headers(): \"${_PAR_UNPARSED_ARGUMENTS}\"")
   endif()
 
   # generate list of compiler flags

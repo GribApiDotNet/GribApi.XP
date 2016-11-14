@@ -1,4 +1,4 @@
-# (C) Copyright 1996-2015 ECMWF.
+# (C) Copyright 1996-2016 ECMWF.
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -32,10 +32,11 @@
 # If any file of the following group of extensions is present in the list of
 # sources, the corresponding CMake variable is set:
 #
-# :<target>_h_srcs:   list of sources with extension .h, .hxx, .hh, .hpp, .H
-# :<target>_c_srcs:   list of sources with extension .c
-# :<target>_cxx_srcs: list of sources with extension .cc, .cxx, .cpp, .C
-# :<target>_f_srcs:   list of sources with extension .f, .F, .for, f77, .f90, .f95
+# :<target>_h_srcs:       source files with extension .h, .hxx, .hh, .hpp, .H
+# :<target>_c_srcs:       source files with extension .c
+# :<target>_cxx_srcs:     source files with extension .cc, .cxx, .cpp, .C
+# :<target>_fortran_srcs: source files with extension .f, .F, .for, f77, .f90,
+#                                                     .f95, .F77, .F90, .F95
 #
 ##############################################################################
 
@@ -48,44 +49,45 @@ macro( ecbuild_separate_sources )
 	cmake_parse_arguments( _PAR "${options}" "${single_value_args}" "${multi_value_args}"  ${_FIRST_ARG} ${ARGN} )
 
 	if(_PAR_UNPARSED_ARGUMENTS)
-	  message(FATAL_ERROR "Unknown keywords given to ecbuild_separate_sources(): \"${_PAR_UNPARSED_ARGUMENTS}\"")
+	  ecbuild_critical("Unknown keywords given to ecbuild_separate_sources(): \"${_PAR_UNPARSED_ARGUMENTS}\"")
 	endif()
 
 	if( NOT _PAR_TARGET  )
-	  message(FATAL_ERROR "The call to ecbuild_separate_sources() doesn't specify the TARGET.")
+	  ecbuild_critical("The call to ecbuild_separate_sources() doesn't specify the TARGET.")
 	endif()
 
 	if( NOT _PAR_SOURCES )
-	  message(FATAL_ERROR "The call to ecbuild_separate_sources() doesn't specify the SOURCES.")
+	  ecbuild_critical("The call to ecbuild_separate_sources() doesn't specify the SOURCES.")
 	endif()
 
 	foreach( src ${_PAR_SOURCES} )
-		if(${src} MATCHES "(\\.h|\\.hxx|\\.hh|\\.hpp|\\.H)")
+		if(${src} MATCHES "(\\.h$|\\.hxx$|\\.hh$|\\.hpp$|\\.H$)")
 			list( APPEND ${_PAR_TARGET}_h_srcs ${src} )
 		endif()
 	endforeach()
 
 	foreach( src ${_PAR_SOURCES} )
-		if(${src} MATCHES "(\\.c)")
+		if(${src} MATCHES "(\\.c$)")
 			list( APPEND ${_PAR_TARGET}_c_srcs ${src} )
 		endif()
 	endforeach()
 
 	foreach( src ${_PAR_SOURCES} )
-		if(${src} MATCHES "(\\.cc|\\.cxx|\\.cpp|\\.C)")
+		if(${src} MATCHES "(\\.cc$|\\.cxx$|\\.cpp$|\\.C$)")
 			list( APPEND ${_PAR_TARGET}_cxx_srcs ${src} )
 		endif()
 	endforeach()
 
 	foreach( src ${_PAR_SOURCES} )
-		if(${src} MATCHES "(\\.f|\\.F|\\.for|\\.f77|\\.f90|\\.f95)")
-			list( APPEND ${_PAR_TARGET}_f_srcs ${src} )
+		if(${src} MATCHES "(\\.f$|\\.F$|\\.for$|\\.f77$|\\.f90$|\\.f95$|\\.f03$|\\.f08$|\\.F77$|\\.F90$|\\.F95$|\\.F03$|\\.F08$)")
+			list( APPEND ${_PAR_TARGET}_fortran_srcs ${src} )
 		endif()
 	endforeach()
+	set_source_files_properties( ${${_PAR_TARGET}_fortran_srcs} PROPERTIES LANGUAGE Fortran )
 
-#    debug_var( ${_PAR_TARGET}_h_srcs )
-#    debug_var( ${_PAR_TARGET}_c_srcs )
-#    debug_var( ${_PAR_TARGET}_cxx_srcs )
-#    debug_var( ${_PAR_TARGET}_f_srcs )
+#    ecbuild_debug_var( ${_PAR_TARGET}_h_srcs )
+#    ecbuild_debug_var( ${_PAR_TARGET}_c_srcs )
+#    ecbuild_debug_var( ${_PAR_TARGET}_cxx_srcs )
+#    ecbuild_debug_var( ${_PAR_TARGET}_fortran_srcs )
 
-endmacro( ecbuild_separate_sources  )
+endmacro( ecbuild_separate_sources )

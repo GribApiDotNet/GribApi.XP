@@ -21,6 +21,8 @@ gts.grib
 index.grib
 grid_ieee.grib
 jpeg.grib2
+latlon.grib
+high_level_api.grib2
 lfpw.grib1
 missing_field.grib1
 missing.grib2
@@ -65,7 +67,6 @@ second_ord_rbr.grib1
 simple_bitmap.grib
 simple.grib
 small_ensemble.grib1
-spectral_compex.grib1
 spectral_complex.grib1
 spherical_model_level.grib1
 spherical_model_level.grib2
@@ -83,3 +84,4 @@ timeRangeIndicator_10.grib
 timeRangeIndicator_5.grib
 tp_ecmwf.grib
 v.grib2
+msl.octa.glob.grib1

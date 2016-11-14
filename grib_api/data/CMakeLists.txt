@@ -11,8 +11,13 @@ endif()
 
 
 # Download all data files doing md5 check on each
-ecbuild_get_test_multidata( TARGET get_gribs
+ecbuild_get_test_multidata( TARGET grib_api_download_gribs
                             NAMES ${files_to_download} )
+
+if( ENABLE_TESTS )
+  set_property( TEST grib_api_download_gribs APPEND PROPERTY LABELS download_data )
+endif()
+
 
 # Copy other files - e.g. reference data, text files etc from the source data dir
 LIST(APPEND other_files
@@ -59,7 +64,3 @@ LIST(APPEND other_files
 foreach( file ${other_files} )
    execute_process( COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_SOURCE_DIR}/${file} ${CMAKE_CURRENT_BINARY_DIR} )
 endforeach()
-
-# Another dummy target which depends on all previous targets
-#add_custom_target( get_gribs ALL DEPENDS ${tgts} )
-#add_custom_target( get_gribs DEPENDS ${tgts} )

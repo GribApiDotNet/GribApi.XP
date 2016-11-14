@@ -6,15 +6,15 @@
 #
 #       -DCMAKE_MODULE_PATH=/path/to/ecbuild/cmake
 
-cmake_minimum_required( VERSION 2.8.4 FATAL_ERROR )
+cmake_minimum_required( VERSION 2.8.11 FATAL_ERROR )
 
 project( grib_api C )
 
 set( CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/../ecbuild/cmake")
 
-include( ecbuild_system )
+include( ecbuild_system NO_POLICY_SCOPE )
 
-ecbuild_requires_macro_version( 1.7 )
+ecbuild_requires_macro_version( 1.9 )
 
 ###############################################################################
 # local project
@@ -62,13 +62,13 @@ ecbuild_add_option( FEATURE AEC
 ecbuild_add_option( FEATURE PYTHON
     DESCRIPTION "build the GRIB_API Python interface"
     DEFAULT ON
-	# REQUIRED_LANGUAGES Python # TODO
+    REQUIRED_PACKAGES "Python VERSION 2.5"
 )
 
 ecbuild_add_option( FEATURE FORTRAN
     DESCRIPTION "build the GRIB_API Fortran interface"
     DEFAULT ON
-	# REQUIRED_LANGUAGES Fortran # TODO
+    # REQUIRED_LANGUAGES Fortran # TODO
 )
 
 # TODO Remove this after REQUIRED_LANGUAGES
@@ -77,16 +77,16 @@ if( ENABLE_FORTRAN )
     ecbuild_enable_fortran( MODULE_DIRECTORY ${PROJECT_BINARY_DIR}/fortran/modules )
     set( HAVE_FORTRAN ${EC_HAVE_FORTRAN} )
 else()
-	set( HAVE_FORTRAN 0 )
+    set( HAVE_FORTRAN 0 )
 endif()
 
 # advanced options (not visible in cmake-gui )
 
 ecbuild_add_option( FEATURE MEMORY_MANAGEMENT DESCRIPTION "enable memory management" DEFAULT OFF ADVANCED )
 ecbuild_add_option( FEATURE ALIGN_MEMORY      DESCRIPTION "enable memory alignment"  DEFAULT OFF ADVANCED )
-
-ecbuild_add_option( FEATURE GRIB_TIMER       DESCRIPTION "enable timer"   DEFAULT OFF ADVANCED )
-ecbuild_add_option( FEATURE GRIB_THREADS     DESCRIPTION "enable threads" DEFAULT OFF ADVANCED )
+ecbuild_add_option( FEATURE GRIB_TIMER       DESCRIPTION "enable timer"         DEFAULT OFF ADVANCED )
+ecbuild_add_option( FEATURE GRIB_THREADS     DESCRIPTION "enable POSIX threads" DEFAULT OFF ADVANCED )
+ecbuild_add_option( FEATURE GRIB_OMP_THREADS DESCRIPTION "enable OMP threads"   DEFAULT OFF ADVANCED )
 
 ###############################################################################
 # macro processing
@@ -96,6 +96,7 @@ set( GRIB_API_EXTRA_INCLUDE_DIRS "" )
 set( GRIB_API_EXTRA_DEFINITIONS  "" )
 
 find_package( CMath )
+list( APPEND GRIB_API_TPLS CMath )
 
 ### JPG support
 
@@ -105,17 +106,27 @@ set( HAVE_LIBOPENJPEG 0 )
 
 if( ENABLE_JPG )
 
-    ecbuild_add_extra_search_paths( jasper ) # help standard cmake macro with ecmwf paths
+    # Note: This is a deprecated feature but we need it to find Jasper at ECMWF.
+    #       ecbuild_add_extra_search_paths modifies CMAKE_PREFIX_PATH
+    #       which can affect future package discovery if not undone by the caller.
+    #       The current CMAKE_PREFIX_PATH is backed up as _CMAKE_PREFIX_PATH
+    #
+    set(CMAKE_WARN_DEPRECATED OFF) # Suppress deprecation message
+    ecbuild_add_extra_search_paths( jasper )
     find_package( Jasper )
+    set(CMAKE_PREFIX_PATH ${_CMAKE_PREFIX_PATH})    # Restore CMAKE_PREFIX_PATH
+    set(CMAKE_WARN_DEPRECATED ON)  # Remove suppression
 
     find_package( OpenJPEG )
 
     if( JASPER_FOUND )
+        list( APPEND GRIB_API_TPLS Jasper )
         set( HAVE_JPEG 1 )
         set( HAVE_LIBJASPER 1 )
     endif()
 
-    if( OpenJPEG_FOUND )
+    if( OPENJPEG_FOUND )
+        list( APPEND GRIB_API_TPLS OpenJPEG )
         set( HAVE_JPEG 1 )
         set( HAVE_LIBOPENJPEG 1 )
     endif()
@@ -146,26 +157,35 @@ set( CMAKE_THREAD_PREFER_PTHREAD 1 ) # find thread library, but prefer pthreads
 find_package(Threads REQUIRED)
 
 # debug
-message(STATUS " CMAKE_THREAD_LIBS_INIT=${CMAKE_THREAD_LIBS_INIT}")
-message(STATUS " CMAKE_USE_PTHREADS_INIT=${CMAKE_USE_PTHREADS_INIT}")
-message(STATUS " GRIB_THREADS=${GRIB_THREADS}, HAVE_GRIB_THREADS=${HAVE_GRIB_THREADS}")
+ecbuild_info(" CMAKE_THREAD_LIBS_INIT=${CMAKE_THREAD_LIBS_INIT}")
+ecbuild_info(" CMAKE_USE_PTHREADS_INIT=${CMAKE_USE_PTHREADS_INIT}")
+ecbuild_info(" GRIB_THREADS=${GRIB_THREADS}, HAVE_GRIB_THREADS=${HAVE_GRIB_THREADS}")
 
-if( NOT ${CMAKE_USE_PTHREADS_INIT} )
-    message( FATAL_ERROR "Only pthreads supported - thread library found is [${CMAKE_THREAD_LIBS_INIT}]" )
-endif()
 
 set( GRIB_PTHREADS 0 )
+set( GRIB_OMP_THREADS 0 )
 set( GRIB_LINUX_PTHREADS 0 )
 #if( HAVE_GRIB_THREADS AND CMAKE_THREAD_LIBS_INIT )
 if( HAVE_GRIB_THREADS )
-    if( CMAKE_USE_PTHREADS_INIT )
-        set( GRIB_PTHREADS 1 )
-        if( ${CMAKE_SYSTEM_NAME} MATCHES "Linux" )
-            set( GRIB_LINUX_PTHREADS 1 )
-        endif()
+    if( NOT ${CMAKE_USE_PTHREADS_INIT} )
+        ecbuild_critical("Only pthreads supported - thread library found is [${CMAKE_THREAD_LIBS_INIT}]" )
     endif()
+    set( GRIB_PTHREADS 1 )
+    if( ${CMAKE_SYSTEM_NAME} MATCHES "Linux" )
+        set( GRIB_LINUX_PTHREADS 1 )
+    endif()
+elseif(HAVE_GRIB_OMP_THREADS)
+    ecbuild_enable_omp()
+    set( GRIB_OMP_THREADS 1 )
 endif()
-message(STATUS " GRIB_PTHREADS=${GRIB_PTHREADS}")
+
+# Cannot have both options
+if( HAVE_GRIB_THREADS AND HAVE_GRIB_OMP_THREADS )
+    ecbuild_critical( "Cannot enable both POSIX threads and OMP! Please specify just one option" )
+endif()
+
+ecbuild_info(" GRIB_PTHREADS=${GRIB_PTHREADS}")
+ecbuild_info(" GRIB_OMP_THREADS=${GRIB_OMP_THREADS}")
 
 set( GRIB_MEM_ALIGN 0 )
 if( ENABLE_ALIGN_MEMORY )
@@ -186,20 +206,24 @@ endif()
 # contents
 
 if( NOT ${DEVELOPER_MODE} )
-    set( grib_api_default_data_prefix ${CMAKE_INSTALL_PREFIX} )
+    set( the_default_data_prefix ${CMAKE_INSTALL_PREFIX} )
 else()
-    set( grib_api_default_data_prefix ${CMAKE_BINARY_DIR} )
+    set( the_default_data_prefix ${CMAKE_BINARY_DIR} )
 endif()
 
-if( NOT DEFINED GRIB_API_DEFINITION_PATH )
-    set( GRIB_API_DEFINITION_PATH ${grib_api_default_data_prefix}/share/grib_api/definitions )
+if( NOT DEFINED GRIB_API_DEFINITION_SUFF )
+  set( GRIB_API_DEFINITION_SUFF  share/grib_api/definitions )
 endif()
-if( NOT DEFINED GRIB_API_SAMPLES_PATH )
-    set( GRIB_API_SAMPLES_PATH ${grib_api_default_data_prefix}/share/grib_api/samples )
+if( NOT DEFINED GRIB_API_SAMPLES_SUFF )
+  set( GRIB_API_SAMPLES_SUFF     share/grib_api/samples )
 endif()
-if( NOT DEFINED GRIB_API_IFS_SAMPLES_PATH )
-    set( GRIB_API_IFS_SAMPLES_PATH ${grib_api_default_data_prefix}/share/grib_api/ifs_samples )
+if( NOT DEFINED GRIB_API_IFS_SAMPLES_SUFF )
+  set( GRIB_API_IFS_SAMPLES_SUFF share/grib_api/ifs_samples )
 endif()
+
+set( GRIB_API_DEFINITION_PATH  ${the_default_data_prefix}/${GRIB_API_DEFINITION_SUFF} )
+set( GRIB_API_SAMPLES_PATH     ${the_default_data_prefix}/${GRIB_API_SAMPLES_SUFF} )
+set( GRIB_API_IFS_SAMPLES_PATH ${the_default_data_prefix}/${GRIB_API_IFS_SAMPLES_SUFF} )
 
 ### config header
 
@@ -212,7 +236,7 @@ add_definitions( -DHAVE_GRIB_API_CONFIG_H )
 install( FILES ${CMAKE_CURRENT_BINARY_DIR}/grib_api_config.h DESTINATION ${INSTALL_INCLUDE_DIR} )
 
 if( CMAKE_COMPILER_IS_GNUCC )
-    cmake_add_c_flags("-pedantic")
+    ecbuild_add_c_flags("-pedantic")
 endif()
 
 ############################################################################################
@@ -220,7 +244,6 @@ endif()
 
 ### export package to other ecbuild packages
 
-set( GRIB_API_TPLS            AEC PNG Jasper OpenJPEG CMath )
 set( GRIB_API_INCLUDE_DIRS    ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_BINARY_DIR}/src )
 set( GRIB_API_LIBRARIES       grib_api )
 
@@ -273,14 +296,16 @@ if( EC_HAVE_FORTRAN )
     list( APPEND GRIB_API_LIBRARIES grib_api_f77 grib_api_f90 )
 endif()
 
+# Bundle
 if( NOT PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME )
-    set( GRIB_API_DEFINITIONS     ${GRIB_API_DEFINITIONS}  PARENT_SCOPE )# includes already TPL definitions
-    set( GRIB_API_INCLUDE_DIRS    ${GRIB_API_INCLUDE_DIRS} ${GRIB_API_EXTRA_INCLUDE_DIRS} PARENT_SCOPE )
-    set( GRIB_API_LIBRARIES       ${GRIB_API_LIBRARIES}    ${GRIB_API_EXTRA_LIBRARIES} ${CMATH_LIBRARIES} PARENT_SCOPE )
-    set( GRIB_API_FOUND           TRUE PARENT_SCOPE )
-    set( GRIB_API_SAMPLES_PATH     ${GRIB_API_SAMPLES_PATH} PARENT_SCOPE )
-    set( GRIB_API_IFS_SAMPLES_PATH ${GRIB_API_IFS_SAMPLES_PATH} PARENT_SCOPE )
-    set( GRIB_API_DEFINITION_PATH  ${GRIB_API_DEFINITION_PATH} PARENT_SCOPE )
+  set( GRIB_API_FOUND            TRUE PARENT_SCOPE )
+  set( GRIB_API_DEFINITIONS      ${GRIB_API_DEFINITIONS}  PARENT_SCOPE ) # includes already TPL definitions
+  set( GRIB_API_INCLUDE_DIRS     ${GRIB_API_INCLUDE_DIRS} ${GRIB_API_EXTRA_INCLUDE_DIRS} PARENT_SCOPE )
+  set( GRIB_API_LIBRARIES        ${GRIB_API_LIBRARIES}    ${GRIB_API_EXTRA_LIBRARIES} ${CMATH_LIBRARIES} PARENT_SCOPE )
+  set( GRIB_API_INSTALL_EXTRA_TOOLS ${GRIB_API_INSTALL_EXTRA_TOOLS} PARENT_SCOPE )
+  set( GRIB_API_DEFINITION_PATH  ${CMAKE_BINARY_DIR}/${GRIB_API_DEFINITION_SUFF}  PARENT_SCOPE )
+  set( GRIB_API_SAMPLES_PATH     ${CMAKE_BINARY_DIR}/${GRIB_API_SAMPLES_SUFF}     PARENT_SCOPE )
+  set( GRIB_API_IFS_SAMPLES_PATH ${CMAKE_BINARY_DIR}/${GRIB_API_IFS_SAMPLES_SUFF} PARENT_SCOPE )
 endif()
 
 # pkg-config
@@ -289,8 +314,9 @@ ecbuild_pkgconfig(
   URL                 "https://software.ecmwf.int/wiki/display/GRIB/"
   DESCRIPTION         "The GRIB API library"
   LIBRARIES           grib_api
-  VARIABLES           HAVE_JPG HAVE_LIBJASPER HAVE_GRIB_THREADS HAVE_NETCDF
-                      HAVE_PYTHON HAVE_FORTRAN HAVE_PNG HAVE_AEC
+  VARIABLES           HAVE_JPG HAVE_LIBJASPER HAVE_LIBOPENJPEG
+                      HAVE_GRIB_THREADS HAVE_GRIB_OMP_THREADS
+                      HAVE_NETCDF HAVE_PYTHON HAVE_FORTRAN HAVE_PNG HAVE_AEC
 )
 if( EC_HAVE_FORTRAN )
  ecbuild_pkgconfig(
@@ -299,8 +325,9 @@ if( EC_HAVE_FORTRAN )
    LIBRARIES           grib_api_f90 grib_api
    DESCRIPTION         "The GRIB API library for Fortran 90"
    IGNORE_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/fortran ${PROJECT_BINARY_DIR}/fortran
-   VARIABLES           HAVE_JPG HAVE_LIBJASPER HAVE_GRIB_THREADS HAVE_NETCDF
-                       HAVE_PYTHON HAVE_PNG HAVE_AEC
+   VARIABLES           HAVE_JPG HAVE_LIBJASPER HAVE_LIBOPENJPEG
+                       HAVE_GRIB_THREADS HAVE_GRIB_OMP_THREADS
+                       HAVE_NETCDF HAVE_PYTHON HAVE_PNG HAVE_AEC
  )
   ecbuild_pkgconfig(
    NAME                grib_api_f77
@@ -308,8 +335,9 @@ if( EC_HAVE_FORTRAN )
    LIBRARIES           grib_api_f77 grib_api
    DESCRIPTION         "The GRIB API library for Fortran 77"
    IGNORE_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/fortran ${PROJECT_BINARY_DIR}/fortran
-   VARIABLES           HAVE_JPG HAVE_LIBJASPER HAVE_GRIB_THREADS HAVE_NETCDF
-                       HAVE_PYTHON HAVE_PNG HAVE_AEC
+   VARIABLES           HAVE_JPG HAVE_LIBJASPER HAVE_LIBOPENJPEG
+                       HAVE_GRIB_THREADS HAVE_GRIB_OMP_THREADS
+                       HAVE_NETCDF HAVE_PYTHON HAVE_PNG HAVE_AEC
  )
 endif()
 
@@ -320,12 +348,12 @@ ecbuild_install_project( NAME ${CMAKE_PROJECT_NAME} )
 
 ecbuild_print_summary()
 
-message("")
-message("   +---------------------------+")
-message("   |  GRIB API version ${GRIB_API_VERSION}  |")
-message("   |  Configuration completed  |")
-message("   +---------------------------+")
-message("")
-message("   You can now do 'make' to compile the package, 'ctest' to test it and 'make install' to install it afterwards.")
-message("")
-
+ecbuild_info("")
+ecbuild_info("   +---------------------------+")
+ecbuild_info("   |  GRIB API version ${GRIB_API_VERSION}  |")
+ecbuild_info("   |  Configuration completed  |")
+ecbuild_info("   +---------------------------+")
+ecbuild_info("")
+ecbuild_info("   You can now do 'make' to compile the package, 'ctest' to test it and 'make install' to install it afterwards.")
+ecbuild_info("")
+ecbuild_info("")

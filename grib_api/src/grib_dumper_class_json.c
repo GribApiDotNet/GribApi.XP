@@ -118,7 +118,6 @@ static void dump_values(grib_dumper* d,grib_accessor* a)
     int mydepth=depth+2;
     double missing_value = 9999;
 
-
     grib_value_count(a,&count);
     size=count;
 
@@ -131,6 +130,7 @@ static void dump_values(grib_dumper* d,grib_accessor* a)
     } else {
         err=grib_unpack_double(a,&value,&size);
     }
+    if (err) fprintf(self->dumper.out," *** ERR=%d (%s) [grib_dumper_json::dump_values]",err,grib_get_error_message(err));
 
     if(!(d->option_flags & GRIB_DUMP_FLAG_ALL_DATA) && size > 3) {
         more = size - 3;
@@ -175,7 +175,6 @@ static void dump_values(grib_dumper* d,grib_accessor* a)
         else
             fprintf(self->dumper.out,"\"%s\" : %g",a->name,value);
     }
-
 }
 
 static void dump_long(grib_dumper* d,grib_accessor* a,const char* comment)
@@ -201,6 +200,7 @@ static void dump_long(grib_dumper* d,grib_accessor* a,const char* comment)
     } else {
         err=grib_unpack_long(a,&value,&size);
     }
+    if (err) fprintf(self->dumper.out," *** ERR=%d (%s) [grib_dumper_json::dump_long]",err,grib_get_error_message(err));
 
     if(!(d->option_flags & GRIB_DUMP_FLAG_ALL_DATA) && size > 3) {
         more = size - 3;
@@ -237,7 +237,6 @@ static void dump_long(grib_dumper* d,grib_accessor* a,const char* comment)
         else
             fprintf(self->dumper.out,"\"%s\" : %ld",a->name,value);
     }
-
 }
 
 static void dump_bits(grib_dumper* d,grib_accessor* a,const char* comment)
@@ -262,7 +261,6 @@ static void dump_double(grib_dumper* d,grib_accessor* a,const char* comment)
         fprintf(self->dumper.out,"\"%s\" : null",a->name);
     else
         fprintf(self->dumper.out,"\"%s\" : %g",a->name,value);
-
 }
 
 static void dump_string(grib_dumper* d,grib_accessor* a,const char* comment)
@@ -291,6 +289,7 @@ static void dump_string(grib_dumper* d,grib_accessor* a,const char* comment)
     else self->begin=0;
 
     err = grib_unpack_string(a,value,&size);
+    if (err) fprintf(self->dumper.out," *** ERR=%d (%s) [grib_dumper_json::dump_string]",err,grib_get_error_message(err));
     p=value;
 
     while(*p) { if(!isprint(*p)) *p = '.'; p++; }

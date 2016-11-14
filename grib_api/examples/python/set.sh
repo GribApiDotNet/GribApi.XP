@@ -3,5 +3,5 @@
 . ./include.sh
 
 REDIRECT=/dev/null
-$PYTHON set.py 2> $REDIRECT > $REDIRECT
+$PYTHON $examples_src/set.py 2> $REDIRECT > $REDIRECT
 rm -f out.set.grib || true

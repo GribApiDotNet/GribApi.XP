@@ -11,7 +11,6 @@
 !  Description: how to set pv values.
 !
 !
-!
 program set_pv
   use grib_api
   implicit none
@@ -31,13 +30,13 @@ program set_pv
                 form="formatted",action="read")
 
   do i=1,numberOfCoefficients,2
-     read(unit=1,fmt=*, iostat=ios) pv(i), pv(i+1)
-     if (ios /= 0) then
-        print *, "I/O error: ",ios
-        exit
-     end if
+    read(unit=1,fmt=*, iostat=ios) pv(i), pv(i+1)
+    if (ios /= 0) then
+      print *, "I/O error: ",ios
+      exit
+    end if
   end do
-  
+
   ! print coefficients
   !do i=1,numberOfCoefficients,2
   !  print *,"  a=",pv(i)," b=",pv(i+1)

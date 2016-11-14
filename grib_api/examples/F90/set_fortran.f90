@@ -30,26 +30,26 @@ program set
        '../../data/regular_latlon_surface_constant.grib1','r')
 
   call grib_open_file(outfile, &
-       '../../data/out.grib1','w')
+       '../../data/out.setf.grib1','w')
 
-  !     a new grib message is loaded from file
-  !     igrib is the grib id to be used in subsequent calls
+  ! A new grib message is loaded from file
+  ! igrib is the grib id to be used in subsequent calls
   call grib_new_from_file(infile,igrib)
 
-  !     set centre as a long */
+  ! set centre as a long */
   centre=80
   call grib_set(igrib,'centre',centre)
 
-  !     get centre as a integer*4
+  ! get centre as a integer*4
   call grib_get(igrib,'centre',int_value)
   write(*,*) 'centre=',int_value
 
-  !     get centre as a string
+  ! get centre as a string
   call grib_get(igrib,'centre',string_value)
   string_centre='centre='//string_value
   write(*,*) string_centre
 
-  !     write modified message to a file
+  ! write modified message to a file
   call grib_write(igrib,outfile)
 
   call grib_release(igrib)

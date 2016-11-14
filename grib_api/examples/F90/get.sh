@@ -9,4 +9,4 @@
 
 . ./include.sh
 
-${examples_dir}f_get > /dev/null
+${examples_dir}grib_api_f_get > /dev/null

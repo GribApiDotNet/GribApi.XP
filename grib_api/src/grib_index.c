@@ -623,7 +623,8 @@ static int grib_write_index_keys(FILE* fh,grib_index_key* keys)
     err=grib_write_uchar(fh,(unsigned char)keys->type);
     if (err) return err;
 
-    grib_write_key_values(fh,keys->values);
+    err=grib_write_key_values(fh,keys->values);
+    if (err) return err;
 
     err=grib_write_index_keys(fh,keys->next);
     if (err) return err;
@@ -645,7 +646,6 @@ static void grib_field_delete(grib_context* c,grib_field* field)
     }
 
     grib_context_free(c,field);
-
 }
 
 static void grib_field_tree_delete(grib_context* c,grib_field_tree* tree)
@@ -752,7 +752,7 @@ int grib_index_write(grib_index* index,const char* filename)
     if (err) return err;
 
     /* See GRIB-32: Do not use the file pool */
-    /* files=grib_file_pool_get_files(); */
+    /*files=grib_file_pool_get_files();*/
     files=index->files;
     err=grib_write_files(fh,files);
     if (err) {
@@ -802,7 +802,6 @@ grib_index* grib_index_read(grib_context* c, const char* filename, int *err)
 
     fh=fopen(filename,"r");
     if (!fh) {
-        grib_context* c = grib_context_get_default();
         grib_context_log(c,(GRIB_LOG_ERROR)|(GRIB_LOG_PERROR),
                 "Unable to write in file %s",filename);
         perror(filename);
@@ -952,6 +951,7 @@ int grib_index_add_file(grib_index* index, const char* filename)
         newfile=(grib_file*)grib_context_malloc_clear(c,sizeof(grib_file));
         newfile->id=grib_filesid;
         newfile->name=strdup(file->name);
+        newfile->handle = file->handle;
         index->files=newfile;
     } else {
         indfile=index->files;
@@ -965,6 +965,7 @@ int grib_index_add_file(grib_index* index, const char* filename)
         newfile=(grib_file*)grib_context_malloc_clear(c,sizeof(grib_file));
         newfile->id=grib_filesid;
         newfile->name=strdup(file->name);
+        newfile->handle = file->handle;
         indfile->next=newfile;
     }
 
@@ -1518,6 +1519,7 @@ grib_handle* grib_handle_new_from_index(grib_index* index,int *err)
         index->current=index->fieldset;
         h=grib_index_get_handle(index->current->field,err);
     }
+    (void)keys; /* suppress gcc warning */
     return h;
 }
 

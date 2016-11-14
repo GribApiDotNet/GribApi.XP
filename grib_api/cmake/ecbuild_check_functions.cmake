@@ -1,8 +1,8 @@
-# (C) Copyright 1996-2015 ECMWF.
+# (C) Copyright 1996-2016 ECMWF.
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
-# which can be obtained at http://www.apache.org/licenses/LICENSE-2.0. 
-# In applying this licence, ECMWF does not waive the privileges and immunities 
+# which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+# In applying this licence, ECMWF does not waive the privileges and immunities
 # granted to it by virtue of its status as an intergovernmental organisation nor
 # does it submit to any jurisdiction.
 
@@ -20,6 +20,8 @@ if( ENABLE_OS_FUNCTIONS_TEST )
     ecbuild_cache_check_symbol_exists( ftruncate    "sys/types.h;unistd.h"            EC_HAVE_FTRUNCATE  )
     ecbuild_cache_check_symbol_exists( open         "sys/types.h;sys/stat.h;fcntl.h"  EC_HAVE_OPEN   )
     ecbuild_cache_check_symbol_exists( fopen        "stdio.h"                         EC_HAVE_FOPEN  )
+    ecbuild_cache_check_symbol_exists( fmemopen     "stdio.h"                         EC_HAVE_FMEMOPEN )
+    ecbuild_cache_check_symbol_exists( funopen      "stdio.h"                         EC_HAVE_FUNOPEN )
     ecbuild_cache_check_symbol_exists( flock        "sys/file.h"                      EC_HAVE_FLOCK  )
     ecbuild_cache_check_symbol_exists( mmap         "sys/mman.h"                      EC_HAVE_MMAP   )
 
@@ -73,10 +75,10 @@ if( ENABLE_OS_FUNCTIONS_TEST )
     ecbuild_cache_check_c_source_compiles( "#define _LARGEFILE64_SOURCE\n#include <sys/stat.h>\nint main(){ struct stat64 s; fstat64(1,&s); return 0; }" EC_HAVE_FSTAT64 )
     # test fseeko64
     ecbuild_cache_check_c_source_compiles( "#define _LARGEFILE64_SOURCE\n#include <stdio.h>\n#include <sys/types.h>\nint main(){FILE* file;off64_t l=0;fseeko64(file,l,SEEK_CUR);return 0;}\n" EC_HAVE_FSEEKO64 )
-   
+
     # test for ftello64
     ecbuild_cache_check_c_source_compiles( "#define _LARGEFILE64_SOURCE\n#include <stdio.h>\n#include <sys/types.h>\nint main(){FILE* file;off64_t l = ftello64(file);return 0;}\n"  EC_HAVE_FTELLO64 )
-    
+
     # test for lseek64
     ecbuild_cache_check_c_source_compiles( "#define _LARGEFILE64_SOURCE\n#include <sys/types.h>\n#include <unistd.h>\nint main(){off64_t h = lseek64(0,0,SEEK_SET);return 0;}\n"  EC_HAVE_LSEEK64 )
     # test for open64
@@ -114,7 +116,7 @@ if( ENABLE_OS_FUNCTIONS_TEST )
     # test for getpwuid_r
     ecbuild_cache_check_c_source_compiles( "#include <unistd.h>\n#include <sys/types.h>\n#include <pwd.h>\nint main(){ char buf[4096]; struct passwd pwbuf; struct passwd *pwbufp = 0; getpwuid_r(getuid(), &pwbuf, buf, sizeof(buf), &pwbufp); }\n" EC_HAVE_GETPWUID_R )
     # test for getpwnam_r
-    ecbuild_cache_check_c_source_compiles( "#include <sys/types.h>\n#include <pwd.h>\nint main(){ struct passwd p; char line[1024]; int n = getpwnam_r(\"user\",&p,line,sizeof(line),0); }\n" EC_HAVE_GETPWNAM_R )    
+    ecbuild_cache_check_c_source_compiles( "#include <sys/types.h>\n#include <pwd.h>\nint main(){ struct passwd p; char line[1024]; int n = getpwnam_r(\"user\",&p,line,sizeof(line),0); }\n" EC_HAVE_GETPWNAM_R )
     # test for readdir_r
     ecbuild_cache_check_c_source_compiles( "#include <dirent.h>\nint main(){ DIR *dirp; struct dirent *entry; struct dirent **result; int i = readdir_r(dirp, entry, result); }\n" EC_HAVE_READDIR_R )
     # test for gethostbyname_r
@@ -164,8 +166,17 @@ if( ENABLE_OS_FUNCTIONS_TEST )
     endif()
     ecbuild_cache_var( EC_HAVE_PROCFS )
 
-#    debug_var(EC_HAVE_PROCFS)
-#    debug_var(EC_HAVE_PROCFS_OUTPUT)
+#    ecbuild_debug_var(EC_HAVE_PROCFS)
+#    ecbuild_debug_var(EC_HAVE_PROCFS_OUTPUT)
+
+    #### check support for DL library #############
+
+    ecbuild_cache_check_include_files( dlfcn.h  EC_HAVE_DLFCN_H )
+
+    cmake_push_check_state(RESET)
+    set(CMAKE_REQUIRED_LIBRARIES ${CMAKE_DL_LIBS} )
+    ecbuild_cache_check_c_source_compiles( "#define _GNU_SOURCE\n#include <dlfcn.h>\nint main(){ void* addr; Dl_info info; dladdr(addr, &info); }\n" EC_HAVE_DLADDR )
+    cmake_pop_check_state()
 
 endif()
 

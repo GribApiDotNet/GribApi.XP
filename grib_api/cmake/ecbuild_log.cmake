@@ -1,4 +1,4 @@
-# (C) Copyright 1996-2015 ECMWF.
+# (C) Copyright 1996-2016 ECMWF.
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -12,22 +12,42 @@
 # Logging
 # =======
 #
-# ecBuild provides macros for logging based on a log level set by the user,
+# ecBuild provides functions for logging based on a log level set by the user,
 # similar to the Python logging module:
 #
-# :ecbuild_debug:    logs a ``STATUS`` message if log level <= ``DEBUG``
-# :ecbuild_info:     logs a ``STATUS`` message if log level <= ``INFO``
-# :ecbuild_warn:     logs a ``WARNING`` message if log level <= ``WARN``
-# :ecbuild_error:    logs a ``SEND_ERROR`` message if log level <= ``ERROR``
-# :ecbuild_critical: logs a ``FATAL_ERROR`` message if log level <= ``CRITICAL``
+# :ecbuild_debug:     logs a ``STATUS`` message if log level <= ``DEBUG``
+# :ecbuild_info:      logs a ``STATUS`` message if log level <= ``INFO``
+# :ecbuild_warn:      logs a ``WARNING`` message if log level <= ``WARN``
+# :ecbuild_error:     logs a ``SEND_ERROR`` message if log level <= ``ERROR``
+# :ecbuild_critical:  logs a ``FATAL_ERROR`` message if log level <= ``CRITICAL``
+# :ecbuild_deprecate: logs a ``DEPRECATION`` message as a warning
+#                     enable CMAKE_ERROR_DEPRECATED to raise an error instead
+#                     disable CMAKE_WARN_DEPRECATED to hide deprecations
+#
+# Furthermore there are auxilliary functions for outputting CMake variables,
+# CMake lists and environment variables if the log level is ``DEBUG``:
+#
+# :ecbuild_debug_var:     logs given CMake variables if log level <= ``DEBUG``
+# :ecbuild_debug_list:    logs given CMake lists if log level <= ``DEBUG``
+# :ecbuild_debug_env_var: logs given environment variables if log level <= ``DEBUG``
+#
+# To log a message to the ecBuild log file only at a given log level, use ::
+#
+#   ecbuild_log( <level> <msg> )
 #
 # Input variables
 # ---------------
 #
 # CMake variables controlling logging behaviour:
 #
+# ECBUILD_LOG_FILE : path
+#   set the log file, defaults to ``${CMAKE_BINARY_DIR}/ecbuild.log``
+#
+#   All ecBuild log functions write their messages to this log file with a time
+#   stamp. Messages emitted by CMake directly cannot be logged to file.
+#
 # ECBUILD_LOG_LEVEL : string, one of DEBUG, INFO, WARN, ERROR, CRITICAL, OFF
-#   set the desired log level, OFF to disable logging altogether
+#   desired log level, defaults to ``INFO``, ``OFF`` to disable logging
 #
 # ECBUILD_NO_COLOUR : bool
 #   if set, does not colour log output (by default log output is coloured)
@@ -35,7 +55,7 @@
 # Usage
 # -----
 #
-# The macros ``ecbuild_debug`` and ``ecbuild_info`` can be used to output
+# The functions ``ecbuild_debug`` and ``ecbuild_info`` can be used to output
 # messages which are not printed by default. Many ecBuild macros use this
 # facility to log debugging hints. When debugging a CMake run, users can use
 # ``-DECBUILD_LOG_LEVEL=DEBUG`` to get detailed diagnostics.
@@ -70,7 +90,7 @@ set(ECBUILD_ERROR    40)
 set(ECBUILD_CRITICAL 50)
 
 if( NOT DEFINED ECBUILD_LOG_LEVEL )
-  set(ECBUILD_LOG_LEVEL ${ECBUILD_WARN})
+  set(ECBUILD_LOG_LEVEL ${ECBUILD_INFO})
 elseif( NOT ECBUILD_LOG_LEVEL )
   set(ECBUILD_LOG_LEVEL 60)
 elseif( ECBUILD_LOG_LEVEL STREQUAL "DEBUG" )
@@ -88,42 +108,158 @@ else()
   set(ECBUILD_LOG_LEVEL ${ECBUILD_WARN})
 endif()
 
+if( NOT DEFINED ECBUILD_LOG_FILE )
+  set( ECBUILD_LOG_FILE ${CMAKE_BINARY_DIR}/ecbuild.log )
+endif()
+if( NOT DEFINED CMAKE_ERROR_DEPRECATED AND NOT DEFINED CMAKE_WARN_DEPRECATED )
+  set( CMAKE_WARN_DEPRECATED ON )
+endif()
+
 ##############################################################################
 
-macro( ecbuild_debug MSG )
+function( ecbuild_log LEVEL )
+  string( REPLACE ";" " " MSG "${ARGN}" )
+  string( TIMESTAMP _time )
+  file( APPEND ${ECBUILD_LOG_FILE} "${_time} - ${LEVEL} - ${MSG}\n" )
+endfunction( ecbuild_log )
+
+##############################################################################
+
+function( ecbuild_debug )
+  string( REPLACE ";" " " MSG "${ARGV}" )
+  ecbuild_log(DEBUG "${MSG}")
   if( ECBUILD_LOG_LEVEL LESS 11)
     message(STATUS "${Blue}DEBUG - ${MSG}${ColourReset}")
   endif()
-endmacro( ecbuild_debug )
+endfunction( ecbuild_debug )
 
 ##############################################################################
 
-macro( ecbuild_info MSG )
+function( ecbuild_info )
+  string( REPLACE ";" " " MSG "${ARGV}" )
+  ecbuild_log(INFO "${MSG}")
   if( ECBUILD_LOG_LEVEL LESS 21)
-    message(STATUS "${Green}INFO - ${MSG}${ColourReset}")
+    message(STATUS "${MSG}")
   endif()
-endmacro( ecbuild_info )
+endfunction( ecbuild_info )
 
 ##############################################################################
 
-macro( ecbuild_warn MSG )
+function( ecbuild_warn )
+  string( REPLACE ";" " " MSG "${ARGV}" )
+  ecbuild_log(WARNING "${MSG}")
   if( ECBUILD_LOG_LEVEL LESS 31)
     message(WARNING "${Yellow}WARN - ${MSG}${ColourReset}")
   endif()
-endmacro( ecbuild_warn )
+endfunction( ecbuild_warn )
 
 ##############################################################################
 
-macro( ecbuild_error MSG )
+function( ecbuild_error )
+  string( REPLACE ";" " " MSG "${ARGV}" )
+  ecbuild_log(ERROR "${MSG}")
   if( ECBUILD_LOG_LEVEL LESS 41)
     message(SEND_ERROR "${BoldRed}ERROR - ${MSG}${ColourReset}")
   endif()
-endmacro( ecbuild_error )
+endfunction( ecbuild_error )
 
 ##############################################################################
 
-macro( ecbuild_critical MSG )
+function( ecbuild_deprecate )
+  string(REPLACE ";" " " MSG ${ARGV})
+  ecbuild_log(DEPRECATION "${MSG}")
+  # DEPRECATION message type was only introduced in CMake 3.0, provide
+  # consistent behaviour for CMake < 3.0
+  if( CMAKE_VERSION VERSION_LESS 3.0 )
+    if( CMAKE_ERROR_DEPRECATED )
+      message(FATAL_ERROR "${BoldRed}DEPRECATION - ${MSG}${ColourReset}")
+    elseif( CMAKE_WARN_DEPRECATED )
+      message(WARNING "${Yellow}DEPRECATION - ${MSG}${ColourReset}")
+    endif()
+  else()
+    message(DEPRECATION "${BoldRed}${MSG}${ColourReset}")
+  endif()
+endfunction( ecbuild_deprecate )
+
+##############################################################################
+
+function( ecbuild_critical )
+  string(REPLACE ";" " " MSG ${ARGV})
+  ecbuild_log(FATAL_ERROR "${MSG}")
   if( ECBUILD_LOG_LEVEL LESS 51)
     message(FATAL_ERROR "${BoldMagenta}CRITICAL - ${MSG}${ColourReset}")
   endif()
-endmacro( ecbuild_critical )
+endfunction( ecbuild_critical )
+
+##############################################################################
+# function for debugging CMake variables
+
+function( ecbuild_debug_var )
+  foreach( VAR ${ARGV} )
+    ecbuild_log(DEBUG "${VAR} : ${${VAR}}")
+    if( ECBUILD_LOG_LEVEL LESS 11)
+      message(STATUS "${Blue}DEBUG - ${VAR} : ${${VAR}}${ColourReset}")
+    endif()
+  endforeach()
+endfunction()
+
+##############################################################################
+# function for debugging CMake lists
+
+function( ecbuild_debug_list )
+  foreach( VAR ${ARGV} )
+    ecbuild_log(DEBUG "${VAR} : ${${VAR}}")
+    foreach( _elem ${${VAR}} )
+      ecbuild_log( DEBUG "  ${_elem}" )
+    endforeach()
+    if( ECBUILD_LOG_LEVEL LESS 11)
+      message( STATUS "${Blue}DEBUG - ${VAR}" )
+      foreach( _elem ${${VAR}} )
+        message( STATUS "  ${_elem}" )
+      endforeach()
+      message(STATUS "${ColourReset}")
+    endif()
+  endforeach()
+endfunction()
+
+##############################################################################
+# function for debugging environment variables
+
+function( ecbuild_debug_env_var )
+  foreach( VAR ${ARGV} )
+    ecbuild_log(DEBUG "ENV ${VAR} : $ENV{${VAR}}")
+    if( ECBUILD_LOG_LEVEL LESS 11)
+      message(STATUS "${Blue}DEBUG - ENV ${VAR} [$ENV{${VAR}}]${ColourReset}")
+    endif()
+  endforeach()
+endfunction()
+
+##############################################################################
+# macro for debugging a cmake variable
+
+macro( debug_var VAR )
+
+    message( WARNING "DEPRECATED debug_var() -- ${VAR} [${${VAR}}]" )
+
+endmacro()
+
+##############################################################################
+# macro for debugging a cmake list
+
+macro( debug_list VAR )
+
+    message( WARNING "DEPRECATED debug_list() -- ${VAR}:" )
+    foreach( _elem ${${VAR}} )
+      message( WARNING "  ${_elem}" )
+    endforeach()
+
+endmacro()
+
+##############################################################################
+# macro for debugging a environment variable within cmake
+
+macro( debug_env_var VAR )
+
+    message( WARNING "DEPRECATED debug_env_var() -- ENV ${VAR} [$ENV{${VAR}}]" )
+
+endmacro()

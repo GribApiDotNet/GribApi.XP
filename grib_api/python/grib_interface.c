@@ -33,7 +33,6 @@ static pthread_mutex_t multi_handle_mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_mutex_t iterator_mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_mutex_t keys_iterator_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-
 static void init() {
   pthread_mutexattr_t attr;
 
@@ -47,7 +46,29 @@ static void init() {
   pthread_mutexattr_destroy(&attr);
 
 }
+#elif GRIB_OMP_THREADS
+static int once = 0;
+static omp_nest_lock_t handle_mutex;
+static omp_nest_lock_t index_mutex;
+static omp_nest_lock_t multi_handle_mutex;
+static omp_nest_lock_t iterator_mutex;
+static omp_nest_lock_t keys_iterator_mutex;
 
+static void init()
+{
+    GRIB_OMP_CRITICAL(lock_fortran)
+    {
+        if (once == 0)
+        {
+            omp_init_nest_lock(&handle_mutex);
+            omp_init_nest_lock(&index_mutex);
+            omp_init_nest_lock(&multi_handle_mutex);
+            omp_init_nest_lock(&iterator_mutex);
+            omp_init_nest_lock(&keys_iterator_mutex);
+            once = 1;
+        }
+    }
+}
 #endif
 
 int GRIB_NULL=-1;
@@ -303,7 +324,7 @@ static void _push_multi_handle(grib_multi_handle *h,int *gid){
 }
 
 static void push_handle(grib_handle *h,int *gid){
-  GRIB_PTHREAD_ONCE(&once,&init)
+  GRIB_MUTEX_INIT_ONCE(&once,&init)
   GRIB_MUTEX_LOCK(&handle_mutex)
   _push_handle(h,gid);
   GRIB_MUTEX_UNLOCK(&handle_mutex)
@@ -311,21 +332,20 @@ static void push_handle(grib_handle *h,int *gid){
 }
 
 static void push_index(grib_index *h,int *gid){
-  GRIB_PTHREAD_ONCE(&once,&init)
-      GRIB_MUTEX_LOCK(&index_mutex)
-      _push_index(h,gid);
+  GRIB_MUTEX_INIT_ONCE(&once,&init)
+  GRIB_MUTEX_LOCK(&index_mutex)
+  _push_index(h,gid);
   GRIB_MUTEX_UNLOCK(&index_mutex)
-      return;
+  return;
 }
 
 static void push_multi_handle(grib_multi_handle *h,int *gid){
-  GRIB_PTHREAD_ONCE(&once,&init)
-      GRIB_MUTEX_LOCK(&multi_handle_mutex)
-      _push_multi_handle(h,gid);
+  GRIB_MUTEX_INIT_ONCE(&once,&init)
+  GRIB_MUTEX_LOCK(&multi_handle_mutex)
+  _push_multi_handle(h,gid);
   GRIB_MUTEX_UNLOCK(&multi_handle_mutex)
-      return;
+  return;
 }
-
 
 static int _push_iterator(grib_iterator *i){
   l_grib_iterator* current  = iterator_set;
@@ -365,7 +385,7 @@ static int _push_iterator(grib_iterator *i){
 
 static int push_iterator(grib_iterator *i){
   int ret=0;
-  GRIB_PTHREAD_ONCE(&once,&init)
+  GRIB_MUTEX_INIT_ONCE(&once,&init)
   GRIB_MUTEX_LOCK(&iterator_mutex)
   ret=_push_iterator(i);
   GRIB_MUTEX_UNLOCK(&iterator_mutex)
@@ -411,7 +431,7 @@ static int _push_keys_iterator(grib_keys_iterator *i){
 
 static int push_keys_iterator(grib_keys_iterator *i){
   int ret=0;
-  GRIB_PTHREAD_ONCE(&once,&init)
+  GRIB_MUTEX_INIT_ONCE(&once,&init)
   GRIB_MUTEX_LOCK(&keys_iterator_mutex)
   ret=_push_keys_iterator(i);
   GRIB_MUTEX_UNLOCK(&keys_iterator_mutex)
@@ -453,7 +473,7 @@ static grib_multi_handle* _get_multi_handle(int multi_handle_id){
 
 static grib_handle* get_handle(int handle_id){
   grib_handle* h=NULL;
-  GRIB_PTHREAD_ONCE(&once,&init)
+  GRIB_MUTEX_INIT_ONCE(&once,&init)
   GRIB_MUTEX_LOCK(&handle_mutex)
   h=_get_handle(handle_id);
   GRIB_MUTEX_UNLOCK(&handle_mutex)
@@ -462,20 +482,20 @@ static grib_handle* get_handle(int handle_id){
 
 static grib_index* get_index(int index_id){
   grib_index* h=NULL;
-  GRIB_PTHREAD_ONCE(&once,&init)
-      GRIB_MUTEX_LOCK(&index_mutex)
-      h=_get_index(index_id);
+  GRIB_MUTEX_INIT_ONCE(&once,&init)
+  GRIB_MUTEX_LOCK(&index_mutex)
+  h=_get_index(index_id);
   GRIB_MUTEX_UNLOCK(&index_mutex)
-      return h;
+  return h;
 }
 
 static grib_multi_handle* get_multi_handle(int multi_handle_id){
   grib_multi_handle* h=NULL;
-  GRIB_PTHREAD_ONCE(&once,&init)
-      GRIB_MUTEX_LOCK(&multi_handle_mutex)
-      h=_get_multi_handle(multi_handle_id);
+  GRIB_MUTEX_INIT_ONCE(&once,&init)
+  GRIB_MUTEX_LOCK(&multi_handle_mutex)
+  h=_get_multi_handle(multi_handle_id);
   GRIB_MUTEX_UNLOCK(&multi_handle_mutex)
-      return h;
+  return h;
 }
 
 static FILE* get_file(int file_id){
@@ -498,7 +518,7 @@ static grib_iterator* _get_iterator(int iterator_id){
 }
 static grib_iterator* get_iterator(int iterator_id){
   grib_iterator* i=NULL;
-  GRIB_PTHREAD_ONCE(&once,&init)
+  GRIB_MUTEX_INIT_ONCE(&once,&init)
   GRIB_MUTEX_LOCK(&iterator_mutex)
   i=_get_iterator(iterator_id);
   GRIB_MUTEX_UNLOCK(&iterator_mutex)
@@ -517,7 +537,7 @@ static grib_keys_iterator* _get_keys_iterator(int keys_iterator_id){
 
 static grib_keys_iterator* get_keys_iterator(int keys_iterator_id){
   grib_keys_iterator* i=NULL;
-  GRIB_PTHREAD_ONCE(&once,&init)
+  GRIB_MUTEX_INIT_ONCE(&once,&init)
   GRIB_MUTEX_LOCK(&keys_iterator_mutex)
   i=_get_keys_iterator(keys_iterator_id);
   GRIB_MUTEX_UNLOCK(&keys_iterator_mutex)
@@ -595,7 +615,7 @@ static int _clear_multi_handle(int multi_handle_id){
 
 static int clear_handle(int handle_id){
   int ret=0;
-  GRIB_PTHREAD_ONCE(&once,&init)
+  GRIB_MUTEX_INIT_ONCE(&once,&init)
   GRIB_MUTEX_LOCK(&handle_mutex)
   ret=_clear_handle(handle_id);
   GRIB_MUTEX_UNLOCK(&handle_mutex)
@@ -604,20 +624,20 @@ static int clear_handle(int handle_id){
 
 static int clear_index(int index_id){
   int ret=0;
-  GRIB_PTHREAD_ONCE(&once,&init)
-      GRIB_MUTEX_LOCK(&index_mutex)
-      ret=_clear_index(index_id);
+  GRIB_MUTEX_INIT_ONCE(&once,&init)
+  GRIB_MUTEX_LOCK(&index_mutex)
+  ret=_clear_index(index_id);
   GRIB_MUTEX_UNLOCK(&index_mutex)
-      return ret;
+  return ret;
 }
 
 static int clear_multi_handle(int multi_handle_id){
   int ret=0;
-  GRIB_PTHREAD_ONCE(&once,&init)
-      GRIB_MUTEX_LOCK(&multi_handle_mutex)
-      ret=_clear_multi_handle(multi_handle_id);
+  GRIB_MUTEX_INIT_ONCE(&once,&init)
+  GRIB_MUTEX_LOCK(&multi_handle_mutex)
+  ret=_clear_multi_handle(multi_handle_id);
   GRIB_MUTEX_UNLOCK(&multi_handle_mutex)
-      return ret;
+  return ret;
 }
 
 static int _clear_iterator(int iterator_id){
@@ -636,7 +656,7 @@ static int _clear_iterator(int iterator_id){
 
 static int clear_iterator(int iterator_id){
   int ret=0;
-  GRIB_PTHREAD_ONCE(&once,&init)
+  GRIB_MUTEX_INIT_ONCE(&once,&init)
   GRIB_MUTEX_LOCK(&iterator_mutex)
   ret=_clear_iterator(iterator_id);
   GRIB_MUTEX_UNLOCK(&iterator_mutex)
@@ -659,7 +679,7 @@ static int _clear_keys_iterator(int keys_iterator_id){
 
 static int clear_keys_iterator(int keys_iterator_id){
   int ret=0;
-  GRIB_PTHREAD_ONCE(&once,&init)
+  GRIB_MUTEX_INIT_ONCE(&once,&init)
   GRIB_MUTEX_LOCK(&keys_iterator_mutex)
   ret=_clear_keys_iterator(keys_iterator_id);
   GRIB_MUTEX_UNLOCK(&keys_iterator_mutex)
@@ -774,7 +794,7 @@ static int _grib_c_iterator_new_(int* gid,int* iterid,int* mode) {
 
 int grib_c_iterator_new(int* gid,int* iterid,int* mode) {
   int ret=0;
-  GRIB_PTHREAD_ONCE(&once,&init)
+  GRIB_MUTEX_INIT_ONCE(&once,&init)
   GRIB_MUTEX_LOCK(&iterator_mutex)
   ret=_grib_c_iterator_new_(gid,iterid,mode);
   GRIB_MUTEX_UNLOCK(&iterator_mutex)
@@ -811,7 +831,7 @@ static int _grib_c_keys_iterator_new_(int* gid,int* iterid,char* name_space) {
 
 int grib_c_keys_iterator_new(int* gid,int* iterid,char* name_space) {
   int ret=0;
-  GRIB_PTHREAD_ONCE(&once,&init)
+  GRIB_MUTEX_INIT_ONCE(&once,&init)
   GRIB_MUTEX_LOCK(&keys_iterator_mutex)
   ret=_grib_c_keys_iterator_new_(gid,iterid,name_space);
   GRIB_MUTEX_UNLOCK(&keys_iterator_mutex)
@@ -1842,11 +1862,9 @@ int grib_c_copy_message(int* gid, void* mess,size_t* len){
     return GRIB_BUFFER_TOO_SMALL;
   }
 
-
   memcpy(mess,h->buffer->data,h->buffer->ulength);
   *len=h->buffer->ulength;
   return GRIB_SUCCESS;
-
 }
 
 void grib_c_check(int* err,char* call,char* str){

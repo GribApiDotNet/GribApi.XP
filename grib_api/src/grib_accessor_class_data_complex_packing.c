@@ -182,7 +182,6 @@ static void init(grib_accessor* a,const long v, grib_arguments* args)
     a->flags |= GRIB_ACCESSOR_FLAG_DATA;
 }
 
-
 static int value_count(grib_accessor* a,long* count)
 {
     grib_accessor_data_complex_packing *self =(grib_accessor_data_complex_packing*)a;
@@ -246,7 +245,6 @@ static int  unpack_double(grib_accessor* a, double* val, size_t *len)
     double reference_value      = 0;
     long   binary_scale_factor         = 0;
     long   decimal_scale_factor = 0;
-
 
     long   sub_j= 0;
     long   sub_k= 0;
@@ -407,6 +405,8 @@ static int  unpack_double(grib_accessor* a, double* val, size_t *len)
                 reference_value,s,pscals,(maxv-hcount)*2,pval);
         i+=(maxv-hcount)*2;
 #else
+        (void)pscals; /* suppress gcc warning */
+        (void)pval;   /* suppress gcc warning */
         for(lcount=hcount; lcount < maxv ; lcount++)
         {
             val[i++] =  (double) ((grib_decode_unsigned_long(lres, &lpos,
@@ -433,9 +433,7 @@ static int  unpack_double(grib_accessor* a, double* val, size_t *len)
     grib_context_free(a->parent->h->context,scals);
 
     return ret;
-
 }
-
 
 
 #define MAXVAL(a,b) a>b?a:b
@@ -564,10 +562,8 @@ static int pack_double(grib_accessor* a, const double* val, size_t *len) {
     unsigned char* buf    = NULL;
 
     size_t         buflen = 0;
-
     size_t         hsize = 0;
     size_t         lsize = 0;
-
 
     unsigned char* hres = NULL;
     unsigned char* lres = NULL;
@@ -762,7 +758,7 @@ static int pack_double(grib_accessor* a, const double* val, size_t *len) {
             !=GRIB_SUCCESS) {
         grib_context_log(a->parent->h->context,GRIB_LOG_ERROR,
                 "unable to find nearest_smaller_value of %g for %s",min,self->reference_value);
-        grib_exit(GRIB_INTERNAL_ERROR);
+        exit(GRIB_INTERNAL_ERROR);
     }
     binary_scale_factor = grib_get_binary_scale_fact(max,reference_value,bits_per_value,&ret);
 

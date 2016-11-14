@@ -94,10 +94,10 @@ static int  init(grib_dumper* d)
     return GRIB_SUCCESS;
 }
 
-static int  destroy  (grib_dumper* d){
+static int  destroy  (grib_dumper* d)
+{
     return GRIB_SUCCESS;
 }
-
 
 static void aliases(grib_dumper* d,grib_accessor* a)
 {
@@ -127,7 +127,7 @@ static void aliases(grib_dumper* d,grib_accessor* a)
 static void dump_long(grib_dumper* d,grib_accessor* a,const char* comment)
 {
     grib_dumper_debug *self = (grib_dumper_debug*)d;
-    long value; size_t size = 1;
+    long value=0; size_t size = 1;
     int err = grib_unpack_long(a,&value,&size);
     int i;
 
@@ -153,7 +153,6 @@ static void dump_long(grib_dumper* d,grib_accessor* a,const char* comment)
 
     aliases(d,a);
 
-
     fprintf(self->dumper.out,"\n");
 }
 
@@ -162,7 +161,7 @@ static int test_bit(long a, long b) {return a&(1<<b);}
 static void dump_bits(grib_dumper* d,grib_accessor* a,const char* comment)
 {
     grib_dumper_debug *self = (grib_dumper_debug*)d;
-    long value; size_t size = 1;
+    long value=0; size_t size = 1;
     int err = grib_unpack_long(a,&value,&size);
     int i;
 
@@ -197,7 +196,7 @@ static void dump_bits(grib_dumper* d,grib_accessor* a,const char* comment)
 static void dump_double(grib_dumper* d,grib_accessor* a,const char* comment)
 {
     grib_dumper_debug *self = (grib_dumper_debug*)d;
-    double value; size_t size = 1;
+    double value=0; size_t size = 1;
     int err = grib_unpack_double(a,&value,&size);
     int i;
 
@@ -382,7 +381,6 @@ static void dump_values(grib_dumper* d,grib_accessor* a)
         size = 100;
     }
 
-
     k = 0;
     while(k < size)
     {
@@ -429,7 +427,6 @@ static void dump_section(grib_dumper* d,grib_accessor* a,grib_block_of_accessors
     /* grib_section* s = grib_get_sub_section(a); */
     grib_section* s = a->sub_section;
 
-
 #if 1
     if(a->name[0] == '_'){
         grib_dump_accessors_block(d,block);
@@ -449,7 +446,8 @@ static void dump_section(grib_dumper* d,grib_accessor* a,grib_block_of_accessors
     fprintf(self->dumper.out,"<===== %s %s\n",a->creator->op, a->name);
 }
 
-static void set_begin_end(grib_dumper* d,grib_accessor* a) {
+static void set_begin_end(grib_dumper* d,grib_accessor* a)
+{
     grib_dumper_debug *self = (grib_dumper_debug*)d;
     if ((d->option_flags & GRIB_DUMP_FLAG_OCTECT) != 0) {
 

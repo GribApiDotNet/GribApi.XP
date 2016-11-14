@@ -13,6 +13,7 @@ extern grib_accessor_class* grib_accessor_class_box;
 extern grib_accessor_class* grib_accessor_class_budgdate;
 extern grib_accessor_class* grib_accessor_class_bytes;
 extern grib_accessor_class* grib_accessor_class_change_scanning_direction;
+extern grib_accessor_class* grib_accessor_class_check_internal_version;
 extern grib_accessor_class* grib_accessor_class_codeflag;
 extern grib_accessor_class* grib_accessor_class_codetable;
 extern grib_accessor_class* grib_accessor_class_codetable_title;

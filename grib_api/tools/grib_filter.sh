@@ -31,15 +31,15 @@ ls ../data/split
 echo "\\endverbatim\\n"
 
 echo "-# The key values in the file name can also be obtained in a different format by indicating explicitly the type required after a colon."
-echo " - :l for long"
+echo " - :i for integer"
 echo " - :d for double"
 echo " - :s for string"
 echo " ."
 echo "The following statement works in a slightly different way from the previous example, "
-echo " including in the output file name the long values for centre and dataType.\\n"
+echo " including in the output file name the integer values for centre and dataType.\\n"
 
 echo "\\verbatim"
-echo "write \"../data/split/[centre:l]_[date]_[dataType:l]_[levelType].grib[editionNumber]\";"
+echo "write \"../data/split/[centre:i]_[date]_[dataType:i]_[levelType].grib[editionNumber]\";"
 echo "\\endverbatim\\n"
 echo "Running the same command again we obtain a different list of files.\\n"
 echo "\\verbatim"
@@ -52,7 +52,7 @@ else
 fi
 
 cat > rules_file <<EOF
-write "../data/split/[centre:l]_[date]_[dataType:l]_[levelType].grib[editionNumber]";
+write "../data/split/[centre:i]_[date]_[dataType:i]_[levelType].grib[editionNumber]";
 EOF
 
 echo ">grib_filter rules_file ../data/tigge_pf_ecmwf.grib2"
@@ -103,28 +103,37 @@ echo "}"
 
 echo "\\endverbatim\\n"
 
+echo "-# Here is an example of an IF statement comparing a key with a string. "
+echo "Note you have to use the \"is\" keyword for strings and not \"==\", and to negate you add the \"!\" before the whole condition:\\n \\n"
+echo "\\verbatim"
+echo "# Select Geopotential Height messages which are not on a Reduced Gaussian Grid"
+echo "if (shortName is \"gh\" && !(gridType is \"reduced_gg\" )) {"
+echo "    set step = 72;"
+echo "}"
+echo "\\endverbatim\\n"
+
 echo "-# The switch statement is an enhanced version of the if statement. Its syntax is the following:"
 echo "\\verbatim"
-echo "switch (key1,key2,...,keyn) {"
-echo "    case val11,val12,...,val1n:"
+echo "switch (key1) {"
+echo "    case val1:"
 echo "        # block of rules;"
-echo "    case val21,val22,...,val2n:"
+echo "    case val2:"
 echo "        # block of rules;"
 echo "    default:"
-echo "        # [ block of rules ]"
+echo "        # block of rules"
 echo "}"
 echo "\\endverbatim\\n"
 echo "Each value of each key given as argument to the switch statement is matched against the values specified in the case statements.\\n"
 echo "If there is a match, then the block or rules corresponding to the matching case statement is executed.\\n"
-echo "Otherwise, the default case is executed. The default case is mandatory, even if empty.\\n"
+echo "Otherwise, the default case is executed. The default case is mandatory if the case statements do not cover all the possibilities.\\n"
 echo "The \"~\" operator can be used to match \"anything\".\\n\\n"
 echo "Following is an example showing the use of the switch statement:\\n"
 echo "\\verbatim"
 echo "processing paramId=[paramId] [shortName] [stepType]";
-echo "switch (shortName,indicatorOfParameter) {"
-echo "    case "tp":"
+echo "switch (shortName) {"
+echo "    case "tp" :"
 echo "        set stepType="accum";"
-echo "    case ~,2 :"
+echo "    case "10u" :"
 echo "        set typeOfLevel="surface";"
 echo "    default:"
 echo "}"

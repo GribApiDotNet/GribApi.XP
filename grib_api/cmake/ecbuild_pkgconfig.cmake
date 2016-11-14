@@ -1,4 +1,4 @@
-# (C) Copyright 1996-2015 ECMWF.
+# (C) Copyright 1996-2016 ECMWF.
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -275,7 +275,7 @@ endfunction(ecbuild_pkgconfig_include)
 # ---------------
 #
 # The following CMake variables are used as default values for some of the
-# options listed above, where ``PNAME`` is the project name in upper case: ::
+# options listed above, where ``PNAME`` is the project name in upper case:
 #
 # :<PNAME>_LIBRARIES:    list of libraries to export
 # :<PNAME>_DESCRIPTION:  package description
@@ -312,7 +312,7 @@ function( ecbuild_pkgconfig )
   string( TOLOWER ${PROJECT_NAME} LNAME )
 
   if(_PAR_UNPARSED_ARGUMENTS)
-    message(FATAL_ERROR "Unknown keywords given to ecbuild_add_executable(): \"${_PAR_UNPARSED_ARGUMENTS}\"")
+    ecbuild_critical("Unknown keywords given to ecbuild_add_executable(): \"${_PAR_UNPARSED_ARGUMENTS}\"")
   endif()
 
   unset( PKGCONFIG_LANGUAGES )
@@ -412,7 +412,7 @@ function( ecbuild_pkgconfig )
   endif()
 
   configure_file( ${_PAR_TEMPLATE} "${CMAKE_BINARY_DIR}/${_PAR_FILENAME}" @ONLY )
-  message( STATUS "pkg-config file created: ${_PAR_FILENAME}" )
+  ecbuild_info( "pkg-config file created: ${_PAR_FILENAME}" )
 
   install( FILES ${CMAKE_BINARY_DIR}/${_PAR_FILENAME}
            DESTINATION ${CMAKE_INSTALL_PREFIX}/${INSTALL_LIB_DIR}/pkgconfig/

@@ -32,7 +32,8 @@ grib_option grib_options[]={
     {"v",0,0,0,1,0}
 };
 char* grib_tool_description="Apply the rules defined in rules_file to each grib "
-   "message\n\tin the grib files provided as arguments.";
+   "message\n\tin the grib files provided as arguments.\n\t"
+   "If you specify '-' (a single dash) for the rules_file, the rules will be read from standard input.";
 char* grib_tool_name="grib_filter";
 char* grib_tool_usage="[options] rules_file "
                       "grib_file grib_file ...";
@@ -68,8 +69,16 @@ int grib_tool_new_filename_action(grib_runtime_options* options,const char* file
     return 0;
 }  
 
-int grib_tool_new_file_action(grib_runtime_options* options,grib_tools_file* file)
+int grib_tool_new_file_action(grib_runtime_options* options, grib_tools_file* file)
 {
+    struct stat s;
+    int stat_val = stat(file->name, &s);
+    if ( stat_val == 0 ) {
+        if (S_ISDIR(s.st_mode)) {
+            fprintf(stderr, "ERROR: \"%s\": Is a directory\n", file->name);
+            exit(1);
+        }
+    }
     return 0;
 }
 

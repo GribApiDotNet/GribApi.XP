@@ -235,7 +235,7 @@ const char* grib_arguments_get_string(grib_handle* h,grib_arguments* args,int n)
   return grib_expression_evaluate_string(h,e,NULL,NULL,&ret);
 }
 
- long grib_arguments_get_long(grib_handle* h,grib_arguments* args,int n)
+long grib_arguments_get_long(grib_handle* h,grib_arguments* args,int n)
 {
   int ret=0;
   long lres=0;
@@ -246,6 +246,7 @@ const char* grib_arguments_get_string(grib_handle* h,grib_arguments* args,int n)
 
   e = args->expression;
   ret = grib_expression_evaluate_long(h,e,&lres);
+  (void)ret;
   return lres;
 }
 
@@ -261,8 +262,8 @@ double grib_arguments_get_double(grib_handle* h,grib_arguments* args,int n)
 
   e = args->expression;
   ret = grib_expression_evaluate_double(h,e,&dres);
+  (void)ret;
   return dres;
-
 }
 
  grib_expression* grib_arguments_get_expression(grib_handle* h,grib_arguments* args,int n)

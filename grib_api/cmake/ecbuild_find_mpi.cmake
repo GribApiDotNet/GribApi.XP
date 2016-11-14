@@ -1,4 +1,4 @@
-# (C) Copyright 1996-2015 ECMWF.
+# (C) Copyright 1996-2016 ECMWF.
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -81,7 +81,7 @@ macro( ecbuild_find_mpi )
     cmake_parse_arguments( _PAR "${options}" "${single_value_args}" "${multi_value_args}"  ${_FIRST_ARG} ${ARGN} )
 
     if(_PAR_UNPARSED_ARGUMENTS)
-      message(FATAL_ERROR "Unknown keywords given to ecbuild_find_mpi(): \"${_PAR_UNPARSED_ARGUMENTS}\"")
+      ecbuild_critical("Unknown keywords given to ecbuild_find_mpi(): \"${_PAR_UNPARSED_ARGUMENTS}\"")
     endif()
 
     # if user defined compilers are MPI compliant, then we use them ...
@@ -110,7 +110,7 @@ macro( ecbuild_find_mpi )
                 C_COMPILER_SUPPORTS_MPI )
 
             if( C_COMPILER_SUPPORTS_MPI )
-                message( STATUS "C compiler supports MPI -- ${CMAKE_C_COMPILER}" )
+                ecbuild_info( "C compiler supports MPI -- ${CMAKE_C_COMPILER}" )
                 set( MPI_C_COMPILER ${CMAKE_C_COMPILER} )
             endif()
 
@@ -134,7 +134,7 @@ macro( ecbuild_find_mpi )
                  CXX_COMPILER_SUPPORTS_MPI )
 
             if( CXX_COMPILER_SUPPORTS_MPI )
-                message( STATUS "C++ compiler supports MPI -- ${CMAKE_CXX_COMPILER}" )
+                ecbuild_info( "C++ compiler supports MPI -- ${CMAKE_CXX_COMPILER}" )
                 set( MPI_CXX_COMPILER ${CMAKE_CXX_COMPILER} )
             endif()
 
@@ -157,7 +157,7 @@ macro( ecbuild_find_mpi )
             Fortran_COMPILER_SUPPORTS_MPI )
 
             if( Fortran_COMPILER_SUPPORTS_MPI )
-                message( STATUS "Fortran compiler supports MPI (F90) -- ${CMAKE_Fortran_COMPILER}" )
+                ecbuild_info( "Fortran compiler supports MPI (F90) -- ${CMAKE_Fortran_COMPILER}" )
                 set( MPI_Fortran_COMPILER ${CMAKE_Fortran_COMPILER} )
                 set( MPI_Fortran_FOUND TRUE )
             endif()
@@ -251,7 +251,7 @@ macro( ecbuild_enable_mpi )
     cmake_parse_arguments( _PAR "${options}" "${single_value_args}" "${multi_value_args}"  ${_FIRST_ARG} ${ARGN} )
 
     if(_PAR_UNPARSED_ARGUMENTS)
-        message(FATAL_ERROR "Unknown keywords given to ecbuild_find_mpi(): \"${_PAR_UNPARSED_ARGUMENTS}\"")
+        ecbuild_critical("Unknown keywords given to ecbuild_find_mpi(): \"${_PAR_UNPARSED_ARGUMENTS}\"")
     endif()
 
     if( NOT _PAR_COMPONENTS )
@@ -304,7 +304,7 @@ macro( ecbuild_include_mpi )
     cmake_parse_arguments( _PAR "${options}" "${single_value_args}" "${multi_value_args}"  ${_FIRST_ARG} ${ARGN} )
 
     if(_PAR_UNPARSED_ARGUMENTS)
-        message(FATAL_ERROR "Unknown keywords given to ecbuild_find_mpi(): \"${_PAR_UNPARSED_ARGUMENTS}\"")
+        ecbuild_critical("Unknown keywords given to ecbuild_find_mpi(): \"${_PAR_UNPARSED_ARGUMENTS}\"")
     endif()
 
     if( MPI_C_FOUND AND NOT C_COMPILER_SUPPORTS_MPI )

@@ -160,12 +160,12 @@ grib_action* grib_action_create_concept( grib_context* context,
 
     a->concept     = concept;
     if (concept) {
-        grib_concept_value* c=concept;
+        grib_concept_value* conc_val=concept;
         grib_trie* index=grib_trie_new(context);
-        while (c) {
-            c->index=index;
-            grib_trie_insert_no_replace(index,c->name,c);
-            c=c->next;
+        while (conc_val) {
+            conc_val->index=index;
+            grib_trie_insert_no_replace(index,conc_val->name,conc_val);
+            conc_val=conc_val->next;
         }
     }
     act->name = grib_context_strdup_persistent(context,name);
@@ -302,7 +302,7 @@ const char* grib_concept_evaluate(grib_handle* h,grib_action* act)
     grib_concept_value*  c = get_concept(h,self);
     int match = 0;
     const char* best = 0;
-    const char* prev = 0;
+    /*const char* prev = 0;*/
 
     while(c)
     {
@@ -358,7 +358,7 @@ const char* grib_concept_evaluate(grib_handle* h,grib_action* act)
         if(e == NULL)
         {
             if(cnt >= match) {
-                prev  = (cnt > match) ? NULL : best;
+                /*prev  = (cnt > match) ? NULL : best;*/
                 match = cnt;
                 best  = c->name;
             }
@@ -403,7 +403,7 @@ int grib_concept_apply(grib_handle* h,grib_action* act,const char* name)
     if (!c){
         err= self->nofail ? GRIB_SUCCESS : GRIB_CONCEPT_NO_MATCH;
         if (err) {
-            size_t i = 0, count = 0;
+            size_t i = 0, concept_count = 0;
             char* all_concept_vals[MAX_NUM_CONCEPT_VALUES] = {NULL,}; /* sorted array containing concept values */
             grib_concept_value* pCon = concepts;
 
@@ -416,14 +416,19 @@ int grib_concept_apply(grib_handle* h,grib_action* act,const char* name)
                 all_concept_vals[i++] = pCon->name;
                 pCon = pCon->next;
             }
-            count = i;
-            /* Printing out all values for concepts like paramId will be silly! */
-            if (count < MAX_NUM_CONCEPT_VALUES) {
+            concept_count = i;
+            /* Only print out all concepts if fewer than MAX_NUM_CONCEPT_VALUES.
+             * Printing out all values for concepts like paramId would be silly! */
+            if (concept_count < MAX_NUM_CONCEPT_VALUES) {
                 fprintf(stderr, "Here are the possible values for concept %s:\n", act->name);
-                qsort(&all_concept_vals, count, sizeof(char*), cmpstringp);
-                for(i=0; i<count; ++i) {
+                qsort(&all_concept_vals, concept_count, sizeof(char*), cmpstringp);
+                for(i=0; i<concept_count; ++i) {
                     if (all_concept_vals[i]) {
-                        fprintf(stderr, "\t%s\n", all_concept_vals[i]);
+                        int print_it = 1;
+                        if (i>0 && strcmp(all_concept_vals[i], all_concept_vals[i-1]) == 0) {
+                            print_it = 0;  /* skip duplicate entries */
+                        }
+                        if (print_it) fprintf(stderr, "\t%s\n", all_concept_vals[i]);
                     }
                 }
             }

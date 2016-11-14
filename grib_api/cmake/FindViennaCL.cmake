@@ -1,4 +1,4 @@
-# (C) Copyright 1996-2015 ECMWF.
+# (C) Copyright 1996-2016 ECMWF.
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -30,9 +30,10 @@ set( VIENNACL_INCLUDE_DIRS ${VIENNACL_INCLUDE_DIR} )
 
 include(FindPackageHandleStandardArgs)
 
-# handle the QUIETLY and REQUIRED arguments and set VIENNACL_FOUND to TRUE
+# handle the QUIET and REQUIRED arguments and set VIENNACL_FOUND to TRUE
 # if all listed variables are valid
-find_package_handle_standard_args(VIENNACL  DEFAULT_MSG
+# Note: capitalisation of the package name must be the same as in the file name
+find_package_handle_standard_args(ViennaCL  DEFAULT_MSG
                                   VIENNACL_INCLUDE_DIR)
 
 mark_as_advanced(VIENNACL_INCLUDE_DIRS)

@@ -1,14 +1,27 @@
 
 AM_CFLAGS =  @WARN_PEDANTIC@ @WERROR@
 
-TESTS = iterator.sh get.sh print_data.sh set.sh keys_iterator.sh multi.sh multi_write.sh \
-        precision.sh list.sh large_grib1.sh get_data.sh sections_copy.sh set_missing.sh clone.sh set_pv.sh \
-        check_gaussian_grids.sh
+TESTS = iterator.sh \
+        get.sh \
+        print_data.sh \
+        set.sh \
+        keys_iterator.sh \
+        multi.sh \
+        multi_write.sh \
+        precision.sh \
+        list.sh \
+        large_grib1.sh \
+        get_data.sh \
+        sections_copy.sh \
+        set_missing.sh \
+        clone.sh \
+        set_pv.sh \
+        set_bitmap.sh
 
 noinst_PROGRAMS  = nearest set_bitmap iterator get print_data set set_missing keys_iterator \
                    set_data mars_param values_check box multi multi2 multi_write precision \
                    set_pv list sections_copy large_grib1 get_data iterator_bitmap clone new_sample \
-                   check_gaussian_grid ensemble_index points
+                   ensemble_index points
 #bin_PROGRAMS            = points
 
 box_SOURCES             = box.c
@@ -35,7 +48,6 @@ large_grib1_SOURCES     = large_grib1.c
 get_data_SOURCES        = get_data.c
 clone_SOURCES           = clone.c
 new_sample_SOURCES      = new_sample.c
-check_gaussian_grid_SOURCES = check_gaussian_grid.c
 ensemble_index_SOURCES = ensemble_index.c
 
 INCLUDES =  -I$(top_builddir)/src

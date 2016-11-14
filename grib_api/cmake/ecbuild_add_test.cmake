@@ -1,4 +1,4 @@
-# (C) Copyright 1996-2015 ECMWF.
+# (C) Copyright 1996-2016 ECMWF.
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -16,13 +16,15 @@
 #
 #   ecbuild_add_test( [ TARGET <name> ]
 #                     [ SOURCES <source1> [<source2> ...] ]
+#                     [ OBJECTS <obj1> [<obj2> ...] ]
 #                     [ COMMAND <executable> ]
 #                     [ TYPE EXE|SCRIPT|PYTHON ]
 #                     [ ARGS <argument1> [<argument2> ...] ]
 #                     [ RESOURCES <file1> [<file2> ...] ]
 #                     [ TEST_DATA <file1> [<file2> ...] ]
 #                     [ BOOST ]
-#                     [ MPI <number-of-ranks> ]
+#                     [ MPI <number-of-mpi-tasks> ]
+#                     [ OMP <number-of-threads-per-mpi-task> ]
 #                     [ ENABLED ON|OFF ]
 #                     [ LIBS <library1> [<library2> ...] ]
 #                     [ INCLUDES <path1> [<path2> ...] ]
@@ -31,7 +33,7 @@
 #                     [ GENERATED <file1> [<file2> ...] ]
 #                     [ DEPENDS <target1> [<target2> ...] ]
 #                     [ TEST_DEPENDS <target1> [<target2> ...] ]
-#                     [ CONDITION <condition1> [<condition2> ...] ]
+#                     [ CONDITION <condition> ]
 #                     [ ENVIRONMENT <variable1> [<variable2> ...] ]
 #                     [ WORKING_DIRECTORY <path> ]
 #                     [ CFLAGS <flag1> [<flag2> ...] ]
@@ -47,6 +49,9 @@
 #
 # SOURCES : required if TARGET is provided
 #   list of source files to be compiled
+#
+# OBJECTS : optional
+#   list of object libraries to add to this target
 #
 # COMMAND : either TARGET or COMMAND must be provided, unless TYPE is PYTHON
 #   command or script to execute (no executable is built)
@@ -74,6 +79,12 @@
 #   number of MPI tasks to use.
 #
 #   If greater than 1, and MPI is not available, the test is disabled.
+#
+# OMP : optional
+#   number of OpenMP threads per MPI task to use.
+#
+#   If set, the environment variable OMP_NUM_THREADS will set.
+#   Also, in case of launchers like aprun, the OMP_NUMTHREADS_FLAG will be used.
 #
 # ENABLED : optional
 #   if set to OFF, the test is built but not enabled as a test case
@@ -126,30 +137,38 @@
 macro( ecbuild_add_test )
 
   set( options           BOOST )
-  set( single_value_args TARGET ENABLED COMMAND TYPE LINKER_LANGUAGE MPI WORKING_DIRECTORY )
-  set( multi_value_args  SOURCES LIBS INCLUDES TEST_DEPENDS DEPENDS ARGS
+  set( single_value_args TARGET ENABLED COMMAND TYPE LINKER_LANGUAGE MPI OMP WORKING_DIRECTORY )
+  set( multi_value_args  SOURCES OBJECTS LIBS INCLUDES TEST_DEPENDS DEPENDS ARGS
                          PERSISTENT DEFINITIONS RESOURCES TEST_DATA CFLAGS
                          CXXFLAGS FFLAGS GENERATED CONDITION ENVIRONMENT )
 
   cmake_parse_arguments( _PAR "${options}" "${single_value_args}" "${multi_value_args}"  ${_FIRST_ARG} ${ARGN} )
 
   if(_PAR_UNPARSED_ARGUMENTS)
-    message(FATAL_ERROR "Unknown keywords given to ecbuild_add_test(): \"${_PAR_UNPARSED_ARGUMENTS}\"")
+    ecbuild_critical("Unknown keywords given to ecbuild_add_test(): \"${_PAR_UNPARSED_ARGUMENTS}\"")
   endif()
 
   set( _TEST_DIR ${CMAKE_CURRENT_BINARY_DIR} )
 
   # Check for MPI
   if(_PAR_MPI)
-    if( (_PAR_MPI GREATER 1) AND ( (NOT HAVE_MPI) OR (NOT MPIEXEC) ) )
+    if( (_PAR_MPI GREATER 1) AND ( (NOT MPI_FOUND) OR (NOT MPIEXEC) ) )
       ecbuild_debug("ecbuild_add_test(${_PAR_TARGET}): ${_PAR_MPI} MPI ranks requested but MPI not available - disabling test")
       set( _PAR_ENABLED 0 )
-    endif()
-    if( (_PAR_MPI EQUAL 1) AND (NOT HAVE_MPI) )
+    elseif( (_PAR_MPI EQUAL 1) AND (NOT MPI_FOUND) )
       ecbuild_debug("ecbuild_add_test(${_PAR_TARGET}): 1 MPI rank requested but MPI not available - disabling MPI")
       set( _PAR_MPI 0 )
+    else()
+      ecbuild_debug("ecbuild_add_test(${_PAR_TARGET}): Running using ${_PAR_MPI} MPI rank(s)")
     endif()
   endif()
+
+  # Check for OMP
+  if( NOT DEFINED _PAR_OMP )
+    set( _PAR_OMP 1 )
+  endif()
+  list( APPEND _PAR_ENVIRONMENT "OMP_NUM_THREADS=${_PAR_OMP}" )
+
 
   # default is enabled
   if( NOT DEFINED _PAR_ENABLED )
@@ -168,7 +187,7 @@ macro( ecbuild_add_test )
   if( NOT _PAR_TYPE AND DEFINED _PAR_TARGET )
     set( _PAR_TYPE "EXE" )
     if( NOT _PAR_SOURCES )
-      message(FATAL_ERROR "The call to ecbuild_add_test() defines a TARGET without SOURCES.")
+      ecbuild_critical("The call to ecbuild_add_test() defines a TARGET without SOURCES.")
     endif()
   endif()
 
@@ -176,7 +195,7 @@ macro( ecbuild_add_test )
     if( PYTHONINTERP_FOUND )
       set( _PAR_COMMAND ${PYTHON_EXECUTABLE} )
     else()
-      message( WARNING "Requested a python test but python interpreter not found - disabling test\nPYTHON_EXECUTABLE: [${PYTHON_EXECUTABLE}]" )
+      ecbuild_warn( "Requested a python test but python interpreter not found - disabling test\nPYTHON_EXECUTABLE: [${PYTHON_EXECUTABLE}]" )
       set( _PAR_ENABLED 0 )
     endif()
   endif()
@@ -184,15 +203,15 @@ macro( ecbuild_add_test )
   ### further checks
 
   if( _PAR_ENABLED AND NOT _PAR_TARGET AND NOT _PAR_COMMAND )
-    message(FATAL_ERROR "The call to ecbuild_add_test() defines neither a TARGET nor a COMMAND.")
+    ecbuild_critical("The call to ecbuild_add_test() defines neither a TARGET nor a COMMAND.")
   endif()
 
   if( _PAR_ENABLED AND NOT _PAR_COMMAND AND NOT _PAR_SOURCES )
-    message(FATAL_ERROR "The call to ecbuild_add_test() defines neither a COMMAND nor SOURCES, so no test can be defined or built.")
+    ecbuild_critical("The call to ecbuild_add_test() defines neither a COMMAND nor SOURCES, so no test can be defined or built.")
   endif()
 
   if( _PAR_TYPE MATCHES "SCRIPT" AND NOT _PAR_COMMAND )
-    message(FATAL_ERROR "The call to ecbuild_add_test() defines a 'script' but doesn't specify the COMMAND.")
+    ecbuild_critical("The call to ecbuild_add_test() defines a 'script' but doesn't specify the COMMAND.")
   endif()
 
   ### conditional build
@@ -266,9 +285,13 @@ macro( ecbuild_add_test )
         endif()
       endif()
 
-      # add the test target
+      # insert already compiled objects (from OBJECT libraries)
+      unset( _all_objects )
+      foreach( _obj ${_PAR_OBJECTS} )
+        list( APPEND _all_objects $<TARGET_OBJECTS:${_obj}> )
+      endforeach()
 
-      add_executable( ${_PAR_TARGET} ${_PAR_SOURCES} )
+      add_executable( ${_PAR_TARGET} ${_PAR_SOURCES} ${_all_objects} )
 
       # add extra dependencies
       if( DEFINED _PAR_DEPENDS)
@@ -299,24 +322,13 @@ macro( ecbuild_add_test )
       # filter sources
       ecbuild_separate_sources( TARGET ${_PAR_TARGET} SOURCES ${_PAR_SOURCES} )
 
-      # add local flags
-      if( DEFINED _PAR_CFLAGS )
-        ecbuild_debug("ecbuild_add_test(${_PAR_TARGET}): use C flags ${_PAR_CFLAGS}")
-        set_source_files_properties( ${${_PAR_TARGET}_c_srcs}   PROPERTIES COMPILE_FLAGS "${_PAR_CFLAGS}" )
-      endif()
-      if( DEFINED _PAR_CXXFLAGS )
-        ecbuild_debug("ecbuild_add_test(${_PAR_TARGET}): use C++ flags ${_PAR_CFLAGS}")
-        set_source_files_properties( ${${_PAR_TARGET}_cxx_srcs} PROPERTIES COMPILE_FLAGS "${_PAR_CXXFLAGS}" )
-      endif()
-      if( DEFINED _PAR_FFLAGS )
-        ecbuild_debug("ecbuild_add_test(${_PAR_TARGET}): use Fortran flags ${_PAR_CFLAGS}")
-        set_source_files_properties( ${${_PAR_TARGET}_f_srcs}   PROPERTIES COMPILE_FLAGS "${_PAR_FFLAGS}" )
-      endif()
+      # Override compilation flags on a per source file basis
+      ecbuild_target_flags( ${_PAR_TARGET} "${_PAR_CFLAGS}" "${_PAR_CXXFLAGS}" "${_PAR_FFLAGS}" )
+
       if( DEFINED _PAR_GENERATED )
         ecbuild_debug("ecbuild_add_test(${_PAR_TARGET}): mark as generated ${_PAR_GENERATED}")
         set_source_files_properties( ${_PAR_GENERATED} PROPERTIES GENERATED 1 )
       endif()
-
 
       # modify definitions to compilation ( -D... )
       get_property( _target_defs TARGET ${_PAR_TARGET} PROPERTY COMPILE_DEFINITIONS )
@@ -354,9 +366,6 @@ macro( ecbuild_add_test )
                           PRE_BUILD
                           COMMAND ${CMAKE_COMMAND} -E remove ${EXE_FILENAME} )
 
-      set_property( TARGET ${_PAR_TARGET} PROPERTY SKIP_BUILD_RPATH         FALSE )
-      set_property( TARGET ${_PAR_TARGET} PROPERTY BUILD_WITH_INSTALL_RPATH FALSE )
-
     endif() # _PAR_SOURCES
 
     if( DEFINED _PAR_COMMAND AND NOT _PAR_TARGET ) # in the absence of target, we use the command as a name
@@ -376,18 +385,29 @@ macro( ecbuild_add_test )
 
     # define the arguments
     set( TEST_ARGS "" )
-    if( DEFINED _PAR_ARGS  )
+    # Boost Unit Test >= 1.60 requires arguments to be passed to the application to be separated by --
+    if( DEFINED _PAR_ARGS AND _PAR_BOOST )
+      list( APPEND TEST_ARGS "--" ${_PAR_ARGS} )
+    elseif( DEFINED _PAR_ARGS )
       list( APPEND TEST_ARGS ${_PAR_ARGS} )
     endif()
 
     # Wrap with MPIEXEC
     if( _PAR_MPI )
+
+      set( MPIEXEC_TASKS ${MPIEXEC_NUMPROC_FLAG} ${_PAR_MPI} )
+      if( DEFINED MPIEXEC_NUMTHREAD_FLAG )
+        set( MPIEXEC_THREADS ${MPIEXEC_NUMTHREAD_FLAG} ${_PAR_OMP} )
+      endif()
+
+      set( _LAUNCH ${MPIEXEC} ${MPIEXEC_TASKS} ${MPIEXEC_THREADS} )
+
       if( DEFINED _PAR_COMMAND )
-        ecbuild_debug("ecbuild_add_test(${_PAR_TARGET}): running as ${MPIEXEC} -n ${_PAR_MPI} ${_TEST_DIR}/${_PAR_COMMAND}")
-        set( _PAR_COMMAND ${MPIEXEC} -n ${_PAR_MPI} ${_TEST_DIR}/${_PAR_COMMAND} )
+        ecbuild_debug("ecbuild_add_test(${_PAR_TARGET}): running as ${_LAUNCH} ${_PAR_COMMAND}")
+        set( _PAR_COMMAND ${_LAUNCH} ${_PAR_COMMAND} )
       else()
-        ecbuild_debug("ecbuild_add_test(${_PAR_TARGET}): running as ${MPIEXEC} -n ${_PAR_MPI} ${_TEST_DIR}/${_PAR_TARGET}")
-        set( _PAR_COMMAND ${MPIEXEC} -n ${_PAR_MPI} ${_TEST_DIR}/${_PAR_TARGET} )
+        ecbuild_debug("ecbuild_add_test(${_PAR_TARGET}): running as ${_LAUNCH} ${_TEST_DIR}/${_PAR_TARGET}")
+        set( _PAR_COMMAND ${_LAUNCH} ${_TEST_DIR}/${_PAR_TARGET} )
       endif()
     endif()
 
@@ -396,9 +416,9 @@ macro( ecbuild_add_test )
     if( _PAR_ENABLED ) # we can disable and still build it but not run it with 'make tests'
 
       if( DEFINED _PAR_COMMAND )
-        add_test( ${_PAR_TARGET} ${_PAR_COMMAND} ${TEST_ARGS} ${_working_dir} ) # run a command as test
+        add_test( NAME ${_PAR_TARGET} COMMAND ${_PAR_COMMAND} ${TEST_ARGS} ${_working_dir} ) # run a command as test
       else()
-        add_test( ${_PAR_TARGET} ${_PAR_TARGET}  ${TEST_ARGS} ${_working_dir} ) # run the test that was generated
+        add_test( NAME ${_PAR_TARGET} COMMAND ${_PAR_TARGET}  ${TEST_ARGS} ${_working_dir} ) # run the test that was generated
       endif()
 
       # get test data

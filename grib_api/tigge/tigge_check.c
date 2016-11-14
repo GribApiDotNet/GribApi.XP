@@ -56,14 +56,17 @@ struct parameter {
 static void point_in_time(grib_handle*,const parameter*,double,double);
 static void statistical_process(grib_handle*,const parameter*,double,double);
 static void six_hourly(grib_handle*,const parameter*,double,double);
+static void since_prev_pp(grib_handle*,const parameter*,double,double);
 static void three_hourly(grib_handle* h,const parameter* p,double min,double max);
 static void from_start(grib_handle*,const parameter*,double,double);
+static void daily_average(grib_handle*,const parameter*,double,double);
 static void given_level(grib_handle*,const parameter*,double,double);
 static void predefined_level(grib_handle*,const parameter*,double,double);
 static void predefined_thickness(grib_handle*,const parameter*,double,double);
 static void given_thickness(grib_handle*,const parameter*,double,double);
 static void has_bitmap(grib_handle*,const parameter*,double,double);
 
+static void height_level(grib_handle*,const parameter*,double,double);
 static void pressure_level(grib_handle*,const parameter*,double,double);
 static void potential_temperature_level(grib_handle*,const parameter*,double,double);
 static void potential_vorticity_level(grib_handle*,const parameter*,double,double);
@@ -85,7 +88,10 @@ int valueflg = 0;
 const char* param = "unknown";
 int warnflg = 0;
 int zeroflg = 0;
-int is_lam =0;
+int is_lam = 0;
+int is_s2s = 0;
+int is_s2s_refcst = 0;
+int is_uerra = 0;
 
 const char* good = NULL;
 const char* bad = NULL;
@@ -93,7 +99,7 @@ const char* bad = NULL;
 FILE* fgood = NULL;
 FILE* fbad  = NULL;
 
-void check(const char* name,int a)
+static void check(const char* name,int a)
 {
     if(!a) {
         printf("%s, field %d [%s]: %s failed\n",file,field,param,name);
@@ -101,15 +107,17 @@ void check(const char* name,int a)
     }
 }
 
-void warn(const char* name,int a)
+/*
+static void warn(const char* name,int a)
 {
     if(!a) {
         printf("%s, field %d [%s]: %s failed\n",file,field,param,name);
         warning++;
     }
 }
+*/
 
-void save(grib_handle* h, const char *name,FILE* f)
+static void save(grib_handle* h, const char *name,FILE* f)
 {
     size_t size;
     const void *buffer;
@@ -130,7 +138,7 @@ void save(grib_handle* h, const char *name,FILE* f)
     }
 }
 
-long get(grib_handle *h,const char* what)
+static long get(grib_handle *h,const char* what)
 {
     int e; long val;
     if((e = grib_get_long(h,what,&val)) != GRIB_SUCCESS)
@@ -142,7 +150,7 @@ long get(grib_handle *h,const char* what)
     return val;
 }
 
-double dget(grib_handle *h,const char* what)
+static double dget(grib_handle *h,const char* what)
 {
     int e; double val;
     if((e = grib_get_double(h,what,&val)) != GRIB_SUCCESS)
@@ -154,28 +162,28 @@ double dget(grib_handle *h,const char* what)
     return val;
 }
 
-int missing(grib_handle *h,const char* what)
+static int missing(grib_handle *h,const char* what)
 {
     int err=0;
     return grib_is_missing(h,what,&err);
 }
 
-int eq(grib_handle *h,const char* what,long value)
+static int eq(grib_handle *h,const char* what,long value)
 {
     return get(h,what) == value;
 }
 
-int ne(grib_handle *h,const char* what,long value)
+static int ne(grib_handle *h,const char* what,long value)
 {
     return get(h,what) != value;
 }
 
-int ge(grib_handle *h,const char* what,long value)
+static int ge(grib_handle *h,const char* what,long value)
 {
     return get(h,what) >= value;
 }
 
-int le(grib_handle *h,const char* what,long value)
+static int le(grib_handle *h,const char* what,long value)
 {
     return get(h,what) <= value;
 }
@@ -185,10 +193,10 @@ static int DBL_EQUAL(double d1, double d2, double tolerance)
     return fabs(d1-d2) <= tolerance;
 }
 
-void gaussian_grid(grib_handle* h)
+static void gaussian_grid(grib_handle* h)
 {
     const double tolerance = 1.0/1000000.0; /* angular tolerance for grib2: micro degrees */
-    long n = get(h,"numberOfParallelsBetweenAPoleAndTheEquator");
+    long n = get(h,"numberOfParallelsBetweenAPoleAndTheEquator"); /* This is the key N */
     static double* values = NULL;
     static long last_n = 0;
     double north = dget(h,"latitudeOfFirstGridPointInDegrees");
@@ -226,25 +234,28 @@ void gaussian_grid(grib_handle* h)
     values[0] = rint(values[0]*1e6)/1e6;
 
     if ( !DBL_EQUAL(north, values[0], tolerance) || !DBL_EQUAL(south, -values[0], tolerance) )
-        printf("N=%ld n=%f s=%f v=%f n-v=%0.30f s-v=%0.30f\n",n,north,south,values[0],north-values[0],south+values[0]);
+        printf("N=%ld north=%f south=%f v(=gauss_lat[0])=%f north-v=%0.30f south-v=%0.30f\n",
+                n,north,south,values[0],north-values[0],south+values[0]);
 
     CHECK(DBL_EQUAL(north, values[0], tolerance));
     CHECK(DBL_EQUAL(south, -values[0], tolerance));
 
-    if(missing(h,"numberOfPointsAlongAParallel"))
+    if(missing(h,"numberOfPointsAlongAParallel"))   /* same as key Ni */
     {
-        double ee = 360.0 - 360.0/(4.0*n);
+        /* If missing, this is a REDUCED gaussian grid */
+        const long MAXIMUM_RESOLUTION = 640;
+        CHECK(get(h,"PLPresent"));
         CHECK(DBL_EQUAL(west, 0.0, tolerance));
-
-        if (!DBL_EQUAL(ee, east, tolerance))
-            printf("east %g %g %g\n",east,ee,ee-east);
-
-        CHECK(DBL_EQUAL(ee, east, tolerance));
+        if (n > MAXIMUM_RESOLUTION) {
+            printf("Gaussian number N (=%ld) cannot exceed %ld\n", n, MAXIMUM_RESOLUTION);
+            CHECK(n <= MAXIMUM_RESOLUTION);
+        }
     }
     else
     {
-        long west = get(h,"longitudeOfFirstGridPoint");
-        long east = get(h,"longitudeOfLastGridPoint");
+        /* REGULAR gaussian grid */
+        long l_west = get(h,"longitudeOfFirstGridPoint");
+        long l_east = get(h,"longitudeOfLastGridPoint");
         long parallel = get(h,"numberOfPointsAlongAParallel");
         long we = get(h,"iDirectionIncrement");
         double dwest  = dget(h,"longitudeOfFirstGridPointInDegrees");
@@ -252,7 +263,7 @@ void gaussian_grid(grib_handle* h)
         double dwe = dget(h,"iDirectionIncrementInDegrees");
         /*printf("parallel=%ld east=%ld west=%ld we=%ld\n",parallel,east,west,we);*/
 
-        CHECK(parallel == (east-west)/we + 1);
+        CHECK(parallel == (l_east-l_west)/we + 1);
         CHECK(fabs((deast-dwest)/dwe + 1 - parallel) < 1e-10);
         CHECK(!get(h,"PLPresent"));
     }
@@ -261,14 +272,15 @@ void gaussian_grid(grib_handle* h)
 
     if(get(h,"PLPresent")) {
         size_t count, i, nPl;
-        int e = grib_get_size(h,"pl",&count);
+        int err_code = grib_get_size(h,"pl",&count);
         double *pl;
-        long total;
+        double expected_lon2 = 0;
+        long total, max_pl = 0;
         long numberOfValues = get(h,"numberOfValues");
         long numberOfDataPoints = get(h,"numberOfDataPoints");
 
-        if(e) {
-            printf("%s, field %d [%s]: cannot number of pl: %s\n",file,field,param,grib_get_error_message(e));
+        if(err_code) {
+            printf("%s, field %d [%s]: cannot number of pl: %s\n",file,field,param,grib_get_error_message(err_code));
             error++;
             return;
         }
@@ -277,13 +289,12 @@ void gaussian_grid(grib_handle* h)
         CHECK(pl != NULL);
 
         nPl = count;
-        if((e =  grib_get_double_array(h,"pl",pl,&count)))
+        if((err_code =  grib_get_double_array(h,"pl",pl,&count)))
         {
-            printf("%s, field %d [%s]: cannot get pl: %s\n",file,field,param,grib_get_error_message(e));
+            printf("%s, field %d [%s]: cannot get pl: %s\n",file,field,param,grib_get_error_message(err_code));
             free(pl);
             error++;
             return;
-
         }
         if(nPl != count)
             printf("nPl=%ld count=%ld\n",(long)nPl,(long)count);
@@ -292,10 +303,19 @@ void gaussian_grid(grib_handle* h)
         CHECK(nPl == (size_t)2*n);
 
         total = 0;
-        for(i = 0 ; i < count; i++)
+        max_pl = pl[0]; /* max elem of pl array = num points at equator */
+        for(i = 0 ; i < count; i++) {
             total += pl[i];
+            if (pl[i] > max_pl) max_pl = pl[i];
+        }
 
         free(pl);
+
+        /* Do not assume maximum of pl array is 4N! not true for octahedral */
+        expected_lon2 = 360.0 - 360.0/max_pl;
+        if (!DBL_EQUAL(expected_lon2, east, tolerance))
+            printf("east actual=%g expected=%g diff=%g\n",east, expected_lon2, expected_lon2-east);
+        CHECK(DBL_EQUAL(expected_lon2, east, tolerance));
 
         if(numberOfDataPoints != total)
             printf("GAUSS numberOfValues=%ld numberOfDataPoints=%ld sum(pl)=%ld\n",
@@ -317,6 +337,45 @@ void gaussian_grid(grib_handle* h)
     CHECK(eq(h,"resolutionAndComponentFlags6",0));
     CHECK(eq(h,"resolutionAndComponentFlags7",0));
     CHECK(eq(h,"resolutionAndComponentFlags8",0));
+}
+
+static void check_validity_datetime(grib_handle* h)
+{
+    /* If we just set the stepRange (for non-instantaneous fields) to its
+     * current value, then this causes the validity date and validity time
+     * keys to be correctly computed.
+     * Then we can compare the previous (possibly wrongly coded) value with
+     * the newly computed one
+     */
+    char stepType[15]={0,};
+    int err = 0;
+    size_t str_len = 100;
+
+    err = grib_get_string(h, "stepType", stepType, &str_len);
+    if (err) return;
+    if (strcmp(stepType, "instant")!=0) { /* not instantaneous */
+        char stepRange[100]={0,};
+        long saved_validityDate, saved_validityTime;
+        long validityDate, validityTime;
+
+        /* Check only applies to accumulated, max etc. */
+        err = grib_get_string(h, "stepRange", stepRange, &str_len);
+        if (err) return;
+
+        saved_validityDate = get(h, "validityDate");
+        saved_validityTime = get(h, "validityTime");
+
+        err = grib_set_string(h, "stepRange", stepRange, &str_len);
+        if (err) return;
+        validityDate = get(h, "validityDate");
+        validityTime = get(h, "validityTime");
+
+        if (validityDate!=saved_validityDate || validityTime!=saved_validityTime) {
+            printf("warning: %s, field %d [%s]: invalid validity Date/Time (Should be %ld and %ld)\n",
+                    file,field,param, validityDate, validityTime);
+            warning++;
+        }
+    }
 }
 
 static void check_range(grib_handle* h,const parameter* p,double min,double max)
@@ -348,20 +407,50 @@ static void point_in_time(grib_handle* h,const parameter* p,double min,double ma
 {
     switch(get(h,"typeOfProcessedData"))
     {
+    case 0: /* Analysis */
+        if (is_uerra)
+            CHECK(eq(h,"productDefinitionTemplateNumber",0)||eq(h,"productDefinitionTemplateNumber",1));
+        if (get(h,"productDefinitionTemplateNumber") == 1){
+            CHECK(ne(h,"numberOfForecastsInEnsemble",0));
+            CHECK(le(h,"perturbationNumber",get(h,"numberOfForecastsInEnsemble")));
+        }
+        break;
+
+    case 1: /* Forecast */
+        if (is_uerra)
+            CHECK(eq(h,"productDefinitionTemplateNumber",0)||eq(h,"productDefinitionTemplateNumber",1));
+        if (get(h,"productDefinitionTemplateNumber") == 1){
+            CHECK(ne(h,"numberOfForecastsInEnsemble",0));
+            CHECK(le(h,"perturbationNumber",get(h,"numberOfForecastsInEnsemble")));
+        }
+        break;
+
     case 2: /* Analysis and forecast products */
         CHECK(eq(h,"productDefinitionTemplateNumber",0));
         break;
 
     case 3: /* Control forecast products */
-        CHECK(eq(h,"productDefinitionTemplateNumber",1));
         CHECK(eq(h,"perturbationNumber",0));
         CHECK(ne(h,"numberOfForecastsInEnsemble",0));
+        if (is_s2s_refcst)
+            CHECK(eq(h,"productDefinitionTemplateNumber",60));
+        else if (is_s2s)
+            /*CHECK(eq(h,"productDefinitionTemplateNumber",60)||eq(h,"productDefinitionTemplateNumber",11)||eq(h,"productDefinitionTemplateNumber",1));*/
+            CHECK(eq(h,"productDefinitionTemplateNumber",1));
+        else
+            CHECK(eq(h,"productDefinitionTemplateNumber",1));
         break;
 
     case 4: /* Perturbed forecast products */
         CHECK(ne(h,"perturbationNumber",0));
         CHECK(ne(h,"numberOfForecastsInEnsemble",0));
-        CHECK(eq(h,"productDefinitionTemplateNumber",1));
+        if (is_s2s_refcst)
+            CHECK(eq(h,"productDefinitionTemplateNumber",60));
+        else if (is_s2s)
+            /*CHECK(eq(h,"productDefinitionTemplateNumber",60)||eq(h,"productDefinitionTemplateNumber",11)||eq(h,"productDefinitionTemplateNumber",1));*/
+            CHECK(eq(h,"productDefinitionTemplateNumber",1));
+        else
+            CHECK(eq(h,"productDefinitionTemplateNumber",1));
         if (is_lam) {
             CHECK(le(h,"perturbationNumber",get(h,"numberOfForecastsInEnsemble")));
         } else {
@@ -376,40 +465,142 @@ static void point_in_time(grib_handle* h,const parameter* p,double min,double ma
         break;
     }
 
-    if(get(h,"indicatorOfUnitOfTimeRange") == 11 || is_lam ) /*  six hours */
+    if (is_uerra)
     {
-        /* Six hourly is OK */
-        ;
+        if(get(h,"indicatorOfUnitOfTimeRange") == 1) /*  hourly */
+        {
+            CHECK((eq(h,"forecastTime",1)||eq(h,"forecastTime",2)||eq(h,"forecastTime",4)||eq(h,"forecastTime",5))||(get(h,"forecastTime") % 3) == 0);
+        }
     }
-    else
-    {
-        CHECK(eq(h,"indicatorOfUnitOfTimeRange",1));/* Hours */
-        CHECK((get(h,"forecastTime") % 6) == 0);  /* Every six hours */
+    else if (is_lam) {
+        if(get(h,"indicatorOfUnitOfTimeRange") == 10 ) /*  three hours */
+        {
+            /* Three hourly is OK */
+            ;
+        }
+        else
+        {
+            CHECK(eq(h,"indicatorOfUnitOfTimeRange",1));/* Hours */
+            CHECK((get(h,"forecastTime") % 3) == 0);  /* Every three hours */
+        }
+    } else {
+        if(get(h,"indicatorOfUnitOfTimeRange") == 11) /*  six hours */
+        {
+            /* Six hourly is OK */
+            ;
+        }
+        else
+        {
+            CHECK(eq(h,"indicatorOfUnitOfTimeRange",1));/* Hours */
+            CHECK((get(h,"forecastTime") % 6) == 0);  /* Every six hours */
+        }
     }
 
     check_range(h,p,min,max);
+}
+
+static void height_level(grib_handle* h,const parameter* p,double min,double max)
+{
+    long level = get(h,"level");
+
+    if (is_uerra){
+        switch(level)
+        {
+        case   15:
+        case   30:
+        case   50:
+        case   75:
+        case  100:
+        case  150:
+        case  200:
+        case  250:
+        case  300:
+        case  400:
+        case  500:
+            break;
+        default:
+            printf("%s, field %d [%s]: invalid height level %ld\n",file,field,param,level);
+            error++;
+            break;
+        }
+    }
 }
 
 static void pressure_level(grib_handle* h,const parameter* p,double min,double max)
 {
     long level = get(h,"level");
 
-    switch(level)
-    {
-    case 1000:
-    case  200:
-    case  250:
-    case  300:
-    case  500:
-    case  700:
-    case  850:
-    case  925:
-    case  50:
-        break;
-    default:
-        printf("%s, field %d [%s]: invalid pressure level %ld\n",file,field,param,level);
-        error++;
-        break;
+    if (is_uerra){
+        switch(level)
+        {
+        case 1000:
+        case  975:
+        case  950:
+        case  925:
+        case  900:
+        case  875:
+        case  850:
+        case  825:
+        case  800:
+        case  750:
+        case  700:
+        case  600:
+        case  500:
+        case  400:
+        case  300:
+        case  250:
+        case  200:
+        case  150:
+        case  100:
+        case   70:
+        case   50:
+        case   30:
+        case   20:
+        case   10:
+            break;
+        default:
+            printf("%s, field %d [%s]: invalid pressure level %ld\n",file,field,param,level);
+            error++;
+            break;
+        }
+    }
+    else if (is_s2s){
+        switch(level)
+        {
+        case 1000:
+        case  925:
+        case  850:
+        case  700:
+        case  500:
+        case  300:
+        case  200:
+        case  100:
+        case  50:
+        case  10:
+            break;
+        default:
+            printf("%s, field %d [%s]: invalid pressure level %ld\n",file,field,param,level);
+            error++;
+            break;
+        }
+    } else {
+        switch(level)
+        {
+        case 1000:
+        case  200:
+        case  250:
+        case  300:
+        case  500:
+        case  700:
+        case  850:
+        case  925:
+        case  50:
+            break;
+        default:
+            printf("%s, field %d [%s]: invalid pressure level %ld\n",file,field,param,level);
+            error++;
+            break;
+        }
     }
 }
 
@@ -447,16 +638,32 @@ static void statistical_process(grib_handle* h,const parameter* p,double min,dou
 {
     switch(get(h,"typeOfProcessedData"))
     {
+    case 0: /* Analysis */
+        if (is_uerra)
+            CHECK(eq(h,"productDefinitionTemplateNumber",8)||eq(h,"productDefinitionTemplateNumber",11));
+        break;
+
+    case 1: /* Forecast */
+        if (is_uerra)
+            CHECK(eq(h,"productDefinitionTemplateNumber",8)||eq(h,"productDefinitionTemplateNumber",11));
+        break;
+
     case 2: /* Analysis and forecast products */
         CHECK(eq(h,"productDefinitionTemplateNumber",8));
         break;
 
     case 3: /* Control forecast products */
-        CHECK(eq(h,"productDefinitionTemplateNumber",11));
+        if (!is_s2s_refcst)
+            CHECK(eq(h,"productDefinitionTemplateNumber",11));
+        else
+            CHECK(eq(h,"productDefinitionTemplateNumber",61));
         break;
 
     case 4: /* Perturbed forecast products */
-        CHECK(eq(h,"productDefinitionTemplateNumber",11));
+        if (!is_s2s_refcst)
+            CHECK(eq(h,"productDefinitionTemplateNumber",11));
+        else
+            CHECK(eq(h,"productDefinitionTemplateNumber",61));
         break;
 
     default:
@@ -466,8 +673,25 @@ static void statistical_process(grib_handle* h,const parameter* p,double min,dou
         break;
     }
 
-    if (!is_lam)
+    if (is_uerra)
     {
+        if(get(h,"indicatorOfUnitOfTimeRange") == 1) /*  hourly */
+        {
+            CHECK((eq(h,"forecastTime",1)||eq(h,"forecastTime",2)||eq(h,"forecastTime",4)||eq(h,"forecastTime",5))||(get(h,"forecastTime") % 3) == 0);
+        }
+    }
+    else if (is_lam) {
+        if(get(h,"indicatorOfUnitOfTimeRange") == 10 ) /*  three hours */
+        {
+            /* Three hourly is OK */
+            ;
+        }
+        else
+        {
+            CHECK(eq(h,"indicatorOfUnitOfTimeRange",1));/* Hours */
+            CHECK((get(h,"forecastTime") % 3) == 0);  /* Every three hours */
+        }
+    } else {
         if(get(h,"indicatorOfUnitOfTimeRange") == 11) /*  six hours */
         {
             /* Six hourly is OK */
@@ -479,41 +703,37 @@ static void statistical_process(grib_handle* h,const parameter* p,double min,dou
             CHECK((get(h,"forecastTime") % 6) == 0);  /* Every six hours */
         }
     }
-    else
-    {
-        if(get(h,"indicatorOfUnitOfTimeRange") == 10 ) /*  three hours */
-        {
-            /* Three hourly is OK */
-            ;
-        }
-        else
-        {
-            CHECK(eq(h,"indicatorOfUnitOfTimeRange",1));/* Hours */
-            CHECK((get(h,"forecastTime") % 3) == 0);  /* Every three hours */
-        }
-    }
 
     CHECK(eq(h,"numberOfTimeRange",1));
     CHECK(eq(h,"numberOfMissingInStatisticalProcess",0));
     CHECK(eq(h,"typeOfTimeIncrement",2));
     /*CHECK(eq(h,"indicatorOfUnitOfTimeForTheIncrementBetweenTheSuccessiveFieldsUsed",255));*/
 
-    CHECK(eq(h,"timeIncrementBetweenSuccessiveFields",0));
-
-    {
-        CHECK(eq(h,"minuteOfEndOfOverallTimeInterval",0));
-        CHECK(eq(h,"secondOfEndOfOverallTimeInterval",0));
-
-        if (!is_lam)
-        {
-            CHECK((get(h,"endStep") % 6) == 0); /* Every six hours */
-        }
+    if (is_s2s)
+        if(get(h,"typeOfStatisticalProcessing") == 0)
+            CHECK(eq(h,"timeIncrementBetweenSuccessiveFields",1)||eq(h,"timeIncrementBetweenSuccessiveFields",4));
         else
-        {
-            CHECK((get(h,"endStep") % 3) == 0);  /* Every three hours */
-        }
-        CHECK(get(h,"endStep") <= 24*30);
+            CHECK(eq(h,"timeIncrementBetweenSuccessiveFields",0));
+    else
+        CHECK(eq(h,"timeIncrementBetweenSuccessiveFields",0));
+
+
+    CHECK(eq(h,"minuteOfEndOfOverallTimeInterval",0));
+    CHECK(eq(h,"secondOfEndOfOverallTimeInterval",0));
+
+    if (is_uerra)
+    {
+        CHECK((eq(h,"endStep",1)||eq(h,"endStep",2)||eq(h,"endStep",4)||eq(h,"endStep",5))||(get(h,"endStep") % 3) == 0);
     }
+    else if (is_lam)
+    {
+        CHECK((get(h,"endStep") % 3) == 0);  /* Every three hours */
+    }
+    else
+    {
+        CHECK((get(h,"endStep") % 6) == 0); /* Every six hours */
+    }
+
 
     if(get(h,"indicatorOfUnitForTimeRange") == 11)
     {
@@ -551,6 +771,15 @@ static void six_hourly(grib_handle* h,const parameter* p,double min,double max)
     check_range(h,p,min,max);
 }
 
+static void since_prev_pp(grib_handle* h,const parameter* p,double min,double max)
+{
+    statistical_process(h,p,min,max);
+
+    CHECK(eq(h,"indicatorOfUnitForTimeRange",1));
+    CHECK(get(h,"endStep") == get(h,"startStep") + get(h,"lengthOfTimeRange"));
+    check_range(h,p,min,max);
+}
+
 static void three_hourly(grib_handle* h,const parameter* p,double min,double max)
 {
     statistical_process(h,p,min,max);
@@ -570,11 +799,28 @@ static void from_start(grib_handle* h,const parameter* p,double min,double max)
     statistical_process(h,p,min,max);
     CHECK(eq(h,"startStep",0));
 
+    if(step == 0){
+        if(!is_uerra){
+            CHECK(min == 0 && max == 0); /* ??? xxx */
+        }
+    }
+    else
+    {
+        check_range(h,p,min/step,max/step);
+    }
+}
+
+static void daily_average(grib_handle* h,const parameter* p,double min,double max)
+{
+    long step = get(h,"endStep");
+    CHECK(get(h,"startStep") == get(h,"endStep") - 24);
+    statistical_process(h,p,min,max);
+
     if(step == 0)
         CHECK(min == 0 && max == 0);
     else
     {
-        check_range(h,p,min/step,max/step);
+        check_range(h,p,min,max);
     }
 }
 
@@ -622,7 +868,7 @@ static void given_thickness(grib_handle* h,const parameter* p,double min,double 
     CHECK(!missing(h,"scaledValueOfSecondFixedSurface"));
 }
 
-void latlon_grid(grib_handle* h)
+static void latlon_grid(grib_handle* h)
 {
     const double tolerance = 1.0/1000000.0; /* angular tolerance for grib2: micro degrees */
     long data_points = get(h,"numberOfDataPoints");
@@ -700,16 +946,30 @@ void latlon_grid(grib_handle* h)
         dsouth = dtmp;
     }
 
-    if (!is_lam) CHECK(north > south);
-    if (!is_lam) CHECK(east  > west);
+    if (!(is_lam || is_uerra))
+    {
+        double area, globe;
+        CHECK(north > south);
+        CHECK(east  > west);
+
+        /* Check that the grid is symmetrical */
+        CHECK(north == -south);
+        CHECK( DBL_EQUAL(dnorth, -dsouth, tolerance) );
+        CHECK(parallel == (east-west)/we + 1);
+        CHECK(fabs((deast-dwest)/dwe + 1 - parallel) < 1e-10);
+        CHECK(meridian == (north-south)/ns + 1);
+        CHECK(fabs((dnorth-dsouth)/dns + 1 - meridian) < 1e-10 );
+
+        /* Check that the field is global */
+        area  = (dnorth-dsouth) * (deast-dwest);
+        globe = 360.0*180.0;
+        CHECK(area <= globe);
+        CHECK(area >= globe*0.95);
+    }
 
     /* GRIB2 requires longitudes are always positive */
     CHECK(east >= 0);
     CHECK(west >= 0);
-
-    /* Check that the grid is symmetrical */
-    if (!is_lam) CHECK(north == -south);
-    if (!is_lam) CHECK( DBL_EQUAL(dnorth, -dsouth, tolerance) );
 
     /*
       printf("meridian=%ld north=%ld south=%ld ns=%ld \n",meridian,north,south,ns);
@@ -718,24 +978,11 @@ void latlon_grid(grib_handle* h)
       printf("parallel=%ld east=%f west=%f we=%f \n",parallel,deast,dwest,dwe);
      */
 
-    if (!is_lam) CHECK(parallel == (east-west)/we + 1);
-    if (!is_lam) CHECK(fabs((deast-dwest)/dwe + 1 - parallel) < 1e-10);
-
-    if (!is_lam) CHECK(meridian == (north-south)/ns + 1);
-    if (!is_lam) CHECK(fabs((dnorth-dsouth)/dns + 1 - meridian) < 1e-10 );
-
-    /* Check that the field is global */
-    if (!is_lam) {
-        double area  = (dnorth-dsouth) * (deast-dwest);
-        double globe = 360.0*180.0;
-        CHECK(area <= globe);
-        CHECK(area >= globe*0.95);
-    }
 }
 
 #define X(x) printf("%s=%ld ",#x,get(h,#x))
 
-void check_parameter(grib_handle* h,double min,double max)
+static void check_parameter(grib_handle* h,double min,double max)
 {
     int err;
     int best = -1;
@@ -760,15 +1007,20 @@ void check_parameter(grib_handle* h,double min,double max)
             else if (ktype == GRIB_TYPE_STRING) {
                 char strval[256]={0,};
                 size_t len = 256;
-                if (strcasecmp(parameters[i].pairs[j].value_string,"MISSING")==0) {
-                    int is_miss = grib_is_missing(h, parameters[i].pairs[j].key, &err);
-                    if (err == GRIB_SUCCESS && is_miss) {
-                        matches++;
+                if (is_uerra && strcasecmp(parameters[i].pairs[j].key,"model")==0) {
+                    /* printf("Skipping model keyword for UERRA class\n"); */
+                    matches++; /*xxx hack to pretend that model key was matched.. */
+                } else {
+                    if (strcasecmp(parameters[i].pairs[j].value_string,"MISSING")==0) {
+                        int is_miss = grib_is_missing(h, parameters[i].pairs[j].key, &err);
+                        if (err == GRIB_SUCCESS && is_miss) {
+                            matches++;
+                        }
                     }
-                }
-                else if(grib_get_string(h,parameters[i].pairs[j].key,strval,&len) == GRIB_SUCCESS) {
-                    if(strcmp(parameters[i].pairs[j].value_string, strval) == 0) {
-                        matches++;
+                    else if(grib_get_string(h,parameters[i].pairs[j].key,strval,&len) == GRIB_SUCCESS) {
+                        if(strcmp(parameters[i].pairs[j].value_string, strval) == 0) {
+                            matches++;
+                        }
                     }
                 }
             }
@@ -776,7 +1028,15 @@ void check_parameter(grib_handle* h,double min,double max)
                 assert(!"Unknown key type");
             }
             j++;
-            /* printf("%s %ld val -> %d %d %ld %d\n",parameters[i].pairs[j].key,parameters[i].pairs[j].value,val,matches,j,best); */
+#if 0
+            printf("%s %s %ld val -> %d %d %d\n",
+                    parameters[i].pairs[j].key,
+                    parameters[i].pairs[j].value_string,
+                    val,
+                    matches,
+                    j,
+                    best);
+#endif
         }
 
         if(matches == j && matches > best)
@@ -812,18 +1072,18 @@ void check_parameter(grib_handle* h,double min,double max)
         X(discipline);
         X(parameterCategory);
         X(parameterNumber);
-        X(scaleFactorOfFirstFixedSurface);
-        X(scaleFactorOfSecondFixedSurface);
-        X(scaledValueOfFirstFixedSurface);
-        X(scaledValueOfSecondFixedSurface);
         X(typeOfFirstFixedSurface);
+        X(scaleFactorOfFirstFixedSurface);
+        X(scaledValueOfFirstFixedSurface);
         X(typeOfSecondFixedSurface);
+        X(scaleFactorOfSecondFixedSurface);
+        X(scaledValueOfSecondFixedSurface);
         printf("\n");
         error++;
     }
 }
 
-void verify(grib_handle* h)
+static void verify(grib_handle* h)
 {
     double min = 0,max = 0;
 
@@ -904,43 +1164,72 @@ void verify(grib_handle* h)
 
     CHECK(eq(h,"significanceOfReferenceTime",1)); /* Start of forecast */
 
-    /* Check if the date is OK */
-    {
-        long date = get(h,"date");
-        /* CHECK(date > 20060101); */
+    if (!is_s2s){
+        /* todo check for how many years back the reforecast is done? Is it coded in the grib??? */
+        /* Check if the date is OK */
+        {
+            long date = get(h,"date");
+            /* CHECK(date > 20060101); */
 
-        CHECK( (date / 10000)         == get(h,"year"));
-        CHECK( ((date % 10000) / 100) == get(h,"month"));
-        CHECK( ((date % 100))         == get(h,"day"));
+            CHECK( (date / 10000)         == get(h,"year"));
+            CHECK( ((date % 10000) / 100) == get(h,"month"));
+            CHECK( ((date % 100))         == get(h,"day"));
+        }
     }
 
-    /* Only 00, 06 12 and 18 Cycle OK */
-    if (!is_lam){
-        CHECK(eq(h,"hour",0) || eq(h,"hour",6) || eq(h,"hour",12) || eq(h,"hour",18));
+    if (is_uerra){
+        CHECK(le(h,"hour",24));
+    }
+    else if (is_lam){
+        CHECK(eq(h,"hour",0) || eq(h,"hour",3) || eq(h,"hour",6) || eq(h,"hour",9) || eq(h,"hour",12) || eq(h,"hour",15) || eq(h,"hour",18) || eq(h,"hour",21));
     }
     else
     {
-        CHECK(eq(h,"hour",0) || eq(h,"hour",3) || eq(h,"hour",6) || eq(h,"hour",9) || eq(h,"hour",12) || eq(h,"hour",15) || eq(h,"hour",18) || eq(h,"hour",21));
+    /* Only 00, 06 12 and 18 Cycle OK */
+        CHECK(eq(h,"hour",0) || eq(h,"hour",6) || eq(h,"hour",12) || eq(h,"hour",18));
     }
     CHECK(eq(h,"minute",0));
     CHECK(eq(h,"second",0));
+    CHECK(ge(h,"startStep",0));
 
-    CHECK(eq(h,"productionStatusOfProcessedData",4)||eq(h,"productionStatusOfProcessedData",5)); /*  TIGGE Operational */
+    if (is_s2s){
+        CHECK(eq(h,"productionStatusOfProcessedData",6)||eq(h,"productionStatusOfProcessedData",7)); /*  S2S prod||test */
+        CHECK(le(h,"endStep",100*24));
+    }
+    else if (!is_uerra)
+    {
+        CHECK(eq(h,"productionStatusOfProcessedData",4)||eq(h,"productionStatusOfProcessedData",5)); /*  TIGGE prod||test */
+        CHECK(le(h,"endStep",30*24));
+    }
 
-    if (!is_lam){
-        CHECK((get(h,"step") % 6) == 0);
+    if (is_uerra){
+        CHECK((eq(h,"step",1)||eq(h,"step",2)||eq(h,"step",4)||eq(h,"step",5))||(get(h,"step") % 3) == 0);
+    }
+    else if (is_lam){
+        CHECK((get(h,"step") % 3) == 0);
     }
     else
     {
-        CHECK((get(h,"step") % 3) == 0);
+        CHECK((get(h,"step") % 6) == 0);
     }
-    CHECK(ge(h,"startStep",0));
-    CHECK(le(h,"endStep",30*24));
 
-    /* 2 = analysis or forecast , 3 = control forecast, 4 = perturbed forecast */
-    CHECK(eq(h,"typeOfProcessedData",2)||eq(h,"typeOfProcessedData",3)||eq(h,"typeOfProcessedData",4));
+    if (is_uerra){
+        CHECK(eq(h,"productionStatusOfProcessedData",8)||eq(h,"productionStatusOfProcessedData",9)); /*  UERRA prod||test */
+        CHECK(le(h,"endStep",30));
+        /* 0 = analysis , 1 = forecast */
+        CHECK(eq(h,"typeOfProcessedData",0)||eq(h,"typeOfProcessedData",1));
+        if (get(h,"typeOfProcessedData") == 0)
+            CHECK(eq(h,"step",0));
+        else
+            CHECK((eq(h,"step",1)||eq(h,"step",2)||eq(h,"step",4)||eq(h,"step",5))||(get(h,"step") % 3) == 0);
+    }
+    else
+    {
+        /* 2 = analysis or forecast , 3 = control forecast, 4 = perturbed forecast */
+        CHECK(eq(h,"typeOfProcessedData",2)||eq(h,"typeOfProcessedData",3)||eq(h,"typeOfProcessedData",4));
+    }
 
-    /* TODO: validate local usage. Empty for now */
+    /* TODO: validate local usage. Empty for now xxx*/
     /* CHECK(eq(h,"section2.sectionLength",5)); */
 
     /* Section 3 */
@@ -954,10 +1243,15 @@ void verify(grib_handle* h)
         latlon_grid(h);
         break;
 
-    case 40:
-        gaussian_grid(h);
+    case 30: /*Lambert conformal*/
+        /*lambert_grid(h); # TODO xxx
+        printf("warning: Lambert grid - geometry checking not implemented yet!\n"); */
+       /*CHECK(eq(h,"scanningMode",64));*/ /* M-F data used to have it wrong.. but it might depends on other projection set up as well!*/
         break;
 
+    case 40: /* gaussian grid (regular or reduced) */
+        gaussian_grid(h);
+        break;
 
     default:
         printf("%s, field %d [%s]: Unsupported gridDefinitionTemplateNumber %ld\n",
@@ -978,9 +1272,18 @@ void verify(grib_handle* h)
 
     /* Check values */
     CHECK(eq(h,"typeOfOriginalFieldValues",0)); /* Floating point */
+
+    check_validity_datetime(h);
+
+    /* do not store empty values e.g. fluxes at step 0
+        todo ?? now it's allowed in the code here!
+        if(!missing(h,"typeOfStatisticalProcessing"))
+          CHECK(ne(h,"stepRange",0));*/
+
+
 }
 
-void validate(const char* path)
+static void validate(const char* path)
 {
     FILE *f = fopen(path,"r");
     grib_handle *h = 0;
@@ -1029,7 +1332,7 @@ void validate(const char* path)
     }
 }
 
-void scan(const char* name)
+static void scan(const char* name)
 {
     DIR *dir;
     if((dir = opendir(name)) != NULL)
@@ -1049,19 +1352,22 @@ void scan(const char* name)
         validate(name);
 }
 
-void usage()
+static void usage()
 {
-    printf("tigge_check [-w] [-v] [-z] [-g good] [-b bad] files ....\n");
+    printf("tigge_check [options] grib_file grib_file ...\n");
     printf("   -l: check local area model fields\n");
     printf("   -v: check value ranges\n");
-    printf("   -w: warning are treated as errors\n");
+    printf("   -w: warnings are treated as errors\n");
     printf("   -g: write good gribs\n");
     printf("   -b: write bad  gribs\n");
     printf("   -z: return 0 to calling shell\n");
+    printf("   -s: check s2s fields\n");
+    printf("   -r: check s2s reforecast fields\n");
+    printf("   -u: check uerra fields\n");
     exit(1);
 }
 
-int main(int argc,const char** argv)
+int main(int argc, char** argv)
 {
     int i;
     int err = 0;
@@ -1100,6 +1406,18 @@ int main(int argc,const char** argv)
 
             case 'l':
                 is_lam=1;
+                break;
+
+            case 's':
+                is_s2s=1;
+                break;
+
+            case 'r':
+                is_s2s_refcst=1;
+                break;
+
+            case 'u':
+                is_uerra=1;
                 break;
 
             default:

@@ -8,5 +8,13 @@
 # virtue of its status as an intergovernmental organisation nor does it submit to any jurisdiction.
 
 . ./include.sh
-${examples_dir}f_set_bitmap > /dev/null
-rm -f out.bmp.grib
+
+OUT_TMP=out.set_bitmap_f.grib
+
+# The input and output files are hardcoded in the example
+${examples_dir}grib_api_f_set_bitmap
+
+x=`${tools_dir}/grib_get -p numberOfDataPoints,numberOfCodedValues,numberOfMissing $OUT_TMP`
+[ "$x" = "496 486 10" ]
+
+rm -f $OUT_TMP

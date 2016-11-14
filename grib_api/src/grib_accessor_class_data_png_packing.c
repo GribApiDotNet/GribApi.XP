@@ -515,7 +515,7 @@ static int pack_double(grib_accessor* a, const double* val, size_t *len)
             !=GRIB_SUCCESS) {
         grib_context_log(a->parent->h->context,GRIB_LOG_ERROR,
                 "unable to find nearest_smaller_value of %g for %s",min,self->reference_value);
-        grib_exit(GRIB_INTERNAL_ERROR);
+        exit(GRIB_INTERNAL_ERROR);
     }
 
     if(reference_value > min)
@@ -638,6 +638,7 @@ static int pack_double(grib_accessor* a, const double* val, size_t *len)
     rows = grib_context_buffer_malloc_clear(a->parent->h->context,sizeof(png_bytep)*height);
 
     rows  = malloc(height*sizeof(png_bytep));
+    Assert(rows);
     for (j=0;j<height;j++)
         rows[j] = &encoded[j*width*bytes];
 
@@ -669,14 +670,14 @@ static int pack_double(grib_accessor* a, const double* val, size_t *len)
 static int  unpack_double(grib_accessor* a, double* val, size_t *len)
 {
     grib_context_log(a->parent->h->context, GRIB_LOG_ERROR,
-            "grib_accessor_data_png_packing: png support not enabled. Please rerun configure with --with-png-support");
+            "grib_accessor_data_png_packing: PNG support not enabled.");
     return GRIB_NOT_IMPLEMENTED;
 }
 
 static int pack_double(grib_accessor* a, const double* val, size_t *len)
 {
     grib_context_log(a->parent->h->context, GRIB_LOG_ERROR,
-            "grib_accessor_data_png_packing: png support not enabled. Please rerun configure with --with-png-support");
+            "grib_accessor_data_png_packing: PNG support not enabled.");
     return GRIB_NOT_IMPLEMENTED;
 }
 

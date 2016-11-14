@@ -13,20 +13,22 @@ import sys
 
 from gribapi import *
 
-VERBOSE=1 # verbose error reporting
+VERBOSE = 1  # verbose error reporting
+
 
 def example():
     f = open(sys.argv[1])
-    out = open(sys.argv[2],'w')
+    out = open(sys.argv[2], 'w')
 
     while 1:
         gid = grib_new_from_file(f)
-        if gid is None: break
+        if gid is None:
+            break
 
         message = grib_get_message(gid)
 
         newgid = grib_new_from_message(message)
-        grib_write(newgid,out)
+        grib_write(newgid, out)
         grib_release(newgid)
 
         grib_release(gid)
@@ -34,14 +36,15 @@ def example():
     out.close()
     f.close()
 
+
 def main():
     try:
         example()
-    except GribInternalError,err:
+    except GribInternalError, err:
         if VERBOSE:
             traceback.print_exc(file=sys.stderr)
         else:
-            print >>sys.stderr,err.msg
+            print >>sys.stderr, err.msg
 
         return 1
 

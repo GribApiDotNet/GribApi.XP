@@ -52,16 +52,15 @@ if( HAVE_FORTRAN )
     # install( CODE "EXECUTE_PROCESS (COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_Fortran_MODULE_DIRECTORY}/${CMAKE_CFG_INTDIR} ${CMAKE_INSTALL_PREFIX}/${INSTALL_INCLUDE_DIR})" )
     install( DIRECTORY ${CMAKE_Fortran_MODULE_DIRECTORY}/${CMAKE_CFG_INTDIR} DESTINATION ${INSTALL_INCLUDE_DIR} )
 
-    install( CODE
-"
-if( EXISTS ${CMAKE_Fortran_MODULE_DIRECTORY}/${CMAKE_CFG_INTDIR}/GRIB_API.mod )
-  execute_process( COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_Fortran_MODULE_DIRECTORY}/${CMAKE_CFG_INTDIR}/GRIB_API.mod ${CMAKE_INSTALL_PREFIX}/${INSTALL_INCLUDE_DIR}/grib_api.mod )
-endif()
+#    install( CODE
+#"
+#if( EXISTS ${CMAKE_Fortran_MODULE_DIRECTORY}/${CMAKE_CFG_INTDIR}/GRIB_API.mod )
+#  execute_process( COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_Fortran_MODULE_DIRECTORY}/${CMAKE_CFG_INTDIR}/GRIB_API.mod ${CMAKE_INSTALL_PREFIX}/${INSTALL_INCLUDE_DIR}/grib_api.mod )
+#endif()
+#
+#if( EXISTS ${CMAKE_Fortran_MODULE_DIRECTORY}/${CMAKE_CFG_INTDIR}/grib_api.mod )
+# execute_process( COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_Fortran_MODULE_DIRECTORY}/${CMAKE_CFG_INTDIR}/grib_api.mod ${CMAKE_INSTALL_PREFIX}/${INSTALL_INCLUDE_DIR}/GRIB_API.mod )
+#endif()
+#" )
 
-if( EXISTS ${CMAKE_Fortran_MODULE_DIRECTORY}/${CMAKE_CFG_INTDIR}/grib_api.mod )
-  execute_process( COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_Fortran_MODULE_DIRECTORY}/${CMAKE_CFG_INTDIR}/grib_api.mod ${CMAKE_INSTALL_PREFIX}/${INSTALL_INCLUDE_DIR}/GRIB_API.mod )
 endif()
-" )
-
-endif()
-

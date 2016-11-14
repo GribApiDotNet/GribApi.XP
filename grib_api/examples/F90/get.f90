@@ -27,97 +27,98 @@ program get
   integer                            ::  numberOfValues
   real                               ::  average,min_val, max_val
   integer                            ::  is_missing, is_defined
+  character(len=10)                  ::  open_mode='r'
   
   call grib_open_file(ifile, &
-       '../../data/reduced_latlon_surface.grib1','r')
+       '../../data/reduced_latlon_surface.grib1', open_mode)
   
   ! Loop on all the messages in a file.
   
-  !     a new grib message is loaded from file
-  !     igrib is the grib id to be used in subsequent calls
+  ! A new GRIB message is loaded from file
+  ! igrib is the GRIB id to be used in subsequent calls
   call  grib_new_from_file(ifile,igrib, iret) 
-  
+
   LOOP: DO WHILE (iret /= GRIB_END_OF_FILE)
 
-     !check if the value of the key is MISSING
-     is_missing=0;
-     call grib_is_missing(igrib,'Ni',is_missing);
-     if ( is_missing /= 1 ) then
-        !     get as a integer
-        call grib_get(igrib,'Ni',numberOfPointsAlongAParallel) 
-        write(*,*) 'numberOfPointsAlongAParallel=', &
-             numberOfPointsAlongAParallel
-     else
-        write(*,*) 'numberOfPointsAlongAParallel is missing'
-     endif     
-     
-     !check for existence of keys
-     is_defined=0;
-     call grib_is_defined(igrib,'edition',is_defined);
-     if ( is_defined == 0 ) then
-         write(0,*) 'ERROR: An expected key was not defined!!'
-         call exit(1)
-     endif
-     call grib_is_defined(igrib,'ThisIsNoLoveSong',is_defined);
-     if ( is_defined == 1 ) then
-         write(0,*) 'ERROR: An unexpected key was defined!!'
-         call exit(1)
-     endif
+    !check if the value of the key is MISSING
+    is_missing=0;
+    call grib_is_missing(igrib,'Ni',is_missing);
+    if ( is_missing /= 1 ) then
+      !     get as a integer
+      call grib_get(igrib,'Ni',numberOfPointsAlongAParallel) 
+      write(*,*) 'numberOfPointsAlongAParallel=', &
+            numberOfPointsAlongAParallel
+    else
+      write(*,*) 'numberOfPointsAlongAParallel is missing'
+    endif     
 
-     !     get as a integer
-     call grib_get(igrib,'Nj',numberOfPointsAlongAMeridian) 
-     write(*,*) 'numberOfPointsAlongAMeridian=', &
-          numberOfPointsAlongAMeridian
-     
-     !     get as a real
-     call grib_get(igrib, 'latitudeOfFirstGridPointInDegrees', &
+    !check for existence of keys
+    is_defined=0;
+    call grib_is_defined(igrib,'edition',is_defined);
+    if ( is_defined == 0 ) then
+      write(0,*) 'ERROR: An expected key was not defined!!'
+      call exit(1)
+    endif
+    call grib_is_defined(igrib,'ThisIsNoLoveSong',is_defined);
+    if ( is_defined == 1 ) then
+      write(0,*) 'ERROR: An unexpected key was defined!!'
+      call exit(1)
+    endif
+
+    !     get as a integer
+    call grib_get(igrib,'Nj',numberOfPointsAlongAMeridian) 
+    write(*,*) 'numberOfPointsAlongAMeridian=', &
+         numberOfPointsAlongAMeridian
+
+    !     get as a real
+    call grib_get(igrib, 'latitudeOfFirstGridPointInDegrees', &
           latitudeOfFirstPointInDegrees) 
-     write(*,*) 'latitudeOfFirstGridPointInDegrees=', &
+    write(*,*) 'latitudeOfFirstGridPointInDegrees=', &
           latitudeOfFirstPointInDegrees
-     
-     !     get as a real
-     call grib_get(igrib, 'longitudeOfFirstGridPointInDegrees', &
-          longitudeOfFirstPointInDegrees) 
-     write(*,*) 'longitudeOfFirstGridPointInDegrees=', &
-          longitudeOfFirstPointInDegrees
-     
-     !     get as a real
-     call grib_get(igrib, 'latitudeOfLastGridPointInDegrees', &
-          latitudeOfLastPointInDegrees) 
-     write(*,*) 'latitudeOfLastGridPointInDegrees=', &
-          latitudeOfLastPointInDegrees
-     
-     !     get as a real
-     call grib_get(igrib, 'longitudeOfLastGridPointInDegrees', &
-          longitudeOfLastPointInDegrees) 
-     write(*,*) 'longitudeOfLastGridPointInDegrees=', &
-          longitudeOfLastPointInDegrees
-     
-     
-     !     get the size of the values array
-     call grib_get_size(igrib,'values',numberOfValues)
-     write(*,*) 'numberOfValues=',numberOfValues
-     
-     allocate(values(numberOfValues), stat=iret)
-     !     get data values
-     call grib_get(igrib,'values',values)
-     call grib_get(igrib,'min',min_val) ! can also be obtained through minval(values)
-     call grib_get(igrib,'max',max_val) ! can also be obtained through maxval(values)
-     call grib_get(igrib,'average',average) ! can also be obtained through maxval(values)
 
-     deallocate(values)
-          
-     write(*,*)'There are ',numberOfValues, &
+    !     get as a real
+    call grib_get(igrib, 'longitudeOfFirstGridPointInDegrees', &
+         longitudeOfFirstPointInDegrees) 
+    write(*,*) 'longitudeOfFirstGridPointInDegrees=', &
+         longitudeOfFirstPointInDegrees
+
+    !     get as a real
+    call grib_get(igrib, 'latitudeOfLastGridPointInDegrees', &
+         latitudeOfLastPointInDegrees) 
+    write(*,*) 'latitudeOfLastGridPointInDegrees=', &
+         latitudeOfLastPointInDegrees
+
+    !     get as a real
+    call grib_get(igrib, 'longitudeOfLastGridPointInDegrees', &
+         longitudeOfLastPointInDegrees) 
+    write(*,*) 'longitudeOfLastGridPointInDegrees=', &
+          longitudeOfLastPointInDegrees
+
+
+    !     get the size of the values array
+    call grib_get_size(igrib,'values',numberOfValues)
+    write(*,*) 'numberOfValues=',numberOfValues
+
+    allocate(values(numberOfValues), stat=iret)
+    !     get data values
+    call grib_get(igrib,'values',values)
+    call grib_get(igrib,'min',min_val) ! can also be obtained through minval(values)
+    call grib_get(igrib,'max',max_val) ! can also be obtained through maxval(values)
+    call grib_get(igrib,'average',average) ! can also be obtained through maxval(values)
+
+    deallocate(values)
+
+    write(*,*)'There are ',numberOfValues, &
           ' average is ',average, &
           ' min is ',  min_val, &
           ' max is ',  max_val
-     
-     call grib_release(igrib)
-     
-     call grib_new_from_file(ifile,igrib, iret)
-     
+
+    call grib_release(igrib)
+
+    call grib_new_from_file(ifile,igrib, iret)
+
   end do LOOP
-  
+
   call grib_close_file(ifile)
-  
+
 end program get

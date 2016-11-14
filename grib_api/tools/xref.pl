@@ -7,8 +7,8 @@ use DBI;
 use strict;
 
 my $host="wrep-db-misc-prod";
-my $user="ecmwf";
-my $pass="";
+my $user="hidden";
+my $pass="hidden";
 
 my $dbh  = DBI->connect("dbi:mysql:;host=$host",$user,$pass) or die $DBI::errstr;
 

@@ -501,8 +501,11 @@ static int unpack_double(grib_accessor* a, double* val, size_t *len)
         if (i == numberOfGroupsOfDataValues-1) nvals_per_group = trueLengthOfLastGroup;
         Assert (n_vals >= vcount+nvals_per_group);
 
+        /*grib_decode_long_array(buf_vals, &vals_p, nbits_per_group_val, nvals_per_group,
+                               &sec_val[vcount]); */
         for(j=0; j < nvals_per_group;j++){
-            sec_val[vcount+j] = group_ref_val + grib_decode_unsigned_long(buf_vals,  &vals_p, nbits_per_group_val);
+            sec_val[vcount+j] = group_ref_val + grib_decode_unsigned_long(buf_vals, &vals_p, nbits_per_group_val);
+            /* sec_val[vcount+j] += group_ref_val; */
         }
 
         vcount += nvals_per_group;
@@ -634,7 +637,7 @@ static int pack_double(grib_accessor* a, const double* val, size_t *len)
             !=GRIB_SUCCESS) {
         grib_context_log(a->parent->h->context,GRIB_LOG_ERROR,
                 "unable to find nearest_smaller_value of %g for %s",min,self->reference_value);
-        grib_exit(GRIB_INTERNAL_ERROR);
+        exit(GRIB_INTERNAL_ERROR);
     }
 
     binary_scale_factor    = grib_get_binary_scale_fact(max,reference_value,bits_per_value,&err);

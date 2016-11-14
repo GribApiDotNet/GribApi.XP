@@ -13,15 +13,17 @@ import sys
 
 from gribapi import *
 
-INPUT='../../data/gts.bufr'
-VERBOSE=1 # verbose error reporting
+INPUT = '../../data/gts.bufr'
+VERBOSE = 1  # verbose error reporting
+
 
 def example():
     f = open(INPUT)
 
     while 1:
         bid = gts_new_from_file(f)
-        if bid is None: break
+        if bid is None:
+            break
 
         iterid = grib_keys_iterator_new(bid)
 
@@ -32,22 +34,23 @@ def example():
 
         while grib_keys_iterator_next(iterid):
             keyname = grib_keys_iterator_get_name(iterid)
-            keyval = grib_get_string(iterid,keyname)
-            print "%s = %s" % (keyname,keyval)
+            keyval = grib_get_string(iterid, keyname)
+            print "%s = %s" % (keyname, keyval)
 
         grib_keys_iterator_delete(iterid)
         grib_release(bid)
 
     f.close()
 
+
 def main():
     try:
         example()
-    except GribInternalError,err:
+    except GribInternalError, err:
         if VERBOSE:
             traceback.print_exc(file=sys.stderr)
         else:
-            print >> sys.stderr,err.msg
+            print >> sys.stderr, err.msg
 
         return 1
 

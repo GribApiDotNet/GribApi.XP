@@ -197,22 +197,27 @@ static void init_class(grib_accessor_class* c)
 #define EFDEBUG 0
 
 static unsigned long nbits[32]={
-        0x1, 0x2, 0x4, 0x8, 0x10, 0x20,
-        0x40, 0x80, 0x100, 0x200, 0x400, 0x800,
-        0x1000, 0x2000, 0x4000, 0x8000, 0x10000, 0x20000,
-        0x40000, 0x80000, 0x100000, 0x200000, 0x400000, 0x800000,
-        0x1000000, 0x2000000, 0x4000000, 0x8000000, 0x10000000, 0x20000000,
-        0x40000000, 0x80000000
+                0x1, 0x2, 0x4, 0x8, 0x10, 0x20,
+                0x40, 0x80, 0x100, 0x200, 0x400, 0x800,
+                0x1000, 0x2000, 0x4000, 0x8000, 0x10000, 0x20000,
+                0x40000, 0x80000, 0x100000, 0x200000, 0x400000, 0x800000,
+                0x1000000, 0x2000000, 0x4000000, 0x8000000, 0x10000000, 0x20000000,
+                0x40000000, 0x80000000
 };
 
-static long number_of_bits(unsigned long x) {
+static long number_of_bits(grib_handle* h, unsigned long x)
+{
     unsigned long *n=nbits;
     const int count = sizeof(nbits)/sizeof(nbits[0]);
     long i=0;
     while (x>=*n) {
         n++;
         i++;
-        Assert(i<count);
+        if (i>=count) {
+            /*grib_dump_content(h, stdout,"debug", ~0, NULL);*/
+            grib_context_log(h->context, GRIB_LOG_FATAL,
+                    "grib_accessor_class_data_g1second_order_general_extended_packing: Number out of range: %ld", x);
+        }
     }
     return i;
 }
@@ -248,7 +253,6 @@ static void init(grib_accessor* a,const long v, grib_arguments* args)
     self->values=NULL;
     self->size=0;
     a->flags |= GRIB_ACCESSOR_FLAG_DATA;
-
 }
 
 static int value_count(grib_accessor* a,long* count)
@@ -326,6 +330,7 @@ static int unpack_double(grib_accessor* a, double* values, size_t *len)
     long bias=0;
     long y=0,z=0,w=0;
     size_t k,ngroups;
+    /* fprintf(stderr, "g1second_order_general_extended_packing"); */
 
     if (!self->dirty) {
         if (*len<self->size) {
@@ -389,16 +394,24 @@ static int unpack_double(grib_accessor* a, double* values, size_t *len)
     n=orderOfSPD;
     for (i=0;i<numberOfGroups;i++) {
         if (groupWidths[i]>0) {
-
+            grib_decode_long_array(buf, &pos, groupWidths[i], groupLengths[i],
+                    &X[n]);
             for (j=0;j<groupLengths[i];j++) {
-                X[n]=grib_decode_unsigned_long(buf,&pos,groupWidths[i]);
-#if EFDEBUG
-                printf("DXXXXX %ld %ld %ld %ld\n",n,X[n],groupWidths[i],groupLengths[i]);
-#endif
                 X[n]+=firstOrderValues[i];
                 count++;
                 n++;
             }
+#if 0
+            for (j=0;j<groupLengths[i];j++) {
+                X[n]=grib_decode_unsigned_long(buf,&pos,groupWidths[i]);
+
+                /*printf("DXXXXX %ld %ld %ld %ld\n",n,X[n],groupWidths[i],groupLengths[i]);*/
+
+                X[n]+=firstOrderValues[i];
+                count++;
+                n++;
+            }
+#endif
         } else {
             for (j=0;j<groupLengths[i];j++) {
                 X[n]=firstOrderValues[i];
@@ -472,39 +485,39 @@ static int unpack_double(grib_accessor* a, double* values, size_t *len)
     return ret;
 }
 
-static void grib_split_long_groups(grib_context* c,long* numberOfGroups,long* lengthOfSecondOrderValues,
+static void grib_split_long_groups(grib_handle* hand, grib_context* c,long* numberOfGroups,long* lengthOfSecondOrderValues,
         long* groupLengths,long* widthOfLengths,
         long* groupWidths, long widthOfWidths,
         long* firstOrderValues,long widthOfFirstOrderValues) {
 
     long i,j;
     long newWidth,delta;
-    long *widthsOfLengths;
-    long *localWidthsOfLengths;
-    long *localLengths;
-    long *localWidths;
-    long *localFirstOrderValues;
+    long *widthsOfLengths = NULL;
+    long *localWidthsOfLengths = NULL;
+    long *localLengths = NULL;
+    long *localWidths = NULL;
+    long *localFirstOrderValues = NULL;
     int maxNumberOfGroups=*numberOfGroups*2;
 
 
     /* the widthOfLengths is the same for all the groupLengths and therefore if
-		few big groups are present all the groups have to be coded with a large number
-		of bits (big widthOfLengths) even if the majority of them is small. 
-		Here we try to reduce the size of the message splitting the big groups.
+       few big groups are present all the groups have to be coded with a large number
+       of bits (big widthOfLengths) even if the majority of them is small.
+       Here we try to reduce the size of the message splitting the big groups.
      */
-
+    Assert(maxNumberOfGroups>0);
     widthsOfLengths=(long*)grib_context_malloc_clear(c,sizeof(long)*maxNumberOfGroups);
     j=0;
     /* compute the widthOfLengths and the number of big groups */
     for (i=0;i<*numberOfGroups;i++) {
-        widthsOfLengths[i]=number_of_bits(groupLengths[i]);
+        widthsOfLengths[i]=number_of_bits(hand, groupLengths[i]);
         if (*widthOfLengths==widthsOfLengths[i]) {
             j++;
         }
     }
 
     /* variation of the size of message due to decrease of groupLengths
-		of 1*/
+       of 1*/
     newWidth=*widthOfLengths-1;
     delta=j*(widthOfWidths+widthOfFirstOrderValues+newWidth)-*numberOfGroups;
 
@@ -524,18 +537,21 @@ static void grib_split_long_groups(grib_context* c,long* numberOfGroups,long* le
         for (i=0;i<*numberOfGroups;i++) {
             if (newWidth<widthsOfLengths[i]) {
                 localLengths[j]=groupLengths[i]/2;
-                localWidthsOfLengths[j]=number_of_bits(localLengths[j]);
+                Assert(j < maxNumberOfGroups);
+                localWidthsOfLengths[j]=number_of_bits(hand, localLengths[j]);
                 localWidths[j]=groupWidths[i];
                 localFirstOrderValues[j]=firstOrderValues[i];
                 j++;
                 localLengths[j]=groupLengths[i]-localLengths[j-1];
-                localWidthsOfLengths[j]=number_of_bits(localLengths[j]);
+                Assert(j < maxNumberOfGroups);
+                localWidthsOfLengths[j]=number_of_bits(hand, localLengths[j]);
                 localWidths[j]=groupWidths[i];
                 localFirstOrderValues[j]=firstOrderValues[i];
                 if (localWidthsOfLengths[j]>newWidth) {
                     localLengths[j]--;
                     localWidthsOfLengths[j]--;
                     j++;
+                    Assert(j < maxNumberOfGroups);
                     localLengths[j]=1;
                     localWidthsOfLengths[j]=1;
                     localWidths[j]=groupWidths[i];
@@ -543,6 +559,7 @@ static void grib_split_long_groups(grib_context* c,long* numberOfGroups,long* le
                 }
                 j++;
             } else {
+                Assert(j < maxNumberOfGroups);
                 localLengths[j]=groupLengths[i];
                 localWidthsOfLengths[j]=widthsOfLengths[i];
                 localWidths[j]=groupWidths[i];
@@ -559,6 +576,7 @@ static void grib_split_long_groups(grib_context* c,long* numberOfGroups,long* le
         *lengthOfSecondOrderValues=0;
         for (i=0;i<*numberOfGroups;i++) {
             groupLengths[i]=localLengths[i];
+            Assert(i < maxNumberOfGroups);
             widthsOfLengths[i]=localWidthsOfLengths[i];
             groupWidths[i]=localWidths[i];
             firstOrderValues[i]=localFirstOrderValues[i];
@@ -599,7 +617,6 @@ static int pack_double(grib_accessor* a, const double* val, size_t *len)
     unsigned char*  buffer = NULL;
     long maxWidth,maxLength,widthOfWidths,NL,widthOfLengths,N1,N2,extraValues,codedNumberOfGroups,numberOfSecondOrderPackedValues;
     long pos;
-
 
     long numberOfGroups;
     long groupLengthC,groupLengthA,remainingValues,count;
@@ -650,7 +667,7 @@ static int pack_double(grib_accessor* a, const double* val, size_t *len)
             !=GRIB_SUCCESS) {
         grib_context_log(a->parent->h->context,GRIB_LOG_ERROR,
                 "unable to find nearest_smaller_value of %g for %s",min,self->reference_value);
-        grib_exit(GRIB_INTERNAL_ERROR);
+        exit(GRIB_INTERNAL_ERROR);
     }
     if((ret = grib_set_double_internal(a->parent->h,self->reference_value, reference_value)) !=
             GRIB_SUCCESS)
@@ -669,6 +686,7 @@ static int pack_double(grib_accessor* a, const double* val, size_t *len)
         return ret;
 
     binary_scale_factor = grib_get_binary_scale_fact(max,reference_value,bits_per_value,&ret);
+    if (ret != GRIB_SUCCESS) return ret;
 
     if((ret = grib_set_long_internal(a->parent->h,self->binary_scale_factor, binary_scale_factor)) !=
             GRIB_SUCCESS)
@@ -715,8 +733,8 @@ static int pack_double(grib_accessor* a, const double* val, size_t *len)
             if ( maxSPD < X[i] ) maxSPD=X[i];
         }
         /* widthOfSPD=(long)ceil(log((double)(maxSPD+1))/log(2.0)); */
-        widthOfSPD=number_of_bits(maxSPD);
-        widthOfBias=number_of_bits(labs(bias))+1;
+        widthOfSPD=number_of_bits(a->parent->h, maxSPD);
+        widthOfBias=number_of_bits(a->parent->h, labs(bias))+1;
 
         if ( widthOfSPD < widthOfBias  ) widthOfSPD=widthOfBias;
 
@@ -728,28 +746,28 @@ static int pack_double(grib_accessor* a, const double* val, size_t *len)
     numberOfGroups=0;
     incrementGroupLengthA=startGroupLength;
 
-
     computeGroupA=1;
     while (remainingValues) {
         /* group A created with length=incrementGroupLengthA (if enough values remain)
-		   incrementGroupLengthA=startGroupLength always except when coming from an A+C or A+B ok branch 
+		   incrementGroupLengthA=startGroupLength always except when coming from an A+C or A+B ok branch
          */
         groupLengthA= incrementGroupLengthA < remainingValues ? incrementGroupLengthA : remainingValues ;
         if (computeGroupA) {
             maxA=X[count];
             minA=X[count];
             for (i=1;i<groupLengthA;i++) {
+                DebugAssertAccess(X, count+i, numberOfValues);
                 if (maxA<X[count+i]) maxA=X[count+i];
                 if (minA>X[count+i]) minA=X[count+i];
             }
-
         }
-        groupWidthA=number_of_bits(maxA-minA);
+        groupWidthA=number_of_bits(a->parent->h, maxA-minA);
         range=(long)grib_power(groupWidthA,2)-1;
 
         offsetC=count+groupLengthA;
         if (offsetC==numberOfValues) {
             /* no more values close group A and end loop */
+            DebugAssertAccess(groupLengths, numberOfGroups, numberOfValues);
             groupLengths[numberOfGroups]=groupLengthA;
             groupWidths[numberOfGroups]=groupWidthA;
             /* firstOrderValues[numberOfGroups]=minA; */
@@ -766,9 +784,11 @@ static int pack_double(grib_accessor* a, const double* val, size_t *len)
         if ( groupLengthC + offsetC > numberOfValues - startGroupLength/2) {
             groupLengthC=numberOfValues-offsetC;
         }
+        DebugAssertAccess(X, offsetC, numberOfValues);
         maxC=X[offsetC];
         minC=X[offsetC];
         for (i=1;i<groupLengthC;i++) {
+            DebugAssertAccess(X, offsetC+i, numberOfValues);
             if (maxC<X[offsetC+i]) maxC=X[offsetC+i];
             if (minC>X[offsetC+i]) minC=X[offsetC+i];
         }
@@ -779,9 +799,10 @@ static int pack_double(grib_accessor* a, const double* val, size_t *len)
         /* check if A+C can be represented with the same width as A*/
         if (maxAC-minAC > range) {
             /* A could not be expanded adding C. Check if A could be expanded taking
-			   some elements from preceding group. The condition is always that width of 
+			   some elements from preceding group. The condition is always that width of
 			   A doesn't increase.
              */
+
             if (numberOfGroups>0 && groupWidths[numberOfGroups-1] > groupWidthA ) {
                 prevGroupLength=groupLengths[numberOfGroups-1]-incrementGroupLength;
                 offsetC=count-incrementGroupLength;
@@ -790,6 +811,7 @@ static int pack_double(grib_accessor* a, const double* val, size_t *len)
                     maxAC=maxA;
                     minAC=minA;
                     for (i=0;i<incrementGroupLength;i++) {
+                        DebugAssertAccess(X, offsetC+i, numberOfValues);
                         if (maxAC<X[offsetC+i]) maxAC=X[offsetC+i];
                         if (minAC>X[offsetC+i]) minAC=X[offsetC+i];
                     }
@@ -799,6 +821,7 @@ static int pack_double(grib_accessor* a, const double* val, size_t *len)
 
                     maxA=maxAC;
                     minA=minAC;
+                    DebugAssertAccess(groupLengths, numberOfGroups-1, numberOfValues);
                     groupLengths[numberOfGroups-1]-=incrementGroupLength;
                     groupLengthA+=incrementGroupLength;
                     count-=incrementGroupLength;
@@ -809,6 +832,7 @@ static int pack_double(grib_accessor* a, const double* val, size_t *len)
                 }
             }
             /* close group A*/
+            DebugAssertAccess(groupLengths, numberOfGroups, numberOfValues);
             groupLengths[numberOfGroups]=groupLengthA;
             groupWidths[numberOfGroups]=groupWidthA;
             /* firstOrderValues[numberOfGroups]=minA; */
@@ -845,6 +869,7 @@ static int pack_double(grib_accessor* a, const double* val, size_t *len)
         /* A+C could be coded with the same width as A*/
         offsetD=offsetC+groupLengthC;
         if (offsetD==numberOfValues) {
+            DebugAssertAccess(groupLengths, numberOfGroups, numberOfValues);
             groupLengths[numberOfGroups]=groupLengthA+groupLengthC;
             groupWidths[numberOfGroups]=groupWidthA;
 
@@ -864,6 +889,7 @@ static int pack_double(grib_accessor* a, const double* val, size_t *len)
         maxB=maxC;
         minB=minC;
         for (i=groupLengthC;i<groupLengthB;i++) {
+            DebugAssertAccess(X, offsetC+i, numberOfValues);
             if (maxB<X[offsetC+i]) maxB=X[offsetC+i];
             if (minB>X[offsetC+i]) minB=X[offsetC+i];
         }
@@ -878,6 +904,7 @@ static int pack_double(grib_accessor* a, const double* val, size_t *len)
              */
 
             /* close group A and continue loop*/
+            DebugAssertAccess(groupLengths, numberOfGroups, numberOfValues);
             groupLengths[numberOfGroups]=groupLengthA;
             groupWidths[numberOfGroups]=groupWidthA;
             /* firstOrderValues[numberOfGroups]=minA; */
@@ -929,22 +956,23 @@ static int pack_double(grib_accessor* a, const double* val, size_t *len)
     } /* end of the while*/
 
     /* computing bitsPerValue as the number of bits needed to represent
-	   the firstOrderValues.
+       the firstOrderValues.
      */
     max=firstOrderValues[0];
     min=firstOrderValues[0];
     for (i=1;i<numberOfGroups;i++) {
+        DebugAssertAccess(firstOrderValues, i, numberOfValues);
         if (max<firstOrderValues[i]) max=firstOrderValues[i];
         if (min>firstOrderValues[i]) min=firstOrderValues[i];
     }
-    widthOfFirstOrderValues=number_of_bits(max-min);
+    widthOfFirstOrderValues=number_of_bits(a->parent->h, max-min);
     firstOrderValuesMax=(long)grib_power(widthOfFirstOrderValues,2)-1;
 
     if (numberOfGroups>2) {
         /* loop through all the groups except the last in reverse order to
-		   check if each group width is still appropriate for the group.
-		   Focus on groups which have been shrank as left groups of an A group taking
-		   some of their elements.
+           check if each group width is still appropriate for the group.
+           Focus on groups which have been shrank as left groups of an A group taking
+           some of their elements.
          */
         offsets=(long*)grib_context_malloc_clear(a->parent->h->context,sizeof(long)*numberOfGroups);
         offsets[0]=orderOfSPD;
@@ -955,13 +983,15 @@ static int pack_double(grib_accessor* a, const double* val, size_t *len)
 
             if (groupLength >= startGroupLength) continue;
 
+            DebugAssertAccess(X, offset, numberOfValues);
             max=X[offset];
             min=X[offset];
             for (j=1;j<groupLength;j++) {
+                DebugAssertAccess(X, offset+j, numberOfValues);
                 if (max<X[offset+j]) max=X[offset+j];
                 if (min>X[offset+j]) min=X[offset+j];
             }
-            groupWidth=number_of_bits(max-min);
+            groupWidth=number_of_bits(a->parent->h, max-min);
             range=(long)grib_power(groupWidth,2)-1;
 
             /* width of first order values has to be unchanged.*/
@@ -976,14 +1006,15 @@ static int pack_double(grib_accessor* a, const double* val, size_t *len)
 
             offsetC=offset;
             /*  group width of the current group (i) can have been reduced
-			    and it is worth to try to expand the group to get some elements
-				from the left group if it has bigger width.
+                and it is worth to try to expand the group to get some elements
+                from the left group if it has bigger width.
              */
             if (i>0 && (groupWidths[i-1] > groupWidths[i]) ) {
                 prevGroupLength=groupLengths[i-1]-incrementGroupLength;
                 offsetC-=incrementGroupLength;
                 while (prevGroupLength >= minGroupLength) {
                     for (j=0;j<incrementGroupLength;j++) {
+                        DebugAssertAccess(X, offsetC+j, numberOfValues);
                         if (max<X[offsetC+j]) max=X[offsetC+j];
                         if (min>X[offsetC+j]) min=X[offsetC+j];
                     }
@@ -992,6 +1023,8 @@ static int pack_double(grib_accessor* a, const double* val, size_t *len)
                     firstOrderValue=max>range ? max-range : 0;
                     if (max-min > range || firstOrderValue > firstOrderValuesMax ) break;
 
+                    DebugAssertAccess(groupLengths, i-1, numberOfValues);
+                    DebugAssertAccess(groupLengths, i, numberOfValues);
                     groupLengths[i-1]-=incrementGroupLength;
                     groupLengths[i]+=incrementGroupLength;
                     firstOrderValues[i]=firstOrderValue;
@@ -1011,8 +1044,13 @@ static int pack_double(grib_accessor* a, const double* val, size_t *len)
         if (maxWidth<groupWidths[i]) maxWidth=groupWidths[i];
         if (maxLength<groupLengths[i]) maxLength=groupLengths[i];
     }
-    widthOfWidths=number_of_bits(maxWidth);
-    widthOfLengths=number_of_bits(maxLength);
+
+    if (maxWidth < 0 || maxLength < 0) {
+        grib_context_log(a->parent->h->context, GRIB_LOG_ERROR, "Cannot compute parameters for second order packing.");
+        return GRIB_ENCODING_ERROR;
+    }
+    widthOfWidths=number_of_bits(a->parent->h, maxWidth);
+    widthOfLengths=number_of_bits(a->parent->h, maxLength);
 
     lengthOfSecondOrderValues=0;
     for ( i=0; i<numberOfGroups;i++) {
@@ -1020,7 +1058,7 @@ static int pack_double(grib_accessor* a, const double* val, size_t *len)
     }
 
     if (!a->parent->h->context->no_big_group_split) {
-        grib_split_long_groups(a->parent->h->context,&numberOfGroups,&lengthOfSecondOrderValues,
+        grib_split_long_groups(a->parent->h, a->parent->h->context,&numberOfGroups,&lengthOfSecondOrderValues,
                 groupLengths,&widthOfLengths,groupWidths,widthOfWidths,
                 firstOrderValues,widthOfFirstOrderValues);
     }
@@ -1039,11 +1077,9 @@ static int pack_double(grib_accessor* a, const double* val, size_t *len)
         if((ret = grib_set_long_internal(a->parent->h,self->widthOfSPD, widthOfSPD))
                 != GRIB_SUCCESS)
             return ret;
-
     }
 
     /* end writing SPD */
-
     if((ret = grib_set_long_internal(a->parent->h,self->widthOfFirstOrderValues, widthOfFirstOrderValues))
             != GRIB_SUCCESS)
         return ret;

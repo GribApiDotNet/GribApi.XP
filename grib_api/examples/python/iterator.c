@@ -24,7 +24,7 @@
 
 #include "grib_api.h"  
 
-void usage(char* prog) {
+static void usage(char* prog) {
 	printf("Usage: %s grib_file\n",prog);
 	exit(1);
 }

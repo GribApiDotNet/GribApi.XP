@@ -2,7 +2,7 @@ ecbuild_add_option( FEATURE TESTS
                     DEFAULT ON
                     DESCRIPTION "Enable the unit tests" )
 
-if( ENABLE_TESTS )
+if( ENABLE_TESTS AND CMAKE_CXX_COMPILER_LOADED )
 
   # Try to find compiled boost
 
@@ -23,11 +23,11 @@ if( ENABLE_TESTS )
     set( HAVE_BOOST_UNIT_TEST 1 )
     set( BOOST_UNIT_TEST_FRAMEWORK_LINKED 1 )
 
-    message( STATUS "Using Boost for unit tests:\n    INC [${Boost_INCLUDE_DIRS}]\n    LIB [${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}]" )
+    ecbuild_info( "Using Boost for unit tests:\n    INC [${Boost_INCLUDE_DIRS}]\n    LIB [${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}]" )
 
   else()
 
-    message( STATUS "Boost unit test framework -- NOT FOUND" )
+    ecbuild_info( "Boost unit test framework -- NOT FOUND" )
 
     set( HAVE_BOOST_UNIT_TEST 0 )
 
@@ -38,4 +38,8 @@ if( ENABLE_TESTS )
 
   endif()
 
+endif()
+
+if( NOT ENABLE_TESTS )
+  ecbuild_info("Tests have been disabled")
 endif()

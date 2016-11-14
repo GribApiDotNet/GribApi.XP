@@ -164,7 +164,6 @@ static void init(grib_accessor* a,const long l, grib_arguments* c)
   a->dirty=1;
 }
 
-
 static int    unpack_double   (grib_accessor* a, double* val, size_t *len)
 {
   grib_accessor_statistics_spectral* self = (grib_accessor_statistics_spectral*)a;
@@ -238,7 +237,8 @@ static int    unpack_double   (grib_accessor* a, double* val, size_t *len)
   return ret;
 }
 
-static int value_count(grib_accessor* a,long* count) {
+static int value_count(grib_accessor* a,long* count)
+{
   grib_accessor_statistics_spectral* self = (grib_accessor_statistics_spectral*)a;
   *count= self->number_of_elements;
   return 0;
@@ -250,8 +250,9 @@ static void destroy(grib_context* c,grib_accessor* a)
   grib_context_free(c,self->v);
 }
 
-static int compare(grib_accessor* a, grib_accessor* b) {
-  int retval=0;
+static int compare(grib_accessor* a, grib_accessor* b)
+{
+  int retval=GRIB_SUCCESS;
   double *aval=0;
   double *bval=0;
 
@@ -288,7 +289,5 @@ static int compare(grib_accessor* a, grib_accessor* b) {
   grib_context_free(a->parent->h->context,aval);
   grib_context_free(b->parent->h->context,bval);
 
-  return GRIB_SUCCESS;
+  return retval;
 }
-
-

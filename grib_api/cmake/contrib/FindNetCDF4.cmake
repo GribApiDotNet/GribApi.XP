@@ -157,10 +157,13 @@ else()
 
     foreach( LANGUAGE ${NETCDF_LANGUAGE_BINDINGS} )
         ecbuild_debug("FindNetCDF4: looking for ${LANGUAGE} language bindings")
+
         set( NETCDF_${LANGUAGE}_FOUND 1 ) # disable this in following if necessary
-      
+
         # find the NETCDF includes
         foreach( INC ${NETCDF_${LANGUAGE}_INCLUDE_NAMES} )
+          #ecbuild_debug( "FindNetCDF4: looking for include file ${INC}")
+
           find_path( NETCDF_${INC}_INCLUDE_DIR ${INC}
               HINTS ${NETCDF_${LANGUAGE}_INCLUDE_FLAGS}
                     ${NETCDF_ROOT} ${NETCDF_DIR} ${NETCDF_PATH} ${NETCDF4_DIR}
@@ -169,8 +172,25 @@ else()
                   include
                   Include
           )
+          if( NOT NETCDF_${INC}_INCLUDE_DIR )
+            #ecbuild_debug( "FindNetCDF4: ${INC} not found" )
+            GET_FILENAME_COMPONENT( _basename ${INC} NAME_WE )
+            GET_FILENAME_COMPONENT( _ext ${INC} EXT )
+            string( TOUPPER ${_basename} _BASENAME )
+            set( INC_MOD "${_BASENAME}${_ext}")
+            #ecbuild_debug( "FindNetCDF4:     try ${INC_MOD}" )
+            find_path( NETCDF_${INC}_INCLUDE_DIR ${INC_MOD}
+              HINTS ${NETCDF_${LANGUAGE}_INCLUDE_FLAGS}
+                    ${NETCDF_ROOT} ${NETCDF_DIR} ${NETCDF_PATH} ${NETCDF4_DIR}
+                    ENV NETCDF_ROOT ENV NETCDF_DIR ENV NETCDF_PATH ENV NETCDF4_DIR
+              PATH_SUFFIXES
+                  include
+                  Include
+            )
+          endif()
+
           mark_as_advanced( NETCDF_${INC}_INCLUDE_DIR )
-          # debug_var( NETCDF_${INC}_INCLUDE_DIR)
+          #ecbuild_debug_var( NETCDF_${INC}_INCLUDE_DIR)
           if (NETCDF_${INC}_INCLUDE_DIR)
             list( APPEND NETCDF_INCLUDE_DIRS ${NETCDF_${INC}_INCLUDE_DIR} )
           else()
@@ -178,7 +198,7 @@ else()
             if( ${location} EQUAL -1 )
               else()
               if(NETCDF_FIND_REQUIRED)
-                message( SEND_ERROR "\"${INC}\" is not found for NetCDF component ${LANGUAGE}" )
+                ecbuild_error( "\"${INC}\" is not found for NetCDF component ${LANGUAGE}" )
               elseif( NOT NETCDF_FIND_QUIETLY )
                 message( STATUS "\"${INC}\" is not found for NetCDF component ${LANGUAGE}" )
               endif()
@@ -249,19 +269,19 @@ else()
 
         # Append the libraries for this language binding to the list of all
         # required libraries.
-        
+
         if( NETCDF_${LANGUAGE}_FOUND )
             ecbuild_debug( "FindNetCDF4: ${LANGUAGE} language bindings found" )
             if( CMAKE_CONFIGURATION_TYPES OR CMAKE_BUILD_TYPE )
-                list( APPEND NETCDF_${LANGUAGE}_LIBRARIES 
+                list( APPEND NETCDF_${LANGUAGE}_LIBRARIES
                     debug ${NETCDF_${LANGUAGE}_LIBRARIES_DEBUG}
                     optimized ${NETCDF_${LANGUAGE}_LIBRARIES_RELEASE} )
             else()
-                list( APPEND NETCDF_${LANGUAGE}_LIBRARIES 
-                    ${NETCDF_${LANGUAGE}_LIBRARIES_RELEASE} )                  
+                list( APPEND NETCDF_${LANGUAGE}_LIBRARIES
+                    ${NETCDF_${LANGUAGE}_LIBRARIES_RELEASE} )
             endif()
         endif()
-        # debug_var( NETCDF_${LANGUAGE}_LIBRARIES )
+        # ecbuild_debug_var( NETCDF_${LANGUAGE}_LIBRARIES )
         list( APPEND NETCDF_FOUND_REQUIRED_VARS NETCDF_${LANGUAGE}_FOUND )
     endforeach()
 
@@ -294,7 +314,10 @@ endif()
 
 set( NETCDF4_FIND_QUIETLY ${NETCDF_FIND_QUIETLY} )
 set( NETCDF4_FIND_REQUIRED ${NETCDF_FIND_REQUIRED} )
-find_package_handle_standard_args( NETCDF4 DEFAULT_MSG
+# handle the QUIET and REQUIRED arguments and set NETCDF4_FOUND to TRUE
+# if all listed variables are valid
+# Note: capitalisation of the package name must be the same as in the file name
+find_package_handle_standard_args( NetCDF4 DEFAULT_MSG
     ${NETCDF_FOUND_REQUIRED_VARS}
     NETCDF_LIBRARIES
     NETCDF_INCLUDE_DIRS

@@ -390,8 +390,6 @@ static int unpack_long(grib_accessor* a, long* val, size_t *len)
     } else {
         return unpack_multiple_time_ranges(a,val,len);
     }
-
-    return GRIB_SUCCESS;
 }
 
 #if 0

@@ -1,4 +1,4 @@
-# (C) Copyright 1996-2015 ECMWF.
+# (C) Copyright 1996-2016 ECMWF.
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -87,15 +87,15 @@ macro( ecbuild_use_package )
   cmake_parse_arguments( _p "${options}" "${single_value_args}" "${multi_value_args}"  ${_FIRST_ARG} ${ARGN} )
 
   if(_p_UNPARSED_ARGUMENTS)
-    message(FATAL_ERROR "Unknown keywords given to ecbuild_use_package(): \"${_p_UNPARSED_ARGUMENTS}\"")
+    ecbuild_critical("Unknown keywords given to ecbuild_use_package(): \"${_p_UNPARSED_ARGUMENTS}\"")
   endif()
 
   if( NOT _p_PROJECT  )
-    message(FATAL_ERROR "The call to ecbuild_use_package() doesn't specify the PROJECT.")
+    ecbuild_critical("The call to ecbuild_use_package() doesn't specify the PROJECT.")
   endif()
 
   if( _p_EXACT AND NOT _p_VERSION )
-    message(FATAL_ERROR "Call to ecbuild_use_package() requests EXACT but doesn't specify VERSION.")
+    ecbuild_critical("Call to ecbuild_use_package() requests EXACT but doesn't specify VERSION.")
   endif()
 
   # try to find the package as a subproject and build it
@@ -105,6 +105,7 @@ macro( ecbuild_use_package )
   # user defined dir with subprojects
 
   if( NOT DEFINED ${pkgUPPER}_SOURCE AND DEFINED SUBPROJECT_DIRS )
+    ecbuild_warn("ecbuild_use_package(): setting SUBPROJECT_DIRS is deprecated")
     ecbuild_debug("ecbuild_use_package(${_p_PROJECT}): scanning subproject directories ${SUBPROJECT_DIRS}")
     foreach( dir ${SUBPROJECT_DIRS} )
       if( EXISTS ${dir}/${_p_PROJECT} AND EXISTS ${dir}/${_p_PROJECT}/CMakeLists.txt )
@@ -119,7 +120,7 @@ macro( ecbuild_use_package )
   if( DEFINED ${pkgUPPER}_SOURCE )
 
     if( NOT EXISTS ${${pkgUPPER}_SOURCE} OR NOT EXISTS ${${pkgUPPER}_SOURCE}/CMakeLists.txt )
-      message( FATAL_ERROR "User defined source directory '${${pkgUPPER}_SOURCE}' for project '${_p_PROJECT}' does not exist or does not contain a CMakeLists.txt file." )
+      ecbuild_critical("User defined source directory '${${pkgUPPER}_SOURCE}' for project '${_p_PROJECT}' does not exist or does not contain a CMakeLists.txt file.")
     endif()
 
     set( ${pkgUPPER}_subproj_dir_ "${${pkgUPPER}_SOURCE}" )
@@ -176,6 +177,7 @@ macro( ecbuild_use_package )
       # add as a subproject
 
       set( ${pkgUPPER}_subproj_dir_ ${${pkgUPPER}_subproj_dir_} CACHE PATH "Path to ${_p_PROJECT} source directory" )
+      mark_as_advanced( ${pkgUPPER}_subproj_dir_ )
 
       set( ECBUILD_PROJECTS ${ECBUILD_PROJECTS} ${_p_PROJECT} CACHE INTERNAL "" )
 
@@ -186,6 +188,8 @@ macro( ecbuild_use_package )
 
       set( ${pkgUPPER}_FOUND 1 )
       set( ${_p_PROJECT}_VERSION ${${pkgUPPER}_VERSION} )
+
+      list( APPEND ${pkgUPPER}_INCLUDE_DIRS ${${pkgUPPER}_TPL_INCLUDE_DIRS} )
 
     endif()
 
@@ -198,7 +202,7 @@ macro( ecbuild_use_package )
     ecbuild_debug("ecbuild_use_package(${_p_PROJECT}): 2) project was already added as subproject, check version is acceptable")
 
     if( NOT ${pkgUPPER}_FOUND )
-      message( FATAL_ERROR "${_p_PROJECT} was already included as sub-project but ${pkgUPPER}_FOUND isn't set -- this is likely a BUG in ecbuild" )
+      ecbuild_critical( "${_p_PROJECT} was already included as sub-project but ${pkgUPPER}_FOUND isn't set -- this is likely a BUG in ecbuild" )
     endif()
 
     # check version is acceptable
@@ -221,26 +225,26 @@ macro( ecbuild_use_package )
 
   # test version for Cases 1,2,3
 
-  # debug_var( _p_PROJECT )
-  # debug_var( _p_VERSION )
-  # debug_var( ${pkgUPPER}_VERSION )
-  # debug_var( ${_p_PROJECT}_VERSION )
-  # debug_var( _just_added )
-  # debug_var( _do_version_check )
-  # debug_var( _source_description )
-  # debug_var( ${pkgUPPER}_FOUND )
-  # debug_var( ${pkgUPPER}_previous_subproj_ )
+  # ecbuild_debug_var( _p_PROJECT )
+  # ecbuild_debug_var( _p_VERSION )
+  # ecbuild_debug_var( ${pkgUPPER}_VERSION )
+  # ecbuild_debug_var( ${_p_PROJECT}_VERSION )
+  # ecbuild_debug_var( _just_added )
+  # ecbuild_debug_var( _do_version_check )
+  # ecbuild_debug_var( _source_description )
+  # ecbuild_debug_var( ${pkgUPPER}_FOUND )
+  # ecbuild_debug_var( ${pkgUPPER}_previous_subproj_ )
 
   if( _p_VERSION AND _do_version_check )
     if( _p_EXACT )
       if( NOT ${_p_PROJECT}_VERSION VERSION_EQUAL _p_VERSION )
-        message( FATAL_ERROR "${PROJECT_NAME} requires (exactly) ${_p_PROJECT} = ${_p_VERSION} -- detected as ${_source_description} ${${_p_PROJECT}_VERSION}" )
+        ecbuild_critical( "${PROJECT_NAME} requires (exactly) ${_p_PROJECT} = ${_p_VERSION} -- detected as ${_source_description} ${${_p_PROJECT}_VERSION}" )
       endif()
     else()
       if( _p_VERSION VERSION_LESS ${_p_PROJECT}_VERSION OR _p_VERSION VERSION_EQUAL ${_p_PROJECT}_VERSION )
-        message( STATUS "${PROJECT_NAME} requires ${_p_PROJECT} >= ${_p_VERSION} -- detected as ${_source_description} ${${_p_PROJECT}_VERSION}" )
+        ecbuild_info( "${PROJECT_NAME} requires ${_p_PROJECT} >= ${_p_VERSION} -- detected as ${_source_description} ${${_p_PROJECT}_VERSION}" )
       else()
-        message( FATAL_ERROR "${PROJECT_NAME} requires ${_p_PROJECT} >= ${_p_VERSION} -- detected only ${_source_description} ${${_p_PROJECT}_VERSION}" )
+        ecbuild_critical( "${PROJECT_NAME} requires ${_p_PROJECT} >= ${_p_VERSION} -- detected only ${_source_description} ${${_p_PROJECT}_VERSION}" )
       endif()
     endif()
   endif()

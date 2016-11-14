@@ -8,8 +8,7 @@
 !
 !
 !
-!  Description: how to set a bitmap in a grib message 
-!
+!  Description: how to set a bitmap in a GRIB message
 !
 !
 program set_bitmap
@@ -31,17 +30,17 @@ program set_bitmap
     ! GRIB 2 example
     call grib_open_file(infile,'../../data/regular_latlon_surface.grib2','r')
   end if
-  
-  call grib_open_file(outfile,'out.bmp.grib','w')
-  
-  !     a new grib message is loaded from file
-  !     igrib is the grib id to be used in subsequent calls
+
+  call grib_open_file(outfile,'out.set_bitmap_f.grib','w')
+
+  ! A new grib message is loaded from file
+  ! igrib is the grib id to be used in subsequent calls
   call grib_new_from_file(infile,igrib)
-  
-  ! The missingValue is not coded in the message. 
+
+  ! The missingValue is not coded in the message.
   ! It is a value we define as a placeholder for a missing value
-  ! in a point of the grid.
-  ! It should be choosen in a way that it cannot be confused 
+  ! at a point in the grid.
+  ! It should be chosen so that it cannot be confused
   ! with a valid field value
   missingValue=9999
   call grib_set(igrib, 'missingValue',missingValue)
@@ -50,29 +49,28 @@ program set_bitmap
   ! get the size of the values array
   call grib_get_size(igrib,'values',numberOfValues)
   write(*,*) 'numberOfValues=',numberOfValues
-  
+
   allocate(values(numberOfValues), stat=iret)
 
   ! get data values
   call grib_get(igrib,'values',values)
-  
-  ! enable bitmap 
-  call grib_set(igrib,"bitmapPresent",1)
 
-  ! some values are missing
+  ! enable bitmap
+  call grib_set(igrib, 'bitmapPresent', 1)
+
+  ! set some values to be missing
   values(1:10) = missingValue
 
   ! set the values (the bitmap will be automatically built)
   call grib_set(igrib,'values', values)
 
-  !  write modified message to a file
+  ! write modified message to a file
   call grib_write(igrib,outfile)
-  
-  ! FREE MEMORY
-  call grib_release(igrib)
-  
-  call grib_close_file(infile)
 
+  ! free memory
+  call grib_release(igrib)
+
+  call grib_close_file(infile)
   call grib_close_file(outfile)
 
   deallocate(values)

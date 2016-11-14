@@ -3,4 +3,4 @@
 . ./include.sh
 
 REDIRECT=/dev/null
-$PYTHON nearest.py 2> $REDIRECT > $REDIRECT
+$PYTHON $examples_src/nearest.py 2> $REDIRECT > $REDIRECT

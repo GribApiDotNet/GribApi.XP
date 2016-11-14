@@ -1,4 +1,4 @@
-# (C) Copyright 1996-2015 ECMWF.
+# (C) Copyright 1996-2016 ECMWF.
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -25,6 +25,7 @@ function( ecbuild_download_resource _p_OUT _p_URL )
   if( NOT EXISTS ${_p_OUT} )
 
     find_program( CURL_PROGRAM curl )
+    mark_as_advanced(CURL_PROGRAM)
     if( CURL_PROGRAM )
       execute_process( COMMAND ${CURL_PROGRAM} --silent --show-error --fail --output ${_p_OUT} ${_p_URL}
                        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR} RESULT_VARIABLE CMD_RESULT )
@@ -34,12 +35,12 @@ function( ecbuild_download_resource _p_OUT _p_URL )
         execute_process( COMMAND ${WGET_PROGRAM} -nv -O ${_p_OUT} ${_p_URL}
                          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR} RESULT_VARIABLE CMD_RESULT )
       else()
-        message(FATAL_ERROR "Could not find curl or wget. Error downloading ${_p_URL}")
+        ecbuild_critical("Could not find curl or wget. Error downloading ${_p_URL}")
       endif()
     endif()
 
     if(CMD_RESULT)
-      message(FATAL_ERROR "Error downloading ${_p_URL}")
+      ecbuild_critical("Error downloading ${_p_URL}")
     endif()
 
   endif()

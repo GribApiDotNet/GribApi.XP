@@ -207,7 +207,6 @@ static int value_count(grib_accessor* a,long* numberOfSecondOrderPackedValues)
   err=grib_get_long_internal(a->parent->h,self->numberOfSecondOrderPackedValues,numberOfSecondOrderPackedValues);
 
   return err;
-
 }
 
 static int unpack_double(grib_accessor* a, double* values, size_t *len)
@@ -281,6 +280,8 @@ static int unpack_double(grib_accessor* a, double* values, size_t *len)
 		i=-1;
 		while (n<numberOfSecondOrderPackedValues) {
 			i+=secondaryBitmap[n];
+			DebugAssertAccess(firstOrderValues,i,numberOfGroups);
+			DebugAssertAccess(X, n, numberOfSecondOrderPackedValues);
 			X[n]=firstOrderValues[i]+X[n];
 			n++;
 		}
@@ -289,11 +290,12 @@ static int unpack_double(grib_accessor* a, double* values, size_t *len)
 		i=-1;
 		while (n<numberOfSecondOrderPackedValues) {
 			i+=secondaryBitmap[n];
+			DebugAssertAccess(firstOrderValues,i,numberOfGroups);
+			DebugAssertAccess(X, n, numberOfSecondOrderPackedValues);
 			X[n]=firstOrderValues[i];
 			n++;
 		}
 	}
-
 
 	/*
 	{

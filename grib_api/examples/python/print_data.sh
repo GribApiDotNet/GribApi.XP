@@ -5,7 +5,7 @@
 TEMP1=temp1.$$
 TEMP2=temp2.$$
 
-$PYTHON print_data.py 2> $TEMP1 > $TEMP1
+$PYTHON $examples_src/print_data.py 2> $TEMP1 > $TEMP1
 ./p_print_data ../../data/regular_latlon_surface.grib1 2> $TEMP2 > $TEMP2
 
 diff $TEMP1 $TEMP2

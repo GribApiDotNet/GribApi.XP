@@ -13,6 +13,7 @@
 { "budgdate", &grib_accessor_class_budgdate, },
 { "bytes", &grib_accessor_class_bytes, },
 { "change_scanning_direction", &grib_accessor_class_change_scanning_direction, },
+{ "check_internal_version", &grib_accessor_class_check_internal_version, },
 { "codeflag", &grib_accessor_class_codeflag, },
 { "codetable", &grib_accessor_class_codetable, },
 { "codetable_title", &grib_accessor_class_codetable_title, },

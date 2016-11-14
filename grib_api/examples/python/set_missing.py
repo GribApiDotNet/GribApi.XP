@@ -13,40 +13,42 @@ import sys
 
 from gribapi import *
 
-INPUT='../../data/tigge/tigge_ecmf_pl_t.grib'
-OUTPUT='out.set_missing.grib'
-VERBOSE=1 # verbose error reporting
+INPUT = '../../data/tigge/tigge_ecmf_pl_t.grib'
+OUTPUT = 'out.set_missing.grib'
+VERBOSE = 1  # verbose error reporting
+
 
 def example():
     fin = open(INPUT)
-    fout = open(OUTPUT,'w')
+    fout = open(OUTPUT, 'w')
 
     gid = grib_new_from_file(fin)
 
-    grib_set_long(gid, "scaledValueOfFirstFixedSurface", 15);
+    grib_set_long(gid, "scaledValueOfFirstFixedSurface", 15)
     grib_set_long(gid, "scaleFactorOfFirstFixedSurface", 1)
-    level=grib_get_double(gid, "level")
-    assert( level == 1.5 )
+    level = grib_get_double(gid, "level")
+    assert(level == 1.5)
 
     # set type of level to surface
-    grib_set(gid,'typeOfFirstFixedSurface','sfc')
-    grib_set_missing(gid,'scaleFactorOfFirstFixedSurface')
-    grib_set_missing(gid,'scaledValueOfFirstFixedSurface')
+    grib_set(gid, 'typeOfFirstFixedSurface', 'sfc')
+    grib_set_missing(gid, 'scaleFactorOfFirstFixedSurface')
+    grib_set_missing(gid, 'scaledValueOfFirstFixedSurface')
 
-    grib_write(gid,fout)
+    grib_write(gid, fout)
 
     grib_release(gid)
     fin.close()
     fout.close()
 
+
 def main():
     try:
         example()
-    except GribInternalError,err:
+    except GribInternalError, err:
         if VERBOSE:
             traceback.print_exc(file=sys.stderr)
         else:
-            print >>sys.stderr,err.msg
+            print >>sys.stderr, err.msg
 
         return 1
 

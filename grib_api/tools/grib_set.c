@@ -22,14 +22,14 @@ grib_option grib_options[]={
   /*{"n:","noise percentage","\n\t\tAdd noise to the data values. The noise added is the given percentage of the data value.\n",0,1,0},*/
   {"p:",0,0,1,1,0},
   {"P:",0,0,0,1,0},
-  {"w:","key[:{s/d/l}]{=/!=}value,key[:{s/d/l}]=value,...",
+  {"w:","key[:{s/d/i}]{=/!=}value,key[:{s/d/i}]=value,...",
   "\n\t\tWhere clause.\n\t\tSet is only executed for grib messages matching all the "
       "key/value constraints.\n\t\tIf a grib message does not match the constraints it is"
       " copied unchanged\n\t\tto the output_grib_file. This behaviour can be changed "
       "setting the option -S."
       "\n\t\tA valid constraint is of type key=value or key!=value."
-      "\n\t\tFor each key a string (key:s) or a double (key:d) or"
-      " a long (key:l)\n\t\ttype can be defined. Default type is string.\n",0,1,0},
+      "\n\t\tFor each key a string (key:s), a double (key:d) or"
+      " an integer (key:i)\n\t\ttype can be defined. Default type is string.\n",0,1,0},
     {"q",0,0,1,0,0},
     {"7",0,0,0,1,0},
     {"S",0,0,0,1,0},
@@ -102,50 +102,54 @@ int grib_tool_new_file_action(grib_runtime_options* options,grib_tools_file* fil
 
 int grib_tool_new_handle_action(grib_runtime_options* options, grib_handle* h)
 {
-	size_t i=0;
-	int err=0;
+    size_t i=0;
+    int err=0;
 
-	if (!options->skip) {
-		double* v=NULL;
-		size_t size=0;
-		if ( options->repack ) {
-			GRIB_CHECK_NOLINE(grib_get_size(h,"values",&size),0);
+    if (!options->skip) {
+        double* v=NULL;
+        size_t size=0;
+        if ( options->repack ) {
+            GRIB_CHECK_NOLINE(grib_get_size(h,"values",&size),0);
 
-			v    = (double*)calloc(size,sizeof(double));
-			if(!v) {
-				fprintf(stderr,"failed to allocate %d bytes\n",(int)(size*sizeof(double)));
-				exit(1);
-			}
+            v = (double*)calloc(size,sizeof(double));
+            if(!v) {
+                fprintf(stderr,"failed to allocate %d bytes\n",(int)(size*sizeof(double)));
+                exit(1);
+            }
 
-			GRIB_CHECK_NOLINE(grib_get_double_array(h,"values",v,&size),0);
-		}
+            GRIB_CHECK_NOLINE(grib_get_double_array(h,"values",v,&size),0);
+        }
 
-		if (options->set_values_count != 0)
-			err=grib_set_values(h,options->set_values,options->set_values_count);
+        if (options->set_values_count != 0) {
+            err=grib_set_values(h,options->set_values,options->set_values_count);
+            if( err != GRIB_SUCCESS && options->fail) exit(err);
+        }
 
-		if ( options->repack ) {
+        if ( options->repack ) {
 
-			if (grib_options_on("d:")) {
-				for(i = 0; i< size; i++)
-					v[i] =  options->constant;
-			}
+            if (grib_options_on("d:")) {
+                for(i = 0; i< size; i++)
+                    v[i] =  options->constant;
+            }
 #if 0
-			if (grib_options_on("n:")) {
-				for(i = 0; i< size; i++)
-					v[i] =  options->constant;
-			}
+            if (grib_options_on("n:")) {
+                for(i = 0; i< size; i++)
+                    v[i] =  options->constant;
+            }
 #endif
 
-			GRIB_CHECK_NOLINE(grib_set_double_array(h,"values",v,size),0);
-			free(v);
-		}
+            if (err == GRIB_SUCCESS) {
+                GRIB_CHECK_NOLINE(grib_set_double_array(h,"values",v,size),0);
+            }
+            free(v);
+        }
 
-		if( err != GRIB_SUCCESS && options->fail) exit(err);
-	}
+        if( err != GRIB_SUCCESS && options->fail) exit(err);
+    }
 
-	if (!options->skip || !options->strict) grib_tools_write_message(options,h);
+    if (!options->skip || !options->strict) grib_tools_write_message(options,h);
 
-	return 0;
+    return 0;
 }
 
 int grib_tool_skip_handle(grib_runtime_options* options, grib_handle* h)

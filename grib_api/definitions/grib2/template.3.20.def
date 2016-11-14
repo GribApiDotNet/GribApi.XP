@@ -10,7 +10,7 @@
 
 # START 2/template.3.20 ----------------------------------------------------------------------
 # TEMPLATE 3.20, Polar stereographic projection
-include "template.3.shape_of_the_earth.def";
+include "grib2/template.3.shape_of_the_earth.def";
 transient oneThousand=1000;
 
 #  Nx - number of points along X-axis
@@ -37,7 +37,7 @@ alias Lo1 =  longitudeOfFirstGridPoint;
 
 #  Resolution and component flag
 # NOTE 1 NOT FOUND
-flags[1] resolutionAndComponentFlag 'grib2/tables/[tablesVersion]/3.3.table' : dump;
+flags[1] resolutionAndComponentFlags 'grib2/tables/[tablesVersion]/3.3.table' : dump;
 
 #  LaD - Latitude where Dx and Dy are specified
 signed[4] LaD  : edition_specific;
@@ -70,7 +70,7 @@ flags[1] projectionCentreFlag 'grib2/tables/[tablesVersion]/3.5.table' : dump;
 # If bit 1 is 1, then the South Pole is on the projection plane
 flagbit southPoleOnProjectionPlane(projectionCentreFlag,7) : dump;   # WMO bit 1
 
-include "template.3.scanning_mode.def";
+include "grib2/template.3.scanning_mode.def";
 
 
 iterator polar_stereographic(numberOfPoints,missingValue,values,

@@ -9,4 +9,4 @@
 
 . ./include.sh
 
-${examples_dir}f_keys_iterator > /dev/null
+${examples_dir}grib_api_f_keys_iterator > /dev/null

@@ -200,121 +200,122 @@ static void init(grib_accessor* a,const long v, grib_arguments* args)
 
 static int value_count(grib_accessor* a,long* numberOfSecondOrderPackedValues)
 {
-  int err=0;
-  grib_accessor_data_g1second_order_general_packing *self =(grib_accessor_data_g1second_order_general_packing*)a;
-  *numberOfSecondOrderPackedValues=0;
+    int err=0;
+    grib_accessor_data_g1second_order_general_packing *self =(grib_accessor_data_g1second_order_general_packing*)a;
+    *numberOfSecondOrderPackedValues=0;
 
-  err=grib_get_long_internal(a->parent->h,self->numberOfSecondOrderPackedValues,numberOfSecondOrderPackedValues);
+    err=grib_get_long_internal(a->parent->h,self->numberOfSecondOrderPackedValues,numberOfSecondOrderPackedValues);
 
-  return err;
-
+    return err;
 }
 
 static int unpack_double(grib_accessor* a, double* values, size_t *len)
 {
-  grib_accessor_data_g1second_order_general_packing* self =  (grib_accessor_data_g1second_order_general_packing*)a;
-  int ret=0;
-  long numberOfGroups,numberOfSecondOrderPackedValues;
-  long* groupWidths=0;
-  long* firstOrderValues=0;
-  long* X=0;
-  long pos=0;
-  long widthOfFirstOrderValues=0;
-  unsigned char* buf = (unsigned char*)a->parent->h->buffer->data;
-  long i,n;
-  double reference_value;
-  long binary_scale_factor;
-  long decimal_scale_factor;
-  double s,d;
-  long* secondaryBitmap;
-  long groupLength,j;
-  size_t groupWidthsSize;
+    grib_accessor_data_g1second_order_general_packing* self =  (grib_accessor_data_g1second_order_general_packing*)a;
+    int ret=0;
+    long numberOfGroups,numberOfSecondOrderPackedValues;
+    long* groupWidths=0;
+    long* firstOrderValues=0;
+    long* X=0;
+    long pos=0;
+    long widthOfFirstOrderValues=0;
+    unsigned char* buf = (unsigned char*)a->parent->h->buffer->data;
+    long i,n;
+    double reference_value;
+    long binary_scale_factor;
+    long decimal_scale_factor;
+    double s,d;
+    long* secondaryBitmap;
+    long groupLength,j;
+    size_t groupWidthsSize;
 
-  buf += grib_byte_offset(a);
+    buf += grib_byte_offset(a);
 
-  if((ret=grib_get_long_internal(a->parent->h,self->numberOfGroups,&numberOfGroups)) != GRIB_SUCCESS)
-         return ret;
+    if((ret=grib_get_long_internal(a->parent->h,self->numberOfGroups,&numberOfGroups)) != GRIB_SUCCESS)
+        return ret;
 
-  if((ret=grib_get_long_internal(a->parent->h,self->widthOfFirstOrderValues,&widthOfFirstOrderValues)) != GRIB_SUCCESS)
-         return ret;
+    if((ret=grib_get_long_internal(a->parent->h,self->widthOfFirstOrderValues,&widthOfFirstOrderValues)) != GRIB_SUCCESS)
+        return ret;
 
-  if((ret=grib_get_long_internal(a->parent->h,self->binary_scale_factor,&binary_scale_factor)) != GRIB_SUCCESS)
-         return ret;
+    if((ret=grib_get_long_internal(a->parent->h,self->binary_scale_factor,&binary_scale_factor)) != GRIB_SUCCESS)
+        return ret;
 
-  if((ret=grib_get_long_internal(a->parent->h,self->decimal_scale_factor,&decimal_scale_factor)) != GRIB_SUCCESS)
-         return ret;
+    if((ret=grib_get_long_internal(a->parent->h,self->decimal_scale_factor,&decimal_scale_factor)) != GRIB_SUCCESS)
+        return ret;
 
-  if((ret=grib_get_double_internal(a->parent->h,self->reference_value,&reference_value)) != GRIB_SUCCESS)
-         return ret;
+    if((ret=grib_get_double_internal(a->parent->h,self->reference_value,&reference_value)) != GRIB_SUCCESS)
+        return ret;
 
-  if((ret=grib_get_long_internal(a->parent->h,self->numberOfSecondOrderPackedValues,
-  					&numberOfSecondOrderPackedValues)) != GRIB_SUCCESS)
-         return ret;
+    if((ret=grib_get_long_internal(a->parent->h,self->numberOfSecondOrderPackedValues,
+            &numberOfSecondOrderPackedValues)) != GRIB_SUCCESS)
+        return ret;
 
-  groupWidths=(long*)grib_context_malloc_clear(a->parent->h->context,sizeof(long)*numberOfGroups);
-  groupWidthsSize=numberOfGroups;
-  if((ret=grib_get_long_array_internal(a->parent->h,self->groupWidths, groupWidths,&groupWidthsSize)) != GRIB_SUCCESS)
-         return ret;
+    groupWidths=(long*)grib_context_malloc_clear(a->parent->h->context,sizeof(long)*numberOfGroups);
+    groupWidthsSize=numberOfGroups;
+    if((ret=grib_get_long_array_internal(a->parent->h,self->groupWidths, groupWidths,&groupWidthsSize)) != GRIB_SUCCESS)
+        return ret;
 
-	secondaryBitmap=(long*)grib_context_malloc_clear(a->parent->h->context,sizeof(long)*(numberOfSecondOrderPackedValues+1));
-	secondaryBitmap[numberOfSecondOrderPackedValues]=1;
-	grib_decode_long_array(buf,&pos,1,numberOfSecondOrderPackedValues,secondaryBitmap);
-	pos = 8 * ( (pos + 7 ) / 8);
+    secondaryBitmap=(long*)grib_context_malloc_clear(a->parent->h->context,sizeof(long)*(numberOfSecondOrderPackedValues+1));
+    secondaryBitmap[numberOfSecondOrderPackedValues]=1;
+    grib_decode_long_array(buf,&pos,1,numberOfSecondOrderPackedValues,secondaryBitmap);
+    pos = 8 * ( (pos + 7 ) / 8);
 
-	firstOrderValues=(long*)grib_context_malloc_clear(a->parent->h->context,sizeof(long)*numberOfGroups);
-	grib_decode_long_array(buf,&pos,widthOfFirstOrderValues,numberOfGroups,firstOrderValues);
-	pos = 8 * ( (pos + 7 ) / 8);
+    firstOrderValues=(long*)grib_context_malloc_clear(a->parent->h->context,sizeof(long)*numberOfGroups);
+    grib_decode_long_array(buf,&pos,widthOfFirstOrderValues,numberOfGroups,firstOrderValues);
+    pos = 8 * ( (pos + 7 ) / 8);
 
-	X=(long*)grib_context_malloc_clear(a->parent->h->context,sizeof(long)*numberOfSecondOrderPackedValues);
+    X=(long*)grib_context_malloc_clear(a->parent->h->context,sizeof(long)*numberOfSecondOrderPackedValues);
 
-	n=0;
-	i=-1;
-	groupLength=0;
-	while (n<numberOfSecondOrderPackedValues) {
-		if (secondaryBitmap[n]) {
-			long *p=secondaryBitmap+n+1;
-			groupLength=1;
-			while (*p != 1) { groupLength++; p++; }
-			i++;
-		}
-		if (groupWidths[i]>0) {
-			for (j=0;j<groupLength;j++) {
-				X[n]=grib_decode_unsigned_long(buf,&pos,groupWidths[i]);
-				X[n]=firstOrderValues[i]+X[n];
-				n++;
-			}
-		} else {
-			for (j=0;j<groupLength;j++) {
-				X[n]=firstOrderValues[i];
-				n++;
-			}
-		}
-	}
+    n=0;
+    i=-1;
+    groupLength=0;
+    while (n<numberOfSecondOrderPackedValues) {
+        if (secondaryBitmap[n]) {
+            long *p=secondaryBitmap+n+1;
+            groupLength=1;
+            while (*p != 1) { groupLength++; p++; }
+            i++;
+        }
+        AssertAccess(groupWidths,i,numberOfGroups);
+        if (groupWidths[i]>0) {
+            for (j=0;j<groupLength;j++) {
+                AssertAccess(X, n, numberOfSecondOrderPackedValues);
+                X[n]=grib_decode_unsigned_long(buf,&pos,groupWidths[i]);
+                X[n]=firstOrderValues[i]+X[n];
+                n++;
+            }
+        } else {
+            for (j=0;j<groupLength;j++) {
+                AssertAccess(X, n, numberOfSecondOrderPackedValues);
+                X[n]=firstOrderValues[i];
+                n++;
+            }
+        }
+    }
 
-	s = grib_power(binary_scale_factor,2);
-	d = grib_power(-decimal_scale_factor,10) ;
-	for (i=0; i<numberOfSecondOrderPackedValues; i++) {
-		values[i] = (double) (((X[i]*s)+reference_value)*d);
-	}
+    s = grib_power(binary_scale_factor,2);
+    d = grib_power(-decimal_scale_factor,10) ;
+    for (i=0; i<numberOfSecondOrderPackedValues; i++) {
+        values[i] = (double) (((X[i]*s)+reference_value)*d);
+    }
 
-	*len=numberOfSecondOrderPackedValues;
-	grib_context_free(a->parent->h->context,secondaryBitmap);
-	grib_context_free(a->parent->h->context,firstOrderValues);
-	grib_context_free(a->parent->h->context,X);
-	grib_context_free(a->parent->h->context,groupWidths);
-  
-  return ret;
+    *len=numberOfSecondOrderPackedValues;
+    grib_context_free(a->parent->h->context,secondaryBitmap);
+    grib_context_free(a->parent->h->context,firstOrderValues);
+    grib_context_free(a->parent->h->context,X);
+    grib_context_free(a->parent->h->context,groupWidths);
+
+    return ret;
 }
 
 static int pack_double(grib_accessor* a, const double* cval, size_t *len)
 {
-  /* return GRIB_NOT_IMPLEMENTED; */
-  char type[]="grid_second_order";
-  size_t size=strlen(type);
+    /* return GRIB_NOT_IMPLEMENTED; */
+    char type[]="grid_second_order";
+    size_t size=strlen(type);
 
-  grib_set_string(a->parent->h,"packingType",type,&size);
+    grib_set_string(a->parent->h,"packingType",type,&size);
 
-  return grib_set_double_array(a->parent->h,"values",cval,*len);
+    return grib_set_double_array(a->parent->h,"values",cval,*len);
 
 }
-

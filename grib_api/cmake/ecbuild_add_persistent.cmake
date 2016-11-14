@@ -1,8 +1,8 @@
-# (C) Copyright 1996-2015 ECMWF.
-# 
+# (C) Copyright 1996-2016 ECMWF.
+#
 # This software is licensed under the terms of the Apache Licence Version 2.0
-# which can be obtained at http://www.apache.org/licenses/LICENSE-2.0. 
-# In applying this licence, ECMWF does not waive the privileges and immunities 
+# which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+# In applying this licence, ECMWF does not waive the privileges and immunities
 # granted to it by virtue of its status as an intergovernmental organisation nor
 # does it submit to any jurisdiction.
 
@@ -34,7 +34,7 @@
 #   C++ namespace to place the persistent class information in
 #
 ##############################################################################
-  
+
 # define the script to build the persistent class information
 set( sg_perl "${CMAKE_CURRENT_LIST_DIR}/sg.pl" CACHE INTERNAL "perl script to generate persistent objects" )
 
@@ -44,20 +44,20 @@ macro( ecbuild_add_persistent )
 
   set( options )
   set( single_value_args SRC_LIST NAMESPACE )
-  set( multi_value_args  FILES ) 
+  set( multi_value_args  FILES )
 
   cmake_parse_arguments( _PAR "${options}" "${single_value_args}" "${multi_value_args}"  ${_FIRST_ARG} ${ARGN} )
 
   if(_PAR_UNPARSED_ARGUMENTS)
-    message(FATAL_ERROR "Unknown keywords given to ecbuild_add_persistent(): \"${_PAR_UNPARSED_ARGUMENTS}\"")
+    ecbuild_critical("Unknown keywords given to ecbuild_add_persistent(): \"${_PAR_UNPARSED_ARGUMENTS}\"")
   endif()
 
   if( NOT _PAR_SRC_LIST  )
-    message(FATAL_ERROR "The call to ecbuild_add_persistent() doesn't specify the SRC_LIST.")
+    ecbuild_critical("The call to ecbuild_add_persistent() doesn't specify the SRC_LIST.")
   endif()
 
   if( NOT _PAR_FILES )
-    message(FATAL_ERROR "The call to ecbuild_add_persistent() doesn't specify the FILES.")
+    ecbuild_critical("The call to ecbuild_add_persistent() doesn't specify the FILES.")
   endif()
 
   foreach( file ${_PAR_FILES} )
@@ -71,7 +71,7 @@ macro( ecbuild_add_persistent )
       set( file ${_file_dir}/${_file_we} )
     endif()
 
-    # debug_var(file)
+    # ecbuild_debug_var(file)
 
     add_custom_command( OUTPUT  ${file}.b
                         COMMAND ${PERL_EXECUTABLE} ${sg_perl} ${CMAKE_CURRENT_SOURCE_DIR}/${file}.h

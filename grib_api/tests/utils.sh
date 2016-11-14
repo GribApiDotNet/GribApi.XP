@@ -15,12 +15,25 @@ set -ea
 # Check the key(s) in the given grib file have the expected value(s)
 # Assumes the file has only ONE message otherwise output goes on to
 # several lines
-check_key_equals()
+grib_check_key_equals()
 {
-   file=$1
-   key=$2
-   val=$3
-   result=`${tools_dir}grib_get -p $key $file`
-   [ "$result" = "$val" ]
+   a_file=$1
+   a_key=$2
+   a_expected=$3
+   a_result=`${tools_dir}grib_get -p $a_key $a_file`
+   if [ "$a_result" != "$a_expected" ]; then
+      echo "File:     $a_file"
+      echo "Key(s):   $a_key"
+      echo "Expected: $a_expected"
+      echo "Result:   $a_result"
+      exit 1
+   fi
 }
 
+grib_check_key_exists()
+{
+   a_file=$1
+   a_key=$2
+   # grib_get will fail if the key is not found
+   $tools_dir/grib_get -p $a_key $a_file >/dev/null
+}
