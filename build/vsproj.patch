@@ -1,0 +1,884 @@
+From 35885398ffb869fe65f4514d4b0b74b7ee168ed5 Mon Sep 17 00:00:00 2001
+From: 0x1mason <etmillin@gmail.com>
+Date: Mon, 14 Nov 2016 13:38:47 -0500
+Subject: [PATCH 2/2] Upgrade default project files
+
+---
+ grib_api/windows/msvc/grib_api.sln                 | 48 ++++++++++++++------
+ .../windows/msvc/grib_api_lib/grib_api_lib.vcxproj | 53 ++++++++++++++++------
+ .../msvc/grib_api_lib/grib_api_lib.vcxproj.filters |  3 --
+ .../windows/msvc/grib_compare/grib_compare.vcxproj | 22 +++++----
+ grib_api/windows/msvc/grib_copy/grib_copy.vcxproj  | 22 +++++----
+ grib_api/windows/msvc/grib_dump/grib_dump.vcxproj  | 22 +++++----
+ .../windows/msvc/grib_filter/grib_filter.vcxproj   | 22 +++++----
+ grib_api/windows/msvc/grib_get/grib_get.vcxproj    | 22 +++++----
+ .../msvc/grib_get_data/grib_get_data.vcxproj       | 22 +++++----
+ grib_api/windows/msvc/grib_ls/grib_ls.vcxproj      | 22 +++++----
+ grib_api/windows/msvc/grib_set/grib_set.vcxproj    | 22 +++++----
+ 11 files changed, 187 insertions(+), 93 deletions(-)
+
+diff --git b/grib_api/windows/msvc/grib_api.sln a/grib_api/windows/msvc/grib_api.sln
+index 8a37faf..93f774e 100644
+--- b/grib_api/windows/msvc/grib_api.sln
++++ a/grib_api/windows/msvc/grib_api.sln
+@@ -1,25 +1,47 @@
+ ﻿
+-Microsoft Visual Studio Solution File, Format Version 12.00
+-# Visual Studio 2013
+-VisualStudioVersion = 12.0.40629.0
+-MinimumVisualStudioVersion = 10.0.40219.1
+-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "grib_api_lib", "grib_api_lib\grib_api_lib.vcxproj", "{3DE8B13F-7DFE-48ED-9158-B34D774500EC}"
++Microsoft Visual Studio Solution File, Format Version 10.00
++# Visual Studio 2008
++Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "grib_api_lib", "grib_api_lib\grib_api_lib.vcproj", "{3DE8B13F-7DFE-48ED-9158-B34D774500EC}"
+ EndProject
+-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "grib_dump", "grib_dump\grib_dump.vcxproj", "{A785A1F1-2AE8-4CD8-B484-9035D1961D43}"
++Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "grib_dump", "grib_dump\grib_dump.vcproj", "{A785A1F1-2AE8-4CD8-B484-9035D1961D43}"
++	ProjectSection(ProjectDependencies) = postProject
++		{3DE8B13F-7DFE-48ED-9158-B34D774500EC} = {3DE8B13F-7DFE-48ED-9158-B34D774500EC}
++	EndProjectSection
+ EndProject
+-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "grib_compare", "grib_compare\grib_compare.vcxproj", "{3584AC9D-1D1A-49D8-8CA3-1DC2D85D7D3D}"
++Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "grib_compare", "grib_compare\grib_compare.vcproj", "{3584AC9D-1D1A-49D8-8CA3-1DC2D85D7D3D}"
++	ProjectSection(ProjectDependencies) = postProject
++		{3DE8B13F-7DFE-48ED-9158-B34D774500EC} = {3DE8B13F-7DFE-48ED-9158-B34D774500EC}
++	EndProjectSection
+ EndProject
+-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "grib_copy", "grib_copy\grib_copy.vcxproj", "{4EA43F5F-0E30-414A-95D4-49498CF13088}"
++Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "grib_copy", "grib_copy\grib_copy.vcproj", "{4EA43F5F-0E30-414A-95D4-49498CF13088}"
++	ProjectSection(ProjectDependencies) = postProject
++		{3DE8B13F-7DFE-48ED-9158-B34D774500EC} = {3DE8B13F-7DFE-48ED-9158-B34D774500EC}
++	EndProjectSection
+ EndProject
+-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "grib_filter", "grib_filter\grib_filter.vcxproj", "{647F4F6B-8F7B-48CE-8A4F-3AB91BBB675A}"
++Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "grib_filter", "grib_filter\grib_filter.vcproj", "{647F4F6B-8F7B-48CE-8A4F-3AB91BBB675A}"
++	ProjectSection(ProjectDependencies) = postProject
++		{3DE8B13F-7DFE-48ED-9158-B34D774500EC} = {3DE8B13F-7DFE-48ED-9158-B34D774500EC}
++	EndProjectSection
+ EndProject
+-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "grib_get", "grib_get\grib_get.vcxproj", "{CEC6AA62-CB06-4C54-A011-C388FE317B6C}"
++Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "grib_get", "grib_get\grib_get.vcproj", "{CEC6AA62-CB06-4C54-A011-C388FE317B6C}"
++	ProjectSection(ProjectDependencies) = postProject
++		{3DE8B13F-7DFE-48ED-9158-B34D774500EC} = {3DE8B13F-7DFE-48ED-9158-B34D774500EC}
++	EndProjectSection
+ EndProject
+-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "grib_get_data", "grib_get_data\grib_get_data.vcxproj", "{3B1919FE-0907-412A-97DE-364E020893FC}"
++Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "grib_get_data", "grib_get_data\grib_get_data.vcproj", "{3B1919FE-0907-412A-97DE-364E020893FC}"
++	ProjectSection(ProjectDependencies) = postProject
++		{3DE8B13F-7DFE-48ED-9158-B34D774500EC} = {3DE8B13F-7DFE-48ED-9158-B34D774500EC}
++	EndProjectSection
+ EndProject
+-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "grib_ls", "grib_ls\grib_ls.vcxproj", "{FE5FB239-B1DE-4F10-8EB5-103302D11244}"
++Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "grib_ls", "grib_ls\grib_ls.vcproj", "{FE5FB239-B1DE-4F10-8EB5-103302D11244}"
++	ProjectSection(ProjectDependencies) = postProject
++		{3DE8B13F-7DFE-48ED-9158-B34D774500EC} = {3DE8B13F-7DFE-48ED-9158-B34D774500EC}
++	EndProjectSection
+ EndProject
+-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "grib_set", "grib_set\grib_set.vcxproj", "{C06A88B7-84D3-41D9-8D04-8002E2483124}"
++Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "grib_set", "grib_set\grib_set.vcproj", "{C06A88B7-84D3-41D9-8D04-8002E2483124}"
++	ProjectSection(ProjectDependencies) = postProject
++		{3DE8B13F-7DFE-48ED-9158-B34D774500EC} = {3DE8B13F-7DFE-48ED-9158-B34D774500EC}
++	EndProjectSection
+ EndProject
+ Global
+ 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+diff --git b/grib_api/windows/msvc/grib_api_lib/grib_api_lib.vcxproj a/grib_api/windows/msvc/grib_api_lib/grib_api_lib.vcxproj
+index 8a81764..aa7e791 100644
+--- b/grib_api/windows/msvc/grib_api_lib/grib_api_lib.vcxproj
++++ a/grib_api/windows/msvc/grib_api_lib/grib_api_lib.vcxproj
+@@ -66,26 +66,26 @@
+     <_ProjectFileVersion>12.0.30501.0</_ProjectFileVersion>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+-    <OutDir>$(Platform)\$(Configuration)\</OutDir>
++    <OutDir>..\..\..\..\lib\$(PlatformTarget)\$(Configuration)\</OutDir>
+     <IntDir>$(Platform)\$(Configuration)\</IntDir>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+-    <OutDir>$(Platform)\$(Configuration)\</OutDir>
++    <OutDir>..\..\..\..\lib\$(PlatformTarget)\$(Configuration)\</OutDir>
+     <IntDir>$(Platform)\$(Configuration)\</IntDir>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+-    <OutDir>$(Platform)\$(Configuration)\</OutDir>
++    <OutDir>..\..\..\..\lib\$(PlatformTarget)\$(Configuration)\</OutDir>
+     <IntDir>$(Platform)\$(Configuration)\</IntDir>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+-    <OutDir>$(Platform)\$(Configuration)\</OutDir>
++    <OutDir>..\..\..\..\lib\$(PlatformTarget)\$(Configuration)\</OutDir>
+     <IntDir>$(Platform)\$(Configuration)\</IntDir>
+   </PropertyGroup>
+   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+     <ClCompile>
+       <Optimization>Disabled</Optimization>
+-      <AdditionalIncludeDirectories>..\..\..\src;..\..\..\tools;..\..\..\jasper-1.900.1\src\libjasper\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+-      <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;IEEE;JAS_WIN_MSVC_BUILD;HAVE_STRING_H;YY_NO_UNISTD_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
++      <AdditionalIncludeDirectories>..\..\..\src;..\..\..\tools;..\..\..\..\ext\jasper-1.900.1\src\libjasper\include;..\..\..\..\ext\lpng;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
++      <PreprocessorDefinitions>WIN32;_CRT_SECURE_NO_WARNINGS;HAVE_LIBPNG;HAVE_LIBPNG_DEBUG;GRIB_OMP_THREADS;HAVE_JPEG;USE_JPEG2000;JAS_WIN_MSVC_BUILD;HAVE_LIBJASPER;_DEBUG;_LIB;IEEE;JAS_WIN_MSVC_BUILD;HAVE_STRING_H;YY_NO_UNISTD_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+       <MinimalRebuild>false</MinimalRebuild>
+       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+@@ -97,7 +97,12 @@
+       <WarningLevel>Level3</WarningLevel>
+       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+       <DisableSpecificWarnings>4996;4273;4018;4244;4101;%(DisableSpecificWarnings)</DisableSpecificWarnings>
++      <OpenMPSupport>true</OpenMPSupport>
+     </ClCompile>
++    <Lib>
++      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
++      <AdditionalLibraryDirectories>..\..\..\..\lib\$(PlatformTarget)\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
++    </Lib>
+   </ItemDefinitionGroup>
+   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+     <Midl>
+@@ -105,8 +110,8 @@
+     </Midl>
+     <ClCompile>
+       <Optimization>Disabled</Optimization>
+-      <AdditionalIncludeDirectories>..\..\..\src;..\..\..\tools;..\..\..\jasper-1.900.1\src\libjasper\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+-      <PreprocessorDefinitions>WIN32;_WIN64;_DEBUG;_LIB;IEEE;HAVE_STRING_H;YY_NO_UNISTD_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
++      <AdditionalIncludeDirectories>..\..\..\src;..\..\..\tools;..\..\..\..\ext\jasper-1.900.1\src\libjasper\include;..\..\..\..\ext\lpng;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
++      <PreprocessorDefinitions>WIN32;_CRT_SECURE_NO_WARNINGS;HAVE_LIBPNG;HAVE_LIBPNG_DEBUG;GRIB_OMP_THREADS;HAVE_JPEG;USE_JPEG2000;JAS_WIN_MSVC_BUILD;HAVE_LIBJASPER;_WIN64;_DEBUG;_LIB;IEEE;HAVE_STRING_H;YY_NO_UNISTD_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+       <MinimalRebuild>false</MinimalRebuild>
+       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+@@ -118,14 +123,19 @@
+       <WarningLevel>Level3</WarningLevel>
+       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+       <DisableSpecificWarnings>4996;4273;4018;4244;4101;4267;%(DisableSpecificWarnings)</DisableSpecificWarnings>
++      <OpenMPSupport>true</OpenMPSupport>
+     </ClCompile>
++    <Lib>
++      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
++      <AdditionalLibraryDirectories>..\..\..\..\lib\$(PlatformTarget)\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
++    </Lib>
+   </ItemDefinitionGroup>
+   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+     <ClCompile>
+       <Optimization>MaxSpeed</Optimization>
+       <IntrinsicFunctions>true</IntrinsicFunctions>
+-      <AdditionalIncludeDirectories>..\..\..\src;..\..\..\tools;..\..\..\jasper-1.900.1\src\libjasper\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+-      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;IEEE;JAS_WIN_MSVC_BUILD;HAVE_STRING_H;YY_NO_UNISTD_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
++      <AdditionalIncludeDirectories>..\..\..\src;..\..\..\tools;..\..\..\..\ext\jasper-1.900.1\src\libjasper\include;..\..\..\..\ext\lpng;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
++      <PreprocessorDefinitions>WIN32;_CRT_SECURE_NO_WARNINGS;HAVE_LIBPNG;GRIB_OMP_THREADS;HAVE_JPEG;USE_JPEG2000;JAS_WIN_MSVC_BUILD;HAVE_LIBJASPER;NDEBUG;_LIB;IEEE;JAS_WIN_MSVC_BUILD;HAVE_STRING_H;YY_NO_UNISTD_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+       <MinimalRebuild>false</MinimalRebuild>
+       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+       <FunctionLevelLinking>true</FunctionLevelLinking>
+@@ -136,7 +146,12 @@
+       <WarningLevel>Level3</WarningLevel>
+       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+       <DisableSpecificWarnings>4996;4273;4018;4244;4101;%(DisableSpecificWarnings)</DisableSpecificWarnings>
++      <OpenMPSupport>true</OpenMPSupport>
+     </ClCompile>
++    <Lib>
++      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
++      <AdditionalLibraryDirectories>..\..\..\..\lib\$(PlatformTarget)\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
++    </Lib>
+   </ItemDefinitionGroup>
+   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+     <Midl>
+@@ -145,8 +160,8 @@
+     <ClCompile>
+       <Optimization>MaxSpeed</Optimization>
+       <IntrinsicFunctions>true</IntrinsicFunctions>
+-      <AdditionalIncludeDirectories>..\..\..\src;..\..\..\tools;..\..\..\jasper-1.900.1\src\libjasper\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+-      <PreprocessorDefinitions>WIN32;_WIN64;NDEBUG;_LIB;IEEE;HAVE_STRING_H;YY_NO_UNISTD_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
++      <AdditionalIncludeDirectories>..\..\..\src;..\..\..\tools;..\..\..\..\ext\jasper-1.900.1\src\libjasper\include;..\..\..\..\ext\lpng;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
++      <PreprocessorDefinitions>WIN32;_CRT_SECURE_NO_WARNINGS;HAVE_LIBPNG;GRIB_OMP_THREADS;HAVE_JPEG;USE_JPEG2000;JAS_WIN_MSVC_BUILD;HAVE_LIBJASPER;_WIN64;NDEBUG;_LIB;IEEE;HAVE_STRING_H;YY_NO_UNISTD_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+       <MinimalRebuild>false</MinimalRebuild>
+       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+       <FunctionLevelLinking>true</FunctionLevelLinking>
+@@ -157,7 +172,12 @@
+       <WarningLevel>Level3</WarningLevel>
+       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+       <DisableSpecificWarnings>4996;4273;4018;4244;4101;4267;%(DisableSpecificWarnings)</DisableSpecificWarnings>
++      <OpenMPSupport>true</OpenMPSupport>
+     </ClCompile>
++    <Lib>
++      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
++      <AdditionalLibraryDirectories>..\..\..\..\lib\$(PlatformTarget)\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
++    </Lib>
+   </ItemDefinitionGroup>
+   <ItemGroup>
+     <ClCompile Include="..\..\..\src\action.c" />
+@@ -204,7 +224,6 @@
+     <ClCompile Include="..\..\..\src\grib_accessor_class_budgdate.c" />
+     <ClCompile Include="..\..\..\src\grib_accessor_class_bytes.c" />
+     <ClCompile Include="..\..\..\src\grib_accessor_class_change_scanning_direction.c" />
+-    <ClCompile Include="..\..\..\src\grib_accessor_class_check_internal_version.c" />
+     <ClCompile Include="..\..\..\src\grib_accessor_class_codeflag.c" />
+     <ClCompile Include="..\..\..\src\grib_accessor_class_codetable.c" />
+     <ClCompile Include="..\..\..\src\grib_accessor_class_codetable_title.c" />
+@@ -489,6 +508,14 @@
+   <ItemGroup>
+     <Text Include="ReadMe.txt" />
+   </ItemGroup>
++  <ItemGroup>
++    <ProjectReference Include="..\..\..\..\ext\jasper-1.900.1\src\msvc\libjasper.vcxproj">
++      <Project>{5053cd4d-1e0c-4720-8546-2982bddc9bec}</Project>
++    </ProjectReference>
++    <ProjectReference Include="..\..\..\..\ext\lpng\projects\vstudio\libpng\libpng.vcxproj">
++      <Project>{d6973076-9317-4ef2-a0b8-b7a18ac0713e}</Project>
++    </ProjectReference>
++  </ItemGroup>
+   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+   <ImportGroup Label="ExtensionTargets">
+   </ImportGroup>
+diff --git b/grib_api/windows/msvc/grib_api_lib/grib_api_lib.vcxproj.filters a/grib_api/windows/msvc/grib_api_lib/grib_api_lib.vcxproj.filters
+index cbb5812..52800ec 100644
+--- b/grib_api/windows/msvc/grib_api_lib/grib_api_lib.vcxproj.filters
++++ a/grib_api/windows/msvc/grib_api_lib/grib_api_lib.vcxproj.filters
+@@ -147,9 +147,6 @@
+     <ClCompile Include="..\..\..\src\grib_accessor_class_change_scanning_direction.c">
+       <Filter>Source Files</Filter>
+     </ClCompile>
+-    <ClCompile Include="..\..\..\src\grib_accessor_class_check_internal_version.c">
+-      <Filter>Source Files</Filter>
+-    </ClCompile>
+     <ClCompile Include="..\..\..\src\grib_accessor_class_codeflag.c">
+       <Filter>Source Files</Filter>
+     </ClCompile>
+diff --git b/grib_api/windows/msvc/grib_compare/grib_compare.vcxproj a/grib_api/windows/msvc/grib_compare/grib_compare.vcxproj
+index 9155eb1..6d09745 100644
+--- b/grib_api/windows/msvc/grib_compare/grib_compare.vcxproj
++++ a/grib_api/windows/msvc/grib_compare/grib_compare.vcxproj
+@@ -66,22 +66,22 @@
+     <_ProjectFileVersion>12.0.30501.0</_ProjectFileVersion>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+-    <OutDir>$(Platform)\$(Configuration)\</OutDir>
++    <OutDir>..\..\..\..\bin\$(PlatformTarget)\$(Configuration)\</OutDir>
+     <IntDir>$(Platform)\$(Configuration)\</IntDir>
+     <LinkIncremental>true</LinkIncremental>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+-    <OutDir>$(Platform)\$(Configuration)\</OutDir>
++    <OutDir>..\..\..\..\bin\$(PlatformTarget)\$(Configuration)\</OutDir>
+     <IntDir>$(Platform)\$(Configuration)\</IntDir>
+     <LinkIncremental>true</LinkIncremental>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+-    <OutDir>$(Platform)\$(Configuration)\</OutDir>
++    <OutDir>..\..\..\..\bin\$(PlatformTarget)\$(Configuration)\</OutDir>
+     <IntDir>$(Platform)\$(Configuration)\</IntDir>
+     <LinkIncremental>false</LinkIncremental>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+-    <OutDir>$(Platform)\$(Configuration)\</OutDir>
++    <OutDir>..\..\..\..\bin\$(PlatformTarget)\$(Configuration)\</OutDir>
+     <IntDir>$(Platform)\$(Configuration)\</IntDir>
+     <LinkIncremental>false</LinkIncremental>
+   </PropertyGroup>
+@@ -89,7 +89,7 @@
+     <ClCompile>
+       <Optimization>Disabled</Optimization>
+       <AdditionalIncludeDirectories>..\..\..\src;..\..\..\tools;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;HAVE_STRING_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
++      <PreprocessorDefinitions>WIN32;_CRT_SECURE_NO_WARNINGS;_DEBUG;_CONSOLE;HAVE_STRING_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+       <MinimalRebuild>true</MinimalRebuild>
+       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+@@ -117,7 +117,7 @@
+     <ClCompile>
+       <Optimization>Disabled</Optimization>
+       <AdditionalIncludeDirectories>..\..\..\src;..\..\..\tools;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+-      <PreprocessorDefinitions>WIN32;_WIN64;_DEBUG;_CONSOLE;HAVE_STRING_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
++      <PreprocessorDefinitions>WIN32;_CRT_SECURE_NO_WARNINGS;_WIN64;_DEBUG;_CONSOLE;HAVE_STRING_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+       <MinimalRebuild>true</MinimalRebuild>
+       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+@@ -143,7 +143,7 @@
+       <Optimization>MaxSpeed</Optimization>
+       <IntrinsicFunctions>true</IntrinsicFunctions>
+       <AdditionalIncludeDirectories>..\..\..\src;..\..\..\tools;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;HAVE_STRING_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
++      <PreprocessorDefinitions>WIN32;_CRT_SECURE_NO_WARNINGS;NDEBUG;_CONSOLE;HAVE_STRING_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+       <FunctionLevelLinking>true</FunctionLevelLinking>
+       <PrecompiledHeader />
+@@ -172,7 +172,7 @@
+       <Optimization>MaxSpeed</Optimization>
+       <IntrinsicFunctions>true</IntrinsicFunctions>
+       <AdditionalIncludeDirectories>..\..\..\src;..\..\..\tools;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+-      <PreprocessorDefinitions>WIN32;_WIN64;NDEBUG;_CONSOLE;HAVE_STRING_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
++      <PreprocessorDefinitions>WIN32;_CRT_SECURE_NO_WARNINGS;_WIN64;NDEBUG;_CONSOLE;HAVE_STRING_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+       <FunctionLevelLinking>true</FunctionLevelLinking>
+       <PrecompiledHeader />
+@@ -196,6 +196,12 @@
+   <ItemGroup>
+     <ClCompile Include="..\..\..\tools\grib_compare.c" />
+   </ItemGroup>
++  <ItemGroup>
++    <ProjectReference Include="..\grib_api_lib\grib_api_lib.vcxproj">
++      <Project>{3de8b13f-7dfe-48ed-9158-b34d774500ec}</Project>
++      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
++    </ProjectReference>
++  </ItemGroup>
+   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+   <ImportGroup Label="ExtensionTargets">
+   </ImportGroup>
+diff --git b/grib_api/windows/msvc/grib_copy/grib_copy.vcxproj a/grib_api/windows/msvc/grib_copy/grib_copy.vcxproj
+index 94cb4aa..cdf0a80 100644
+--- b/grib_api/windows/msvc/grib_copy/grib_copy.vcxproj
++++ a/grib_api/windows/msvc/grib_copy/grib_copy.vcxproj
+@@ -66,22 +66,22 @@
+     <_ProjectFileVersion>12.0.30501.0</_ProjectFileVersion>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+-    <OutDir>$(Platform)\$(Configuration)\</OutDir>
++    <OutDir>..\..\..\..\bin\$(PlatformTarget)\$(Configuration)\</OutDir>
+     <IntDir>$(Platform)\$(Configuration)\</IntDir>
+     <LinkIncremental>true</LinkIncremental>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+-    <OutDir>$(Platform)\$(Configuration)\</OutDir>
++    <OutDir>..\..\..\..\bin\$(PlatformTarget)\$(Configuration)\</OutDir>
+     <IntDir>$(Platform)\$(Configuration)\</IntDir>
+     <LinkIncremental>true</LinkIncremental>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+-    <OutDir>$(Platform)\$(Configuration)\</OutDir>
++    <OutDir>..\..\..\..\bin\$(PlatformTarget)\$(Configuration)\</OutDir>
+     <IntDir>$(Platform)\$(Configuration)\</IntDir>
+     <LinkIncremental>false</LinkIncremental>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+-    <OutDir>$(Platform)\$(Configuration)\</OutDir>
++    <OutDir>..\..\..\..\bin\$(PlatformTarget)\$(Configuration)\</OutDir>
+     <IntDir>$(Platform)\$(Configuration)\</IntDir>
+     <LinkIncremental>false</LinkIncremental>
+   </PropertyGroup>
+@@ -89,7 +89,7 @@
+     <ClCompile>
+       <Optimization>Disabled</Optimization>
+       <AdditionalIncludeDirectories>..\..\..\src;..\..\..\tools;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;HAVE_STRING_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
++      <PreprocessorDefinitions>WIN32;_CRT_SECURE_NO_WARNINGS;_DEBUG;_CONSOLE;HAVE_STRING_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+       <MinimalRebuild>true</MinimalRebuild>
+       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+@@ -117,7 +117,7 @@
+     <ClCompile>
+       <Optimization>Disabled</Optimization>
+       <AdditionalIncludeDirectories>..\..\..\src;..\..\..\tools;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+-      <PreprocessorDefinitions>WIN32;_WIN64;_DEBUG;_CONSOLE;HAVE_STRING_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
++      <PreprocessorDefinitions>WIN32;_CRT_SECURE_NO_WARNINGS;_WIN64;_DEBUG;_CONSOLE;HAVE_STRING_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+       <MinimalRebuild>true</MinimalRebuild>
+       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+@@ -143,7 +143,7 @@
+       <Optimization>MaxSpeed</Optimization>
+       <IntrinsicFunctions>true</IntrinsicFunctions>
+       <AdditionalIncludeDirectories>..\..\..\src;..\..\..\tools;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;HAVE_STRING_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
++      <PreprocessorDefinitions>WIN32;_CRT_SECURE_NO_WARNINGS;NDEBUG;_CONSOLE;HAVE_STRING_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+       <FunctionLevelLinking>true</FunctionLevelLinking>
+       <PrecompiledHeader />
+@@ -172,7 +172,7 @@
+       <Optimization>MaxSpeed</Optimization>
+       <IntrinsicFunctions>true</IntrinsicFunctions>
+       <AdditionalIncludeDirectories>..\..\..\src;..\..\..\tools;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+-      <PreprocessorDefinitions>WIN32;_WIN64;NDEBUG;_CONSOLE;HAVE_STRING_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
++      <PreprocessorDefinitions>WIN32;_CRT_SECURE_NO_WARNINGS;_WIN64;NDEBUG;_CONSOLE;HAVE_STRING_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+       <FunctionLevelLinking>true</FunctionLevelLinking>
+       <PrecompiledHeader />
+@@ -196,6 +196,12 @@
+   <ItemGroup>
+     <ClCompile Include="..\..\..\tools\grib_copy.c" />
+   </ItemGroup>
++  <ItemGroup>
++    <ProjectReference Include="..\grib_api_lib\grib_api_lib.vcxproj">
++      <Project>{3de8b13f-7dfe-48ed-9158-b34d774500ec}</Project>
++      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
++    </ProjectReference>
++  </ItemGroup>
+   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+   <ImportGroup Label="ExtensionTargets">
+   </ImportGroup>
+diff --git b/grib_api/windows/msvc/grib_dump/grib_dump.vcxproj a/grib_api/windows/msvc/grib_dump/grib_dump.vcxproj
+index c859f20..56a72cb 100644
+--- b/grib_api/windows/msvc/grib_dump/grib_dump.vcxproj
++++ a/grib_api/windows/msvc/grib_dump/grib_dump.vcxproj
+@@ -66,22 +66,22 @@
+     <_ProjectFileVersion>12.0.30501.0</_ProjectFileVersion>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+-    <OutDir>$(Platform)\$(Configuration)\</OutDir>
++    <OutDir>..\..\..\..\bin\$(PlatformTarget)\$(Configuration)\</OutDir>
+     <IntDir>$(Platform)\$(Configuration)\</IntDir>
+     <LinkIncremental>true</LinkIncremental>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+-    <OutDir>$(Platform)\$(Configuration)\</OutDir>
++    <OutDir>..\..\..\..\bin\$(PlatformTarget)\$(Configuration)\</OutDir>
+     <IntDir>$(Platform)\$(Configuration)\</IntDir>
+     <LinkIncremental>true</LinkIncremental>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+-    <OutDir>$(Platform)\$(Configuration)\</OutDir>
++    <OutDir>..\..\..\..\bin\$(PlatformTarget)\$(Configuration)\</OutDir>
+     <IntDir>$(Platform)\$(Configuration)\</IntDir>
+     <LinkIncremental>false</LinkIncremental>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+-    <OutDir>$(Platform)\$(Configuration)\</OutDir>
++    <OutDir>..\..\..\..\bin\$(PlatformTarget)\$(Configuration)\</OutDir>
+     <IntDir>$(Platform)\$(Configuration)\</IntDir>
+     <LinkIncremental>false</LinkIncremental>
+   </PropertyGroup>
+@@ -89,7 +89,7 @@
+     <ClCompile>
+       <Optimization>Disabled</Optimization>
+       <AdditionalIncludeDirectories>..\..\..\src;..\..\..\tools;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;HAVE_STRING_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
++      <PreprocessorDefinitions>WIN32;_CRT_SECURE_NO_WARNINGS;_DEBUG;_CONSOLE;HAVE_STRING_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+       <MinimalRebuild>true</MinimalRebuild>
+       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+@@ -117,7 +117,7 @@
+     <ClCompile>
+       <Optimization>Disabled</Optimization>
+       <AdditionalIncludeDirectories>..\..\..\src;..\..\..\tools;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+-      <PreprocessorDefinitions>WIN32;_WIN64;_DEBUG;_CONSOLE;HAVE_STRING_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
++      <PreprocessorDefinitions>WIN32;_CRT_SECURE_NO_WARNINGS;_WIN64;_DEBUG;_CONSOLE;HAVE_STRING_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+       <MinimalRebuild>true</MinimalRebuild>
+       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+@@ -143,7 +143,7 @@
+       <Optimization>MaxSpeed</Optimization>
+       <IntrinsicFunctions>true</IntrinsicFunctions>
+       <AdditionalIncludeDirectories>..\..\..\src;..\..\..\tools;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;HAVE_STRING_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
++      <PreprocessorDefinitions>WIN32;_CRT_SECURE_NO_WARNINGS;NDEBUG;_CONSOLE;HAVE_STRING_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+       <FunctionLevelLinking>true</FunctionLevelLinking>
+       <PrecompiledHeader />
+@@ -172,7 +172,7 @@
+       <Optimization>MaxSpeed</Optimization>
+       <IntrinsicFunctions>true</IntrinsicFunctions>
+       <AdditionalIncludeDirectories>..\..\..\src;..\..\..\tools;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+-      <PreprocessorDefinitions>WIN32;_WIN64;NDEBUG;_CONSOLE;HAVE_STRING_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
++      <PreprocessorDefinitions>WIN32;_CRT_SECURE_NO_WARNINGS;_WIN64;NDEBUG;_CONSOLE;HAVE_STRING_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+       <FunctionLevelLinking>true</FunctionLevelLinking>
+       <PrecompiledHeader />
+@@ -196,6 +196,12 @@
+   <ItemGroup>
+     <ClCompile Include="..\..\..\tools\grib_dump.c" />
+   </ItemGroup>
++  <ItemGroup>
++    <ProjectReference Include="..\grib_api_lib\grib_api_lib.vcxproj">
++      <Project>{3de8b13f-7dfe-48ed-9158-b34d774500ec}</Project>
++      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
++    </ProjectReference>
++  </ItemGroup>
+   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+   <ImportGroup Label="ExtensionTargets">
+   </ImportGroup>
+diff --git b/grib_api/windows/msvc/grib_filter/grib_filter.vcxproj a/grib_api/windows/msvc/grib_filter/grib_filter.vcxproj
+index f6e67f5..92f9709 100644
+--- b/grib_api/windows/msvc/grib_filter/grib_filter.vcxproj
++++ a/grib_api/windows/msvc/grib_filter/grib_filter.vcxproj
+@@ -66,22 +66,22 @@
+     <_ProjectFileVersion>12.0.30501.0</_ProjectFileVersion>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+-    <OutDir>$(Platform)\$(Configuration)\</OutDir>
++    <OutDir>..\..\..\..\bin\$(PlatformTarget)\$(Configuration)\</OutDir>
+     <IntDir>$(Platform)\$(Configuration)\</IntDir>
+     <LinkIncremental>true</LinkIncremental>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+-    <OutDir>$(Platform)\$(Configuration)\</OutDir>
++    <OutDir>..\..\..\..\bin\$(PlatformTarget)\$(Configuration)\</OutDir>
+     <IntDir>$(Platform)\$(Configuration)\</IntDir>
+     <LinkIncremental>true</LinkIncremental>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+-    <OutDir>$(Platform)\$(Configuration)\</OutDir>
++    <OutDir>..\..\..\..\bin\$(PlatformTarget)\$(Configuration)\</OutDir>
+     <IntDir>$(Platform)\$(Configuration)\</IntDir>
+     <LinkIncremental>false</LinkIncremental>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+-    <OutDir>$(Platform)\$(Configuration)\</OutDir>
++    <OutDir>..\..\..\..\bin\$(PlatformTarget)\$(Configuration)\</OutDir>
+     <IntDir>$(Platform)\$(Configuration)\</IntDir>
+     <LinkIncremental>false</LinkIncremental>
+   </PropertyGroup>
+@@ -89,7 +89,7 @@
+     <ClCompile>
+       <Optimization>Disabled</Optimization>
+       <AdditionalIncludeDirectories>..\..\..\src;..\..\..\tools;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;HAVE_STRING_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
++      <PreprocessorDefinitions>WIN32;_CRT_SECURE_NO_WARNINGS;_DEBUG;_CONSOLE;HAVE_STRING_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+       <MinimalRebuild>true</MinimalRebuild>
+       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+@@ -117,7 +117,7 @@
+     <ClCompile>
+       <Optimization>Disabled</Optimization>
+       <AdditionalIncludeDirectories>..\..\..\src;..\..\..\tools;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+-      <PreprocessorDefinitions>WIN32;_WIN64;_DEBUG;_CONSOLE;HAVE_STRING_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
++      <PreprocessorDefinitions>WIN32;_CRT_SECURE_NO_WARNINGS;_WIN64;_DEBUG;_CONSOLE;HAVE_STRING_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+       <MinimalRebuild>true</MinimalRebuild>
+       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+@@ -143,7 +143,7 @@
+       <Optimization>MaxSpeed</Optimization>
+       <IntrinsicFunctions>true</IntrinsicFunctions>
+       <AdditionalIncludeDirectories>..\..\..\src;..\..\..\tools;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;HAVE_STRING_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
++      <PreprocessorDefinitions>WIN32;_CRT_SECURE_NO_WARNINGS;NDEBUG;_CONSOLE;HAVE_STRING_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+       <FunctionLevelLinking>true</FunctionLevelLinking>
+       <PrecompiledHeader />
+@@ -172,7 +172,7 @@
+       <Optimization>MaxSpeed</Optimization>
+       <IntrinsicFunctions>true</IntrinsicFunctions>
+       <AdditionalIncludeDirectories>..\..\..\src;..\..\..\tools;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+-      <PreprocessorDefinitions>WIN32;_WIN64;NDEBUG;_CONSOLE;HAVE_STRING_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
++      <PreprocessorDefinitions>WIN32;_CRT_SECURE_NO_WARNINGS;_WIN64;NDEBUG;_CONSOLE;HAVE_STRING_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+       <FunctionLevelLinking>true</FunctionLevelLinking>
+       <PrecompiledHeader />
+@@ -196,6 +196,12 @@
+   <ItemGroup>
+     <ClCompile Include="..\..\..\tools\grib_filter.c" />
+   </ItemGroup>
++  <ItemGroup>
++    <ProjectReference Include="..\grib_api_lib\grib_api_lib.vcxproj">
++      <Project>{3de8b13f-7dfe-48ed-9158-b34d774500ec}</Project>
++      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
++    </ProjectReference>
++  </ItemGroup>
+   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+   <ImportGroup Label="ExtensionTargets">
+   </ImportGroup>
+diff --git b/grib_api/windows/msvc/grib_get/grib_get.vcxproj a/grib_api/windows/msvc/grib_get/grib_get.vcxproj
+index 473ac24..da9afd4 100644
+--- b/grib_api/windows/msvc/grib_get/grib_get.vcxproj
++++ a/grib_api/windows/msvc/grib_get/grib_get.vcxproj
+@@ -66,22 +66,22 @@
+     <_ProjectFileVersion>12.0.30501.0</_ProjectFileVersion>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+-    <OutDir>$(Platform)\$(Configuration)\</OutDir>
++    <OutDir>..\..\..\..\bin\$(PlatformTarget)\$(Configuration)\</OutDir>
+     <IntDir>$(Platform)\$(Configuration)\</IntDir>
+     <LinkIncremental>true</LinkIncremental>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+-    <OutDir>$(Platform)\$(Configuration)\</OutDir>
++    <OutDir>..\..\..\..\bin\$(PlatformTarget)\$(Configuration)\</OutDir>
+     <IntDir>$(Platform)\$(Configuration)\</IntDir>
+     <LinkIncremental>true</LinkIncremental>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+-    <OutDir>$(Platform)\$(Configuration)\</OutDir>
++    <OutDir>..\..\..\..\bin\$(PlatformTarget)\$(Configuration)\</OutDir>
+     <IntDir>$(Platform)\$(Configuration)\</IntDir>
+     <LinkIncremental>false</LinkIncremental>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+-    <OutDir>$(Platform)\$(Configuration)\</OutDir>
++    <OutDir>..\..\..\..\bin\$(PlatformTarget)\$(Configuration)\</OutDir>
+     <IntDir>$(Platform)\$(Configuration)\</IntDir>
+     <LinkIncremental>false</LinkIncremental>
+   </PropertyGroup>
+@@ -89,7 +89,7 @@
+     <ClCompile>
+       <Optimization>Disabled</Optimization>
+       <AdditionalIncludeDirectories>..\..\..\src;..\..\..\tools;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;HAVE_STRING_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
++      <PreprocessorDefinitions>WIN32;_CRT_SECURE_NO_WARNINGS;_DEBUG;_CONSOLE;HAVE_STRING_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+       <MinimalRebuild>true</MinimalRebuild>
+       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+@@ -117,7 +117,7 @@
+     <ClCompile>
+       <Optimization>Disabled</Optimization>
+       <AdditionalIncludeDirectories>..\..\..\src;..\..\..\tools;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+-      <PreprocessorDefinitions>WIN32;_WIN64;_DEBUG;_CONSOLE;HAVE_STRING_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
++      <PreprocessorDefinitions>WIN32;_CRT_SECURE_NO_WARNINGS;_WIN64;_DEBUG;_CONSOLE;HAVE_STRING_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+       <MinimalRebuild>true</MinimalRebuild>
+       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+@@ -143,7 +143,7 @@
+       <Optimization>MaxSpeed</Optimization>
+       <IntrinsicFunctions>true</IntrinsicFunctions>
+       <AdditionalIncludeDirectories>..\..\..\src;..\..\..\tools;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;HAVE_STRING_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
++      <PreprocessorDefinitions>WIN32;_CRT_SECURE_NO_WARNINGS;NDEBUG;_CONSOLE;HAVE_STRING_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+       <FunctionLevelLinking>true</FunctionLevelLinking>
+       <PrecompiledHeader />
+@@ -172,7 +172,7 @@
+       <Optimization>MaxSpeed</Optimization>
+       <IntrinsicFunctions>true</IntrinsicFunctions>
+       <AdditionalIncludeDirectories>..\..\..\src;..\..\..\tools;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+-      <PreprocessorDefinitions>WIN32;_WIN64;NDEBUG;_CONSOLE;HAVE_STRING_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
++      <PreprocessorDefinitions>WIN32;_CRT_SECURE_NO_WARNINGS;_WIN64;NDEBUG;_CONSOLE;HAVE_STRING_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+       <FunctionLevelLinking>true</FunctionLevelLinking>
+       <PrecompiledHeader />
+@@ -196,6 +196,12 @@
+   <ItemGroup>
+     <ClCompile Include="..\..\..\tools\grib_get.c" />
+   </ItemGroup>
++  <ItemGroup>
++    <ProjectReference Include="..\grib_api_lib\grib_api_lib.vcxproj">
++      <Project>{3de8b13f-7dfe-48ed-9158-b34d774500ec}</Project>
++      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
++    </ProjectReference>
++  </ItemGroup>
+   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+   <ImportGroup Label="ExtensionTargets">
+   </ImportGroup>
+diff --git b/grib_api/windows/msvc/grib_get_data/grib_get_data.vcxproj a/grib_api/windows/msvc/grib_get_data/grib_get_data.vcxproj
+index 2c6e5ca..5d23ea4 100644
+--- b/grib_api/windows/msvc/grib_get_data/grib_get_data.vcxproj
++++ a/grib_api/windows/msvc/grib_get_data/grib_get_data.vcxproj
+@@ -66,22 +66,22 @@
+     <_ProjectFileVersion>12.0.30501.0</_ProjectFileVersion>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+-    <OutDir>$(Platform)\$(Configuration)\</OutDir>
++    <OutDir>..\..\..\..\bin\$(PlatformTarget)\$(Configuration)\</OutDir>
+     <IntDir>$(Platform)\$(Configuration)\</IntDir>
+     <LinkIncremental>true</LinkIncremental>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+-    <OutDir>$(Platform)\$(Configuration)\</OutDir>
++    <OutDir>..\..\..\..\bin\$(PlatformTarget)\$(Configuration)\</OutDir>
+     <IntDir>$(Platform)\$(Configuration)\</IntDir>
+     <LinkIncremental>true</LinkIncremental>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+-    <OutDir>$(Platform)\$(Configuration)\</OutDir>
++    <OutDir>..\..\..\..\bin\$(PlatformTarget)\$(Configuration)\</OutDir>
+     <IntDir>$(Platform)\$(Configuration)\</IntDir>
+     <LinkIncremental>false</LinkIncremental>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+-    <OutDir>$(Platform)\$(Configuration)\</OutDir>
++    <OutDir>..\..\..\..\bin\$(PlatformTarget)\$(Configuration)\</OutDir>
+     <IntDir>$(Platform)\$(Configuration)\</IntDir>
+     <LinkIncremental>false</LinkIncremental>
+   </PropertyGroup>
+@@ -89,7 +89,7 @@
+     <ClCompile>
+       <Optimization>Disabled</Optimization>
+       <AdditionalIncludeDirectories>..\..\..\src;..\..\..\tools;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;HAVE_STRING_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
++      <PreprocessorDefinitions>WIN32;_CRT_SECURE_NO_WARNINGS;_DEBUG;_CONSOLE;HAVE_STRING_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+       <MinimalRebuild>true</MinimalRebuild>
+       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+@@ -117,7 +117,7 @@
+     <ClCompile>
+       <Optimization>Disabled</Optimization>
+       <AdditionalIncludeDirectories>..\..\..\src;..\..\..\tools;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+-      <PreprocessorDefinitions>WIN32;_WIN64;_DEBUG;_CONSOLE;HAVE_STRING_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
++      <PreprocessorDefinitions>WIN32;_CRT_SECURE_NO_WARNINGS;_WIN64;_DEBUG;_CONSOLE;HAVE_STRING_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+       <MinimalRebuild>true</MinimalRebuild>
+       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+@@ -143,7 +143,7 @@
+       <Optimization>MaxSpeed</Optimization>
+       <IntrinsicFunctions>true</IntrinsicFunctions>
+       <AdditionalIncludeDirectories>..\..\..\src;..\..\..\tools;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;HAVE_STRING_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
++      <PreprocessorDefinitions>WIN32;_CRT_SECURE_NO_WARNINGS;NDEBUG;_CONSOLE;HAVE_STRING_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+       <FunctionLevelLinking>true</FunctionLevelLinking>
+       <PrecompiledHeader />
+@@ -172,7 +172,7 @@
+       <Optimization>MaxSpeed</Optimization>
+       <IntrinsicFunctions>true</IntrinsicFunctions>
+       <AdditionalIncludeDirectories>..\..\..\src;..\..\..\tools;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+-      <PreprocessorDefinitions>WIN32;_WIN64;NDEBUG;_CONSOLE;HAVE_STRING_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
++      <PreprocessorDefinitions>WIN32;_CRT_SECURE_NO_WARNINGS;_WIN64;NDEBUG;_CONSOLE;HAVE_STRING_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+       <FunctionLevelLinking>true</FunctionLevelLinking>
+       <PrecompiledHeader />
+@@ -196,6 +196,12 @@
+   <ItemGroup>
+     <ClCompile Include="..\..\..\tools\grib_get_data.c" />
+   </ItemGroup>
++  <ItemGroup>
++    <ProjectReference Include="..\grib_api_lib\grib_api_lib.vcxproj">
++      <Project>{3de8b13f-7dfe-48ed-9158-b34d774500ec}</Project>
++      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
++    </ProjectReference>
++  </ItemGroup>
+   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+   <ImportGroup Label="ExtensionTargets">
+   </ImportGroup>
+diff --git b/grib_api/windows/msvc/grib_ls/grib_ls.vcxproj a/grib_api/windows/msvc/grib_ls/grib_ls.vcxproj
+index b7d3065..3afc1f7 100644
+--- b/grib_api/windows/msvc/grib_ls/grib_ls.vcxproj
++++ a/grib_api/windows/msvc/grib_ls/grib_ls.vcxproj
+@@ -66,22 +66,22 @@
+     <_ProjectFileVersion>12.0.30501.0</_ProjectFileVersion>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+-    <OutDir>$(Platform)\$(Configuration)\</OutDir>
++    <OutDir>..\..\..\..\bin\$(PlatformTarget)\$(Configuration)\</OutDir>
+     <IntDir>$(Platform)\$(Configuration)\</IntDir>
+     <LinkIncremental>true</LinkIncremental>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+-    <OutDir>$(Platform)\$(Configuration)\</OutDir>
++    <OutDir>..\..\..\..\bin\$(PlatformTarget)\$(Configuration)\</OutDir>
+     <IntDir>$(Platform)\$(Configuration)\</IntDir>
+     <LinkIncremental>true</LinkIncremental>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+-    <OutDir>$(Platform)\$(Configuration)\</OutDir>
++    <OutDir>..\..\..\..\bin\$(PlatformTarget)\$(Configuration)\</OutDir>
+     <IntDir>$(Platform)\$(Configuration)\</IntDir>
+     <LinkIncremental>false</LinkIncremental>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+-    <OutDir>$(Platform)\$(Configuration)\</OutDir>
++    <OutDir>..\..\..\..\bin\$(PlatformTarget)\$(Configuration)\</OutDir>
+     <IntDir>$(Platform)\$(Configuration)\</IntDir>
+     <LinkIncremental>false</LinkIncremental>
+   </PropertyGroup>
+@@ -89,7 +89,7 @@
+     <ClCompile>
+       <Optimization>Disabled</Optimization>
+       <AdditionalIncludeDirectories>..\..\..\src;..\..\..\tools;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;HAVE_STRING_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
++      <PreprocessorDefinitions>WIN32;_CRT_SECURE_NO_WARNINGS;_DEBUG;_CONSOLE;HAVE_STRING_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+       <MinimalRebuild>true</MinimalRebuild>
+       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+@@ -117,7 +117,7 @@
+     <ClCompile>
+       <Optimization>Disabled</Optimization>
+       <AdditionalIncludeDirectories>..\..\..\src;..\..\..\tools;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+-      <PreprocessorDefinitions>WIN32;_WIN64;_DEBUG;_CONSOLE;HAVE_STRING_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
++      <PreprocessorDefinitions>WIN32;_CRT_SECURE_NO_WARNINGS;_WIN64;_DEBUG;_CONSOLE;HAVE_STRING_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+       <MinimalRebuild>true</MinimalRebuild>
+       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+@@ -143,7 +143,7 @@
+       <Optimization>MaxSpeed</Optimization>
+       <IntrinsicFunctions>true</IntrinsicFunctions>
+       <AdditionalIncludeDirectories>..\..\..\src;..\..\..\tools;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;HAVE_STRING_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
++      <PreprocessorDefinitions>WIN32;_CRT_SECURE_NO_WARNINGS;NDEBUG;_CONSOLE;HAVE_STRING_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+       <FunctionLevelLinking>true</FunctionLevelLinking>
+       <PrecompiledHeader />
+@@ -172,7 +172,7 @@
+       <Optimization>MaxSpeed</Optimization>
+       <IntrinsicFunctions>true</IntrinsicFunctions>
+       <AdditionalIncludeDirectories>..\..\..\src;..\..\..\tools;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+-      <PreprocessorDefinitions>WIN32;_WIN64;NDEBUG;_CONSOLE;HAVE_STRING_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
++      <PreprocessorDefinitions>WIN32;_CRT_SECURE_NO_WARNINGS;_WIN64;NDEBUG;_CONSOLE;HAVE_STRING_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+       <FunctionLevelLinking>true</FunctionLevelLinking>
+       <PrecompiledHeader />
+@@ -196,6 +196,12 @@
+   <ItemGroup>
+     <ClCompile Include="..\..\..\tools\grib_ls.c" />
+   </ItemGroup>
++  <ItemGroup>
++    <ProjectReference Include="..\grib_api_lib\grib_api_lib.vcxproj">
++      <Project>{3de8b13f-7dfe-48ed-9158-b34d774500ec}</Project>
++      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
++    </ProjectReference>
++  </ItemGroup>
+   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+   <ImportGroup Label="ExtensionTargets">
+   </ImportGroup>
+diff --git b/grib_api/windows/msvc/grib_set/grib_set.vcxproj a/grib_api/windows/msvc/grib_set/grib_set.vcxproj
+index 0f84d67..8a8fb28 100644
+--- b/grib_api/windows/msvc/grib_set/grib_set.vcxproj
++++ a/grib_api/windows/msvc/grib_set/grib_set.vcxproj
+@@ -66,22 +66,22 @@
+     <_ProjectFileVersion>12.0.30501.0</_ProjectFileVersion>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+-    <OutDir>$(Platform)\$(Configuration)\</OutDir>
++    <OutDir>..\..\..\..\bin\$(PlatformTarget)\$(Configuration)\</OutDir>
+     <IntDir>$(Platform)\$(Configuration)\</IntDir>
+     <LinkIncremental>true</LinkIncremental>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+-    <OutDir>$(Platform)\$(Configuration)\</OutDir>
++    <OutDir>..\..\..\..\bin\$(PlatformTarget)\$(Configuration)\</OutDir>
+     <IntDir>$(Platform)\$(Configuration)\</IntDir>
+     <LinkIncremental>true</LinkIncremental>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+-    <OutDir>$(Platform)\$(Configuration)\</OutDir>
++    <OutDir>..\..\..\..\bin\$(PlatformTarget)\$(Configuration)\</OutDir>
+     <IntDir>$(Platform)\$(Configuration)\</IntDir>
+     <LinkIncremental>false</LinkIncremental>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+-    <OutDir>$(Platform)\$(Configuration)\</OutDir>
++    <OutDir>..\..\..\..\bin\$(PlatformTarget)\$(Configuration)\</OutDir>
+     <IntDir>$(Platform)\$(Configuration)\</IntDir>
+     <LinkIncremental>false</LinkIncremental>
+   </PropertyGroup>
+@@ -89,7 +89,7 @@
+     <ClCompile>
+       <Optimization>Disabled</Optimization>
+       <AdditionalIncludeDirectories>..\..\..\src;..\..\..\tools;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;HAVE_STRING_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
++      <PreprocessorDefinitions>WIN32;_CRT_SECURE_NO_WARNINGS;_DEBUG;_CONSOLE;HAVE_STRING_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+       <MinimalRebuild>true</MinimalRebuild>
+       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+@@ -117,7 +117,7 @@
+     <ClCompile>
+       <Optimization>Disabled</Optimization>
+       <AdditionalIncludeDirectories>..\..\..\src;..\..\..\tools;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+-      <PreprocessorDefinitions>WIN32;_WIN64;_DEBUG;_CONSOLE;HAVE_STRING_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
++      <PreprocessorDefinitions>WIN32;_CRT_SECURE_NO_WARNINGS;_WIN64;_DEBUG;_CONSOLE;HAVE_STRING_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+       <MinimalRebuild>true</MinimalRebuild>
+       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+@@ -143,7 +143,7 @@
+       <Optimization>MaxSpeed</Optimization>
+       <IntrinsicFunctions>true</IntrinsicFunctions>
+       <AdditionalIncludeDirectories>..\..\..\src;..\..\..\tools;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;HAVE_STRING_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
++      <PreprocessorDefinitions>WIN32;_CRT_SECURE_NO_WARNINGS;NDEBUG;_CONSOLE;HAVE_STRING_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+       <FunctionLevelLinking>true</FunctionLevelLinking>
+       <PrecompiledHeader />
+@@ -172,7 +172,7 @@
+       <Optimization>MaxSpeed</Optimization>
+       <IntrinsicFunctions>true</IntrinsicFunctions>
+       <AdditionalIncludeDirectories>..\..\..\src;..\..\..\tools;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+-      <PreprocessorDefinitions>WIN32;_WIN64;NDEBUG;_CONSOLE;HAVE_STRING_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
++      <PreprocessorDefinitions>WIN32;_CRT_SECURE_NO_WARNINGS;_WIN64;NDEBUG;_CONSOLE;HAVE_STRING_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+       <FunctionLevelLinking>true</FunctionLevelLinking>
+       <PrecompiledHeader />
+@@ -196,6 +196,12 @@
+   <ItemGroup>
+     <ClCompile Include="..\..\..\tools\grib_set.c" />
+   </ItemGroup>
++  <ItemGroup>
++    <ProjectReference Include="..\grib_api_lib\grib_api_lib.vcxproj">
++      <Project>{3de8b13f-7dfe-48ed-9158-b34d774500ec}</Project>
++      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
++    </ProjectReference>
++  </ItemGroup>
+   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+   <ImportGroup Label="ExtensionTargets">
+   </ImportGroup>
+-- 
+1.9.4.msysgit.0
+

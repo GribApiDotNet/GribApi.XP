@@ -1,0 +1,66 @@
+From eca1ef4d35f209e0d2c09375e77ef50e9f29dc50 Mon Sep 17 00:00:00 2001
+From: 0x1mason <etmillin@gmail.com>
+Date: Mon, 14 Nov 2016 12:43:07 -0500
+Subject: [PATCH] Update to vanilla v1.18.0
+
+---
+ grib_api/src/grib_errors.c | 40 ++++++++++++++++++++++++++++++++++++----
+ 1 file changed, 36 insertions(+), 4 deletions(-)
+
+diff --git b/grib_api/src/grib_errors.c a/grib_api/src/grib_errors.c
+index ce0bc19..76edec7 100644
+--- b/grib_api/src/grib_errors.c
++++ a/grib_api/src/grib_errors.c
+@@ -99,12 +99,44 @@ void grib_check(const char* call,const char*  file,int line,int e,const char* ms
+ 		} else {
+ 			grib_context_log(c,GRIB_LOG_ERROR,"%s",grib_get_error_message(e));
+ 		}
+-        exit(e);
++        grib_exit(e);
+     }
+ }
+ 
+-void grib_fail(const char* expr,const char* file,int line) {
+-   fprintf(stderr,"%s at line %d: assertion failure Assert(%s)\n",file,line,expr);
+-   abort();
++grib_fail_proc _grib_fail = NULL;
++
++void grib_set_fail_proc(grib_fail_proc p) 
++{
++	_grib_fail = p;
+ }
+ 
++void grib_fail_default(const char* expr, const char* file, int line) 
++{
++	fprintf(stderr, "%s at line %d: assertion failure Assert(%s)\n", file, line, expr);
++	abort();
++}
++
++void grib_fail(const char* expr,const char* file,int line)
++{
++	if (_grib_fail) {
++		_grib_fail(expr, file, line);
++	} else {
++		grib_fail_default(expr, file, line);
++	}
++}
++
++grib_exit_proc _grib_exit = NULL;
++
++void grib_set_exit_proc(grib_exit_proc p)
++{
++	_grib_exit = p;
++}
++
++void grib_exit(int code)
++{
++	if (_grib_exit) {
++		_grib_exit(code);
++	} else {
++		exit(code);
++	}
++}
+\ No newline at end of file
+-- 
+1.9.4.msysgit.0
+

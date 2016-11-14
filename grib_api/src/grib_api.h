@@ -1260,6 +1260,40 @@ int grib_keys_iterator_get_bytes(grib_keys_iterator *kiter, unsigned char *v, si
 
 void grib_update_sections_lengths(grib_handle* h);
 
+/**
+* Grib fail proc, format of a procedure handling a fatal error
+*
+* @param c             : the context where the logging will apply
+* @param level         : the log level, as defined in log modes
+* @param mesg          : the message to be logged
+*/
+typedef void(*grib_fail_proc)    (const char* expr, const char* file, int line);
+
+/**
+* Set a custom handler for fatal errors
+*
+* @param p             : the procedure to invoke on fatal errors
+*/
+void grib_set_fail_proc(grib_fail_proc p);
+
+/**
+* Grib exit proc, format of a procedure that terminates the process
+*
+* @param c             : the exit code
+*/
+typedef void(*grib_exit_proc)    (int code);
+
+/**
+* Set a custom handler for exit
+*
+* @param p             : the procedure to invoke to terminate the process
+*/
+void grib_set_exit_proc(grib_exit_proc p);
+
+/**
+* Terminate the process
+*/
+void grib_exit(int code);
 
 /**
 * Convert an error code into a string
