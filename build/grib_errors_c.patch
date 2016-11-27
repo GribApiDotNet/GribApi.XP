@@ -1,7 +1,7 @@
 From eca1ef4d35f209e0d2c09375e77ef50e9f29dc50 Mon Sep 17 00:00:00 2001
 From: 0x1mason <etmillin@gmail.com>
 Date: Mon, 14 Nov 2016 12:43:07 -0500
-Subject: [PATCH] Update to vanilla v1.18.0
+Subject: [PATCH] Patch custom error handling
 
 ---
  grib_api/src/grib_errors.c | 40 ++++++++++++++++++++++++++++++++++++----
