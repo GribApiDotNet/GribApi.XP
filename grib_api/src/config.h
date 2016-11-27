@@ -14,13 +14,13 @@
 #define GRIB_ABI_REVISION 0
 
 /* Grib Api version */
-#define GRIB_API_MAIN_VERSION 1.18.0
+#define GRIB_API_MAIN_VERSION 1.19.0
 
 /* Grib Api Major release */
 #define GRIB_API_MAJOR_VERSION 1
 
 /* Grib Api Minor release */
-#define GRIB_API_MINOR_VERSION 18
+#define GRIB_API_MINOR_VERSION 19
 
 /* Grib Api Revision release */
 #define GRIB_API_REVISION_VERSION 0

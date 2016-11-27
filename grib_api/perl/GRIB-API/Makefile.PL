@@ -5,7 +5,7 @@ use ExtUtils::MakeMaker;
 WriteMakefile(
     NAME              => 'GRIB::API',
    # Module version
-   'VERSION'   => '1.18.0',
+   'VERSION'   => '1.19.0',
 
    # Preprocessor defines
    'DEFINE' => '-DHAVE_CONFIG_H',     # e.g., '-DHAVE_SOMETHING'

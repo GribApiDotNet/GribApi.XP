@@ -546,6 +546,7 @@ dist_definitionsgrib2_DATA = \
 	grib2/template.4.46.def\
 	grib2/template.4.47.def\
 	grib2/template.4.48.def\
+	grib2/template.4.49.def\
 	grib2/template.4.5.def\
 	grib2/template.4.51.def\
 	grib2/template.4.53.def\
@@ -553,10 +554,15 @@ dist_definitionsgrib2_DATA = \
 	grib2/template.4.55.def\
 	grib2/template.4.56.def\
 	grib2/template.4.57.def\
+	grib2/template.4.59.def\
 	grib2/template.4.6.def\
 	grib2/template.4.60.def\
 	grib2/template.4.61.def\
 	grib2/template.4.7.def\
+	grib2/template.4.70.def\
+	grib2/template.4.71.def\
+	grib2/template.4.72.def\
+	grib2/template.4.73.def\
 	grib2/template.4.8.def\
 	grib2/template.4.9.def\
 	grib2/template.4.91.def\
@@ -572,6 +578,7 @@ dist_definitionsgrib2_DATA = \
 	grib2/template.4.parameter_chemical.def\
 	grib2/template.4.parameter_chemical_distribution.def\
 	grib2/template.4.parameter_partition.def\
+	grib2/template.4.parameter_postproc.def\
 	grib2/template.4.parameter_tile.def\
 	grib2/template.4.percentile.def\
 	grib2/template.4.point_in_time.def\
@@ -1949,6 +1956,138 @@ dist_definitionsgrib2_tables_17_DATA = \
 	grib2/tables/17/5.7.table\
 	grib2/tables/17/6.0.table\
 	grib2/tables/17/stepType.table
+
+definitionsgrib2_tables_18dir = @GRIB_DEFINITION_PATH@/grib2/tables/18
+dist_definitionsgrib2_tables_18_DATA = \
+	grib2/tables/18/0.0.table\
+	grib2/tables/18/1.0.table\
+	grib2/tables/18/1.1.table\
+	grib2/tables/18/1.2.table\
+	grib2/tables/18/1.3.table\
+	grib2/tables/18/1.4.table\
+	grib2/tables/18/1.5.table\
+	grib2/tables/18/1.6.table\
+	grib2/tables/18/3.0.table\
+	grib2/tables/18/3.1.table\
+	grib2/tables/18/3.10.table\
+	grib2/tables/18/3.11.table\
+	grib2/tables/18/3.15.table\
+	grib2/tables/18/3.2.table\
+	grib2/tables/18/3.20.table\
+	grib2/tables/18/3.21.table\
+	grib2/tables/18/3.3.table\
+	grib2/tables/18/3.4.table\
+	grib2/tables/18/3.5.table\
+	grib2/tables/18/3.6.table\
+	grib2/tables/18/3.7.table\
+	grib2/tables/18/3.8.table\
+	grib2/tables/18/3.9.table\
+	grib2/tables/18/4.0.table\
+	grib2/tables/18/4.1.0.table\
+	grib2/tables/18/4.1.1.table\
+	grib2/tables/18/4.1.10.table\
+	grib2/tables/18/4.1.192.table\
+	grib2/tables/18/4.1.2.table\
+	grib2/tables/18/4.1.3.table\
+	grib2/tables/18/4.10.table\
+	grib2/tables/18/4.11.table\
+	grib2/tables/18/4.12.table\
+	grib2/tables/18/4.13.table\
+	grib2/tables/18/4.14.table\
+	grib2/tables/18/4.15.table\
+	grib2/tables/18/4.192.table\
+	grib2/tables/18/4.2.0.0.table\
+	grib2/tables/18/4.2.0.1.table\
+	grib2/tables/18/4.2.0.13.table\
+	grib2/tables/18/4.2.0.14.table\
+	grib2/tables/18/4.2.0.15.table\
+	grib2/tables/18/4.2.0.16.table\
+	grib2/tables/18/4.2.0.17.table\
+	grib2/tables/18/4.2.0.18.table\
+	grib2/tables/18/4.2.0.19.table\
+	grib2/tables/18/4.2.0.190.table\
+	grib2/tables/18/4.2.0.191.table\
+	grib2/tables/18/4.2.0.2.table\
+	grib2/tables/18/4.2.0.20.table\
+	grib2/tables/18/4.2.0.3.table\
+	grib2/tables/18/4.2.0.4.table\
+	grib2/tables/18/4.2.0.5.table\
+	grib2/tables/18/4.2.0.6.table\
+	grib2/tables/18/4.2.0.7.table\
+	grib2/tables/18/4.2.1.0.table\
+	grib2/tables/18/4.2.1.1.table\
+	grib2/tables/18/4.2.1.2.table\
+	grib2/tables/18/4.2.10.0.table\
+	grib2/tables/18/4.2.10.1.table\
+	grib2/tables/18/4.2.10.191.table\
+	grib2/tables/18/4.2.10.2.table\
+	grib2/tables/18/4.2.10.3.table\
+	grib2/tables/18/4.2.10.4.table\
+	grib2/tables/18/4.2.2.0.table\
+	grib2/tables/18/4.2.2.3.table\
+	grib2/tables/18/4.2.2.4.table\
+	grib2/tables/18/4.2.2.5.table\
+	grib2/tables/18/4.2.3.0.table\
+	grib2/tables/18/4.2.3.1.table\
+	grib2/tables/18/4.2.3.2.table\
+	grib2/tables/18/4.2.3.3.table\
+	grib2/tables/18/4.2.3.4.table\
+	grib2/tables/18/4.2.3.5.table\
+	grib2/tables/18/4.2.3.6.table\
+	grib2/tables/18/4.201.table\
+	grib2/tables/18/4.202.table\
+	grib2/tables/18/4.203.table\
+	grib2/tables/18/4.204.table\
+	grib2/tables/18/4.205.table\
+	grib2/tables/18/4.206.table\
+	grib2/tables/18/4.207.table\
+	grib2/tables/18/4.208.table\
+	grib2/tables/18/4.209.table\
+	grib2/tables/18/4.210.table\
+	grib2/tables/18/4.211.table\
+	grib2/tables/18/4.212.table\
+	grib2/tables/18/4.213.table\
+	grib2/tables/18/4.215.table\
+	grib2/tables/18/4.216.table\
+	grib2/tables/18/4.217.table\
+	grib2/tables/18/4.218.table\
+	grib2/tables/18/4.219.table\
+	grib2/tables/18/4.220.table\
+	grib2/tables/18/4.221.table\
+	grib2/tables/18/4.222.table\
+	grib2/tables/18/4.223.table\
+	grib2/tables/18/4.224.table\
+	grib2/tables/18/4.225.table\
+	grib2/tables/18/4.227.table\
+	grib2/tables/18/4.230.table\
+	grib2/tables/18/4.233.table\
+	grib2/tables/18/4.234.table\
+	grib2/tables/18/4.236.table\
+	grib2/tables/18/4.240.table\
+	grib2/tables/18/4.241.table\
+	grib2/tables/18/4.242.table\
+	grib2/tables/18/4.243.table\
+	grib2/tables/18/4.3.table\
+	grib2/tables/18/4.4.table\
+	grib2/tables/18/4.5.table\
+	grib2/tables/18/4.6.table\
+	grib2/tables/18/4.7.table\
+	grib2/tables/18/4.8.table\
+	grib2/tables/18/4.9.table\
+	grib2/tables/18/4.91.table\
+	grib2/tables/18/5.0.table\
+	grib2/tables/18/5.1.table\
+	grib2/tables/18/5.2.table\
+	grib2/tables/18/5.3.table\
+	grib2/tables/18/5.4.table\
+	grib2/tables/18/5.40.table\
+	grib2/tables/18/5.40000.table\
+	grib2/tables/18/5.5.table\
+	grib2/tables/18/5.50002.table\
+	grib2/tables/18/5.6.table\
+	grib2/tables/18/5.7.table\
+	grib2/tables/18/6.0.table\
+	grib2/tables/18/stepType.table
 
 definitionsgrib2_tables_2dir = @GRIB_DEFINITION_PATH@/grib2/tables/2
 dist_definitionsgrib2_tables_2_DATA = \

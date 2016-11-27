@@ -6,7 +6,7 @@ libdir=${exec_prefix}/lib
 
 Name: grib_api
 Description: The grib_api library
-Version: 1.18.0
+Version: 1.19.0
 Cflags: -I${includedir}
 Libs: -L${libdir} -lgrib_api
 Libs.private: -L${libdir} -lgrib_api -lm -ljasper 

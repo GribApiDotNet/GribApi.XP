@@ -67,7 +67,7 @@ ecbuild_add_option( FEATURE PYTHON
 
 ecbuild_add_option( FEATURE FORTRAN
     DESCRIPTION "build the GRIB_API Fortran interface"
-    DEFAULT OFF
+    DEFAULT ON
     # REQUIRED_LANGUAGES Fortran # TODO
 )
 

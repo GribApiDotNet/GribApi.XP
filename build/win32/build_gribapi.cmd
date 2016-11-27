@@ -11,7 +11,7 @@ if "%1"=="rebuild" SET REBUILD=/t:Clean,Build
 
 SET VisualStudioVersion=%2
 if "%2"=="" (
-	SET VisualStudioVersion=14
+	SET VisualStudioVersion=11
 )
 
 SET CONFIG=%3
@@ -27,14 +27,19 @@ SET ERRORLEVEL=0
 
 SET TV=/property:PlatformToolset=V%VisualStudioVersion%0
 
-::SET PATH=C:\Program Files (x86)\NUnit 2.6.4\bin;%PATH%
-::SET PATH=C:\Program Files (x86)\Microsoft Visual Studio %VisualStudioVersion%.0\VC\bin;%PATH%
-
+SET PATH=C:\Program Files (x86)\NUnit 2.6.4\bin;%PATH%
+::SET PATH=C:\Program Files (x86)\NUnit 2.6.4\bin;C:\Program Files (x86)\Microsoft Visual Studio %VisualStudioVersion%.0\VC\bin;%PATH%
 SET BASEDIR=%~dp0..\..\
+SET FrameworkVersion=v4.0.30319
+SET FrameworkDir="%SystemRoot%\Microsoft.NET\Framework"
 SET CRT="C:\Program Files\MSBuild\Microsoft.Cpp\v4.0\V%VisualStudioVersion%0/"
 
 if exist "C:\Program Files (x86)\MSBuild\Microsoft.Cpp\v4.0\V%VisualStudioVersion%0" (
   SET CRT="C:\Program Files (x86)\MSBuild\Microsoft.Cpp\v4.0\V%VisualStudioVersion%0/"
+)
+
+if exist "%SystemRoot%\Microsoft.NET\Framework64" (
+  SET FrameworkDir="%SystemRoot%\Microsoft.NET\Framework64"
 )
 
 ::Setlocal EnableDelayedExpansion

@@ -126,6 +126,7 @@ DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
 	$(dist_definitionsgrib2_tables_15_DATA) \
 	$(dist_definitionsgrib2_tables_16_DATA) \
 	$(dist_definitionsgrib2_tables_17_DATA) \
+	$(dist_definitionsgrib2_tables_18_DATA) \
 	$(dist_definitionsgrib2_tables_2_DATA) \
 	$(dist_definitionsgrib2_tables_3_DATA) \
 	$(dist_definitionsgrib2_tables_4_DATA) \
@@ -245,6 +246,7 @@ am__installdirs = "$(DESTDIR)$(definitionsdir)" \
 	"$(DESTDIR)$(definitionsgrib2_tables_15dir)" \
 	"$(DESTDIR)$(definitionsgrib2_tables_16dir)" \
 	"$(DESTDIR)$(definitionsgrib2_tables_17dir)" \
+	"$(DESTDIR)$(definitionsgrib2_tables_18dir)" \
 	"$(DESTDIR)$(definitionsgrib2_tables_2dir)" \
 	"$(DESTDIR)$(definitionsgrib2_tables_3dir)" \
 	"$(DESTDIR)$(definitionsgrib2_tables_4dir)" \
@@ -307,6 +309,7 @@ DATA = $(dist_definitions_DATA) $(dist_definitionsbudg_DATA) \
 	$(dist_definitionsgrib2_tables_15_DATA) \
 	$(dist_definitionsgrib2_tables_16_DATA) \
 	$(dist_definitionsgrib2_tables_17_DATA) \
+	$(dist_definitionsgrib2_tables_18_DATA) \
 	$(dist_definitionsgrib2_tables_2_DATA) \
 	$(dist_definitionsgrib2_tables_3_DATA) \
 	$(dist_definitionsgrib2_tables_4_DATA) \
@@ -1058,6 +1061,7 @@ dist_definitionsgrib2_DATA = \
 	grib2/template.4.46.def\
 	grib2/template.4.47.def\
 	grib2/template.4.48.def\
+	grib2/template.4.49.def\
 	grib2/template.4.5.def\
 	grib2/template.4.51.def\
 	grib2/template.4.53.def\
@@ -1065,10 +1069,15 @@ dist_definitionsgrib2_DATA = \
 	grib2/template.4.55.def\
 	grib2/template.4.56.def\
 	grib2/template.4.57.def\
+	grib2/template.4.59.def\
 	grib2/template.4.6.def\
 	grib2/template.4.60.def\
 	grib2/template.4.61.def\
 	grib2/template.4.7.def\
+	grib2/template.4.70.def\
+	grib2/template.4.71.def\
+	grib2/template.4.72.def\
+	grib2/template.4.73.def\
 	grib2/template.4.8.def\
 	grib2/template.4.9.def\
 	grib2/template.4.91.def\
@@ -1084,6 +1093,7 @@ dist_definitionsgrib2_DATA = \
 	grib2/template.4.parameter_chemical.def\
 	grib2/template.4.parameter_chemical_distribution.def\
 	grib2/template.4.parameter_partition.def\
+	grib2/template.4.parameter_postproc.def\
 	grib2/template.4.parameter_tile.def\
 	grib2/template.4.percentile.def\
 	grib2/template.4.point_in_time.def\
@@ -2461,6 +2471,138 @@ dist_definitionsgrib2_tables_17_DATA = \
 	grib2/tables/17/5.7.table\
 	grib2/tables/17/6.0.table\
 	grib2/tables/17/stepType.table
+
+definitionsgrib2_tables_18dir = @GRIB_DEFINITION_PATH@/grib2/tables/18
+dist_definitionsgrib2_tables_18_DATA = \
+	grib2/tables/18/0.0.table\
+	grib2/tables/18/1.0.table\
+	grib2/tables/18/1.1.table\
+	grib2/tables/18/1.2.table\
+	grib2/tables/18/1.3.table\
+	grib2/tables/18/1.4.table\
+	grib2/tables/18/1.5.table\
+	grib2/tables/18/1.6.table\
+	grib2/tables/18/3.0.table\
+	grib2/tables/18/3.1.table\
+	grib2/tables/18/3.10.table\
+	grib2/tables/18/3.11.table\
+	grib2/tables/18/3.15.table\
+	grib2/tables/18/3.2.table\
+	grib2/tables/18/3.20.table\
+	grib2/tables/18/3.21.table\
+	grib2/tables/18/3.3.table\
+	grib2/tables/18/3.4.table\
+	grib2/tables/18/3.5.table\
+	grib2/tables/18/3.6.table\
+	grib2/tables/18/3.7.table\
+	grib2/tables/18/3.8.table\
+	grib2/tables/18/3.9.table\
+	grib2/tables/18/4.0.table\
+	grib2/tables/18/4.1.0.table\
+	grib2/tables/18/4.1.1.table\
+	grib2/tables/18/4.1.10.table\
+	grib2/tables/18/4.1.192.table\
+	grib2/tables/18/4.1.2.table\
+	grib2/tables/18/4.1.3.table\
+	grib2/tables/18/4.10.table\
+	grib2/tables/18/4.11.table\
+	grib2/tables/18/4.12.table\
+	grib2/tables/18/4.13.table\
+	grib2/tables/18/4.14.table\
+	grib2/tables/18/4.15.table\
+	grib2/tables/18/4.192.table\
+	grib2/tables/18/4.2.0.0.table\
+	grib2/tables/18/4.2.0.1.table\
+	grib2/tables/18/4.2.0.13.table\
+	grib2/tables/18/4.2.0.14.table\
+	grib2/tables/18/4.2.0.15.table\
+	grib2/tables/18/4.2.0.16.table\
+	grib2/tables/18/4.2.0.17.table\
+	grib2/tables/18/4.2.0.18.table\
+	grib2/tables/18/4.2.0.19.table\
+	grib2/tables/18/4.2.0.190.table\
+	grib2/tables/18/4.2.0.191.table\
+	grib2/tables/18/4.2.0.2.table\
+	grib2/tables/18/4.2.0.20.table\
+	grib2/tables/18/4.2.0.3.table\
+	grib2/tables/18/4.2.0.4.table\
+	grib2/tables/18/4.2.0.5.table\
+	grib2/tables/18/4.2.0.6.table\
+	grib2/tables/18/4.2.0.7.table\
+	grib2/tables/18/4.2.1.0.table\
+	grib2/tables/18/4.2.1.1.table\
+	grib2/tables/18/4.2.1.2.table\
+	grib2/tables/18/4.2.10.0.table\
+	grib2/tables/18/4.2.10.1.table\
+	grib2/tables/18/4.2.10.191.table\
+	grib2/tables/18/4.2.10.2.table\
+	grib2/tables/18/4.2.10.3.table\
+	grib2/tables/18/4.2.10.4.table\
+	grib2/tables/18/4.2.2.0.table\
+	grib2/tables/18/4.2.2.3.table\
+	grib2/tables/18/4.2.2.4.table\
+	grib2/tables/18/4.2.2.5.table\
+	grib2/tables/18/4.2.3.0.table\
+	grib2/tables/18/4.2.3.1.table\
+	grib2/tables/18/4.2.3.2.table\
+	grib2/tables/18/4.2.3.3.table\
+	grib2/tables/18/4.2.3.4.table\
+	grib2/tables/18/4.2.3.5.table\
+	grib2/tables/18/4.2.3.6.table\
+	grib2/tables/18/4.201.table\
+	grib2/tables/18/4.202.table\
+	grib2/tables/18/4.203.table\
+	grib2/tables/18/4.204.table\
+	grib2/tables/18/4.205.table\
+	grib2/tables/18/4.206.table\
+	grib2/tables/18/4.207.table\
+	grib2/tables/18/4.208.table\
+	grib2/tables/18/4.209.table\
+	grib2/tables/18/4.210.table\
+	grib2/tables/18/4.211.table\
+	grib2/tables/18/4.212.table\
+	grib2/tables/18/4.213.table\
+	grib2/tables/18/4.215.table\
+	grib2/tables/18/4.216.table\
+	grib2/tables/18/4.217.table\
+	grib2/tables/18/4.218.table\
+	grib2/tables/18/4.219.table\
+	grib2/tables/18/4.220.table\
+	grib2/tables/18/4.221.table\
+	grib2/tables/18/4.222.table\
+	grib2/tables/18/4.223.table\
+	grib2/tables/18/4.224.table\
+	grib2/tables/18/4.225.table\
+	grib2/tables/18/4.227.table\
+	grib2/tables/18/4.230.table\
+	grib2/tables/18/4.233.table\
+	grib2/tables/18/4.234.table\
+	grib2/tables/18/4.236.table\
+	grib2/tables/18/4.240.table\
+	grib2/tables/18/4.241.table\
+	grib2/tables/18/4.242.table\
+	grib2/tables/18/4.243.table\
+	grib2/tables/18/4.3.table\
+	grib2/tables/18/4.4.table\
+	grib2/tables/18/4.5.table\
+	grib2/tables/18/4.6.table\
+	grib2/tables/18/4.7.table\
+	grib2/tables/18/4.8.table\
+	grib2/tables/18/4.9.table\
+	grib2/tables/18/4.91.table\
+	grib2/tables/18/5.0.table\
+	grib2/tables/18/5.1.table\
+	grib2/tables/18/5.2.table\
+	grib2/tables/18/5.3.table\
+	grib2/tables/18/5.4.table\
+	grib2/tables/18/5.40.table\
+	grib2/tables/18/5.40000.table\
+	grib2/tables/18/5.5.table\
+	grib2/tables/18/5.50002.table\
+	grib2/tables/18/5.6.table\
+	grib2/tables/18/5.7.table\
+	grib2/tables/18/6.0.table\
+	grib2/tables/18/stepType.table
 
 definitionsgrib2_tables_2dir = @GRIB_DEFINITION_PATH@/grib2/tables/2
 dist_definitionsgrib2_tables_2_DATA = \
@@ -4809,6 +4951,27 @@ uninstall-dist_definitionsgrib2_tables_17DATA:
 	@list='$(dist_definitionsgrib2_tables_17_DATA)'; test -n "$(definitionsgrib2_tables_17dir)" || list=; \
 	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
 	dir='$(DESTDIR)$(definitionsgrib2_tables_17dir)'; $(am__uninstall_files_from_dir)
+install-dist_definitionsgrib2_tables_18DATA: $(dist_definitionsgrib2_tables_18_DATA)
+	@$(NORMAL_INSTALL)
+	@list='$(dist_definitionsgrib2_tables_18_DATA)'; test -n "$(definitionsgrib2_tables_18dir)" || list=; \
+	if test -n "$$list"; then \
+	  echo " $(MKDIR_P) '$(DESTDIR)$(definitionsgrib2_tables_18dir)'"; \
+	  $(MKDIR_P) "$(DESTDIR)$(definitionsgrib2_tables_18dir)" || exit 1; \
+	fi; \
+	for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  echo "$$d$$p"; \
+	done | $(am__base_list) | \
+	while read files; do \
+	  echo " $(INSTALL_DATA) $$files '$(DESTDIR)$(definitionsgrib2_tables_18dir)'"; \
+	  $(INSTALL_DATA) $$files "$(DESTDIR)$(definitionsgrib2_tables_18dir)" || exit $$?; \
+	done
+
+uninstall-dist_definitionsgrib2_tables_18DATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(dist_definitionsgrib2_tables_18_DATA)'; test -n "$(definitionsgrib2_tables_18dir)" || list=; \
+	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
+	dir='$(DESTDIR)$(definitionsgrib2_tables_18dir)'; $(am__uninstall_files_from_dir)
 install-dist_definitionsgrib2_tables_2DATA: $(dist_definitionsgrib2_tables_2_DATA)
 	@$(NORMAL_INSTALL)
 	@list='$(dist_definitionsgrib2_tables_2_DATA)'; test -n "$(definitionsgrib2_tables_2dir)" || list=; \
@@ -5186,7 +5349,7 @@ check-am: all-am
 check: check-am
 all-am: Makefile $(DATA)
 installdirs:
-	for dir in "$(DESTDIR)$(definitionsdir)" "$(DESTDIR)$(definitionsbudgdir)" "$(DESTDIR)$(definitionscdfdir)" "$(DESTDIR)$(definitionscommondir)" "$(DESTDIR)$(definitionsgrib1dir)" "$(DESTDIR)$(definitionsgrib1_localConcepts_ammcdir)" "$(DESTDIR)$(definitionsgrib1_localConcepts_cnmcdir)" "$(DESTDIR)$(definitionsgrib1_localConcepts_ecmfdir)" "$(DESTDIR)$(definitionsgrib1_localConcepts_edzwdir)" "$(DESTDIR)$(definitionsgrib1_localConcepts_efkldir)" "$(DESTDIR)$(definitionsgrib1_localConcepts_eidbdir)" "$(DESTDIR)$(definitionsgrib1_localConcepts_ekmidir)" "$(DESTDIR)$(definitionsgrib1_localConcepts_enmidir)" "$(DESTDIR)$(definitionsgrib1_localConcepts_eswidir)" "$(DESTDIR)$(definitionsgrib1_localConcepts_kwbcdir)" "$(DESTDIR)$(definitionsgrib1_localConcepts_lfpwdir)" "$(DESTDIR)$(definitionsgrib1_localConcepts_lowmdir)" "$(DESTDIR)$(definitionsgrib1_localConcepts_rjtddir)" "$(DESTDIR)$(definitionsgrib1_localConcepts_sbsjdir)" "$(DESTDIR)$(definitionsgrib1_local_ecmfdir)" "$(DESTDIR)$(definitionsgrib1_local_edzwdir)" "$(DESTDIR)$(definitionsgrib1_local_rjtddir)" "$(DESTDIR)$(definitionsgrib2dir)" "$(DESTDIR)$(definitionsgrib2_localdir)" "$(DESTDIR)$(definitionsgrib2_localConcepts_cnmcdir)" "$(DESTDIR)$(definitionsgrib2_localConcepts_ecmfdir)" "$(DESTDIR)$(definitionsgrib2_localConcepts_edzwdir)" "$(DESTDIR)$(definitionsgrib2_localConcepts_efkldir)" "$(DESTDIR)$(definitionsgrib2_localConcepts_egrrdir)" "$(DESTDIR)$(definitionsgrib2_localConcepts_ekmidir)" "$(DESTDIR)$(definitionsgrib2_localConcepts_eswidir)" "$(DESTDIR)$(definitionsgrib2_localConcepts_kwbcdir)" "$(DESTDIR)$(definitionsgrib2_localConcepts_lfpwdir)" "$(DESTDIR)$(definitionsgrib2_localConcepts_lfpw1dir)" "$(DESTDIR)$(definitionsgrib2_localConcepts_lsswdir)" "$(DESTDIR)$(definitionsgrib2_local_1098dir)" "$(DESTDIR)$(definitionsgrib2_local_edzwdir)" "$(DESTDIR)$(definitionsgrib2_tablesdir)" "$(DESTDIR)$(definitionsgrib2_tables_0dir)" "$(DESTDIR)$(definitionsgrib2_tables_1dir)" "$(DESTDIR)$(definitionsgrib2_tables_10dir)" "$(DESTDIR)$(definitionsgrib2_tables_11dir)" "$(DESTDIR)$(definitionsgrib2_tables_12dir)" "$(DESTDIR)$(definitionsgrib2_tables_13dir)" "$(DESTDIR)$(definitionsgrib2_tables_14dir)" "$(DESTDIR)$(definitionsgrib2_tables_15dir)" "$(DESTDIR)$(definitionsgrib2_tables_16dir)" "$(DESTDIR)$(definitionsgrib2_tables_17dir)" "$(DESTDIR)$(definitionsgrib2_tables_2dir)" "$(DESTDIR)$(definitionsgrib2_tables_3dir)" "$(DESTDIR)$(definitionsgrib2_tables_4dir)" "$(DESTDIR)$(definitionsgrib2_tables_5dir)" "$(DESTDIR)$(definitionsgrib2_tables_6dir)" "$(DESTDIR)$(definitionsgrib2_tables_7dir)" "$(DESTDIR)$(definitionsgrib2_tables_8dir)" "$(DESTDIR)$(definitionsgrib2_tables_9dir)" "$(DESTDIR)$(definitionsgrib2_tables_local_ecmfdir)" "$(DESTDIR)$(definitionsgrib2_tables_local_ecmf_4dir)" "$(DESTDIR)$(definitionsgtsdir)" "$(DESTDIR)$(definitionshdf5dir)" "$(DESTDIR)$(definitionsmarsdir)" "$(DESTDIR)$(definitionsmars_eswidir)" "$(DESTDIR)$(definitionstidedir)" "$(DESTDIR)$(definitionswrapdir)"; do \
+	for dir in "$(DESTDIR)$(definitionsdir)" "$(DESTDIR)$(definitionsbudgdir)" "$(DESTDIR)$(definitionscdfdir)" "$(DESTDIR)$(definitionscommondir)" "$(DESTDIR)$(definitionsgrib1dir)" "$(DESTDIR)$(definitionsgrib1_localConcepts_ammcdir)" "$(DESTDIR)$(definitionsgrib1_localConcepts_cnmcdir)" "$(DESTDIR)$(definitionsgrib1_localConcepts_ecmfdir)" "$(DESTDIR)$(definitionsgrib1_localConcepts_edzwdir)" "$(DESTDIR)$(definitionsgrib1_localConcepts_efkldir)" "$(DESTDIR)$(definitionsgrib1_localConcepts_eidbdir)" "$(DESTDIR)$(definitionsgrib1_localConcepts_ekmidir)" "$(DESTDIR)$(definitionsgrib1_localConcepts_enmidir)" "$(DESTDIR)$(definitionsgrib1_localConcepts_eswidir)" "$(DESTDIR)$(definitionsgrib1_localConcepts_kwbcdir)" "$(DESTDIR)$(definitionsgrib1_localConcepts_lfpwdir)" "$(DESTDIR)$(definitionsgrib1_localConcepts_lowmdir)" "$(DESTDIR)$(definitionsgrib1_localConcepts_rjtddir)" "$(DESTDIR)$(definitionsgrib1_localConcepts_sbsjdir)" "$(DESTDIR)$(definitionsgrib1_local_ecmfdir)" "$(DESTDIR)$(definitionsgrib1_local_edzwdir)" "$(DESTDIR)$(definitionsgrib1_local_rjtddir)" "$(DESTDIR)$(definitionsgrib2dir)" "$(DESTDIR)$(definitionsgrib2_localdir)" "$(DESTDIR)$(definitionsgrib2_localConcepts_cnmcdir)" "$(DESTDIR)$(definitionsgrib2_localConcepts_ecmfdir)" "$(DESTDIR)$(definitionsgrib2_localConcepts_edzwdir)" "$(DESTDIR)$(definitionsgrib2_localConcepts_efkldir)" "$(DESTDIR)$(definitionsgrib2_localConcepts_egrrdir)" "$(DESTDIR)$(definitionsgrib2_localConcepts_ekmidir)" "$(DESTDIR)$(definitionsgrib2_localConcepts_eswidir)" "$(DESTDIR)$(definitionsgrib2_localConcepts_kwbcdir)" "$(DESTDIR)$(definitionsgrib2_localConcepts_lfpwdir)" "$(DESTDIR)$(definitionsgrib2_localConcepts_lfpw1dir)" "$(DESTDIR)$(definitionsgrib2_localConcepts_lsswdir)" "$(DESTDIR)$(definitionsgrib2_local_1098dir)" "$(DESTDIR)$(definitionsgrib2_local_edzwdir)" "$(DESTDIR)$(definitionsgrib2_tablesdir)" "$(DESTDIR)$(definitionsgrib2_tables_0dir)" "$(DESTDIR)$(definitionsgrib2_tables_1dir)" "$(DESTDIR)$(definitionsgrib2_tables_10dir)" "$(DESTDIR)$(definitionsgrib2_tables_11dir)" "$(DESTDIR)$(definitionsgrib2_tables_12dir)" "$(DESTDIR)$(definitionsgrib2_tables_13dir)" "$(DESTDIR)$(definitionsgrib2_tables_14dir)" "$(DESTDIR)$(definitionsgrib2_tables_15dir)" "$(DESTDIR)$(definitionsgrib2_tables_16dir)" "$(DESTDIR)$(definitionsgrib2_tables_17dir)" "$(DESTDIR)$(definitionsgrib2_tables_18dir)" "$(DESTDIR)$(definitionsgrib2_tables_2dir)" "$(DESTDIR)$(definitionsgrib2_tables_3dir)" "$(DESTDIR)$(definitionsgrib2_tables_4dir)" "$(DESTDIR)$(definitionsgrib2_tables_5dir)" "$(DESTDIR)$(definitionsgrib2_tables_6dir)" "$(DESTDIR)$(definitionsgrib2_tables_7dir)" "$(DESTDIR)$(definitionsgrib2_tables_8dir)" "$(DESTDIR)$(definitionsgrib2_tables_9dir)" "$(DESTDIR)$(definitionsgrib2_tables_local_ecmfdir)" "$(DESTDIR)$(definitionsgrib2_tables_local_ecmf_4dir)" "$(DESTDIR)$(definitionsgtsdir)" "$(DESTDIR)$(definitionshdf5dir)" "$(DESTDIR)$(definitionsmarsdir)" "$(DESTDIR)$(definitionsmars_eswidir)" "$(DESTDIR)$(definitionstidedir)" "$(DESTDIR)$(definitionswrapdir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: install-am
@@ -5286,6 +5449,7 @@ install-data-am: install-dist_definitionsDATA \
 	install-dist_definitionsgrib2_tables_15DATA \
 	install-dist_definitionsgrib2_tables_16DATA \
 	install-dist_definitionsgrib2_tables_17DATA \
+	install-dist_definitionsgrib2_tables_18DATA \
 	install-dist_definitionsgrib2_tables_1DATA \
 	install-dist_definitionsgrib2_tables_2DATA \
 	install-dist_definitionsgrib2_tables_3DATA \
@@ -5393,6 +5557,7 @@ uninstall-am: uninstall-dist_definitionsDATA \
 	uninstall-dist_definitionsgrib2_tables_15DATA \
 	uninstall-dist_definitionsgrib2_tables_16DATA \
 	uninstall-dist_definitionsgrib2_tables_17DATA \
+	uninstall-dist_definitionsgrib2_tables_18DATA \
 	uninstall-dist_definitionsgrib2_tables_1DATA \
 	uninstall-dist_definitionsgrib2_tables_2DATA \
 	uninstall-dist_definitionsgrib2_tables_3DATA \
@@ -5463,6 +5628,7 @@ uninstall-am: uninstall-dist_definitionsDATA \
 	install-dist_definitionsgrib2_tables_15DATA \
 	install-dist_definitionsgrib2_tables_16DATA \
 	install-dist_definitionsgrib2_tables_17DATA \
+	install-dist_definitionsgrib2_tables_18DATA \
 	install-dist_definitionsgrib2_tables_1DATA \
 	install-dist_definitionsgrib2_tables_2DATA \
 	install-dist_definitionsgrib2_tables_3DATA \
@@ -5533,6 +5699,7 @@ uninstall-am: uninstall-dist_definitionsDATA \
 	uninstall-dist_definitionsgrib2_tables_15DATA \
 	uninstall-dist_definitionsgrib2_tables_16DATA \
 	uninstall-dist_definitionsgrib2_tables_17DATA \
+	uninstall-dist_definitionsgrib2_tables_18DATA \
 	uninstall-dist_definitionsgrib2_tables_1DATA \
 	uninstall-dist_definitionsgrib2_tables_2DATA \
 	uninstall-dist_definitionsgrib2_tables_3DATA \

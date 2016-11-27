@@ -2,7 +2,7 @@
 Summary: The ECMWF GRIB API is an application program interface accessible from C and FORTRAN programs developed for encoding and decoding WMO FM-92 GRIB edition 1 and edition 2 messages.
 %define rel 1
 
-%define version 1.18.0
+%define version 1.19.0
 %define pkgname grib_api
 %define prefix /usr/local
 %define _prefix /usr/local
