@@ -13,6 +13,7 @@ C:\> choco install grib-tools
 
 ##### Changes from Vanilla 1.19.0 for Windows
 * PNG compression support
+* OMP multi-threading enabled by default
 * `grib_exit` and `grib_assert` hooks for custom handling of fatal errors (details coming soon)
 
 ##### Building
