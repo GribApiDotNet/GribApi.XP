@@ -11,10 +11,8 @@ To install the GRIB tools from [Chocolatey](https://chocolatey.org/packages/grib
 C:\> choco install grib-tools
 ```
 
-##### Changes from Vanilla 1.14.5 for Windows
+##### Changes from Vanilla 1.19.0 for Windows
 * PNG compression support
-* Pre-built `definitions` and `samples`
-* Thread safety for Windows via OpenMP
 * `grib_exit` and `grib_assert` hooks for custom handling of fatal errors (details coming soon)
 
 ##### Building
@@ -22,7 +20,7 @@ You can build directly with Visual Studio using `./build/Grib.Api.Master.sln`.
 
 To build x86 and x64 libs together, you can run `build\build_gribapi.cmd [re|build] [vs tools version] [Debug|Release] [opt: package version]`, e.g.
 ```shell
-C:\> build\build_gribapi.cmd rebuild 12 Debug
+C:\> build\build_gribapi.cmd rebuild 14 Debug
 ```
 
 ### Updating grib_api
@@ -30,7 +28,7 @@ Not scripted yet, sorry :(
 
 1. Delete everything in `root/grib_api`.
 2. Download the latest version from https://software.ecmwf.int/wiki/display/GRIB/Download
-3. Extract the files with `tar` or `7zip` and copy the files to `root/grib_api` directory.
+3. **As administrator** (ensures symbolic links are created), extract the files files to `root/grib_api` directory.
 4. Commit the vanilla changes to the local repo.
 5. Open a VS Developer Command Prompt.
 ```shell

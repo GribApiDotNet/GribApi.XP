@@ -30,6 +30,7 @@ xcopy %_GRIB_API%\samples %~dp0..\..\bin\x64\%_CONFIG%\samples\ /S /d /I /Q
 
 rm -rf %~dp0..\..\bin\x86\%_CONFIG%\definitions
 rm -rf %~dp0..\..\bin\x86\%_CONFIG%\samples
+rm -rf %~dp0..\..\bin\x86\%_CONFIG%\ifs_samples
 
 xcopy %_GRIB_API%\definitions %~dp0..\..\bin\x86\%_CONFIG%\definitions\ /S /d /I /Q
 xcopy %_GRIB_API%\samples %~dp0..\..\bin\x86\%_CONFIG%\samples\ /S /d /I /Q
