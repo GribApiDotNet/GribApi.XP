@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Copyright 2005-2016 ECMWF.
+# Copyright 2005-2017 ECMWF.
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -24,7 +24,7 @@ grib_api_bin=$1/bin
 
 definitions=$2
 
-if [ ! -f $grib_api_bin/grib_info ]
+if [ ! -f $grib_api_bin/codes_info ]
 then
 echo "
 Unable to find grib_api tools in $grib_api_bin
@@ -33,8 +33,8 @@ exit 1
 fi
 
 set -e
-version=`$grib_api_bin/grib_info -v`
-defaultDefinitions=`$grib_api_bin/grib_info -d`
+version=`$grib_api_bin/codes_info -v`
+defaultDefinitions=`$grib_api_bin/codes_info -d`
 set +e
 
 if [ $version != $requiredLibVersion ]
@@ -53,7 +53,7 @@ fi
 echo checking definition files compatibility...
 for file in `find . -name '*.def' -print`
 do
-  ${grib_api_bin}/grib_parser $file 
+  ${grib_api_bin}/codes_parser $file 
 done
 if [ $? != 0 ]
 then
@@ -109,7 +109,7 @@ if [ ${definitions} != $defaultDefinitions ]
 then
 echo "
 ## Please remember to set
-##    GRIB_DEFINITION_PATH=${definitions}
+##    ECCODES_DEFINITION_PATH=${definitions}
 ## to activate the new definition files.
 "
 

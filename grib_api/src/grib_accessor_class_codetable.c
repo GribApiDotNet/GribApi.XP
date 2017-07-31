@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2016 ECMWF.
+ * Copyright 2005-2017 ECMWF.
  *
  * This software is licensed under the terms of the Apache Licence Version 2.0
  * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -15,20 +15,33 @@
 #include "grib_api_internal.h"
 #include <ctype.h>
 
-/*
- * strcasecmp is not in the C standard. However, it's defined by
- * 4.4BSD, POSIX.1-2001. So we use our own
-*/
-int grib_strcasecmp(const char *s1, const char *s2)
-{
-   const unsigned char *us1 = (const unsigned char *)s1,
-                       *us2 = (const unsigned char *)s2;
+#if GRIB_PTHREADS
+static pthread_once_t once  = PTHREAD_ONCE_INIT;
+static pthread_mutex_t mutex1 = PTHREAD_MUTEX_INITIALIZER;
 
-   while (tolower(*us1) == tolower(*us2++))
-      if (*us1++ == '\0')
-         return (0);
-   return (tolower(*us1) - tolower(*--us2));
+static void thread_init() {
+    pthread_mutexattr_t attr;
+    pthread_mutexattr_init(&attr);
+    pthread_mutexattr_settype(&attr,PTHREAD_MUTEX_RECURSIVE);
+    pthread_mutex_init(&mutex1,&attr);
+    pthread_mutexattr_destroy(&attr);
 }
+#elif GRIB_OMP_THREADS
+static int once = 0;
+static omp_nest_lock_t mutex1;
+
+static void thread_init()
+{
+    GRIB_OMP_CRITICAL(lock_grib_accessor_class_codetable_c)
+    {
+        if (once == 0)
+        {
+            omp_init_nest_lock(&mutex1);
+            once = 1;
+        }
+    }
+}
+#endif
 
 /*
    This is used by make_class.pl
@@ -101,13 +114,15 @@ static grib_accessor_class _grib_accessor_class_codetable = {
     &get_native_type,            /* get native type               */
     0,                /* get sub_section                */
     0,               /* grib_pack procedures long      */
-    0,               /* grib_pack procedures long      */
+    0,                 /* grib_pack procedures long      */
     0,                  /* grib_pack procedures long      */
     &unpack_long,                /* grib_unpack procedures long    */
     0,                /* grib_pack procedures double    */
     0,              /* grib_unpack procedures double  */
     &pack_string,                /* grib_pack procedures string    */
     &unpack_string,              /* grib_unpack procedures string  */
+    0,          /* grib_pack array procedures string    */
+    0,        /* grib_unpack array procedures string  */
     0,                 /* grib_pack procedures bytes     */
     0,               /* grib_unpack procedures bytes   */
     &pack_expression,            /* pack_expression */
@@ -120,7 +135,8 @@ static grib_accessor_class _grib_accessor_class_codetable = {
     0,                    /* compare vs. another accessor   */
     0,     /* unpack only ith value          */
     0,     /* unpack a subarray         */
-    0,             		/* clear          */
+    0,              		/* clear          */
+    0,               		/* clone accessor          */
 };
 
 
@@ -139,6 +155,8 @@ static void init_class(grib_accessor_class* c)
 	c->pack_long	=	(*(c->super))->pack_long;
 	c->pack_double	=	(*(c->super))->pack_double;
 	c->unpack_double	=	(*(c->super))->unpack_double;
+	c->pack_string_array	=	(*(c->super))->pack_string_array;
+	c->unpack_string_array	=	(*(c->super))->unpack_string_array;
 	c->pack_bytes	=	(*(c->super))->pack_bytes;
 	c->unpack_bytes	=	(*(c->super))->unpack_bytes;
 	c->notify_change	=	(*(c->super))->notify_change;
@@ -151,20 +169,23 @@ static void init_class(grib_accessor_class* c)
 	c->unpack_double_element	=	(*(c->super))->unpack_double_element;
 	c->unpack_double_subarray	=	(*(c->super))->unpack_double_subarray;
 	c->clear	=	(*(c->super))->clear;
+	c->make_clone	=	(*(c->super))->make_clone;
 }
 
 /* END_CLASS_IMP */
 
 static int grib_load_codetable(grib_context* c,const char* filename,
         const char* recomposed_name,size_t size,grib_codetable* t);
-static void init(grib_accessor* a, const long len, grib_arguments* params) {
+
+static void init(grib_accessor* a, const long len, grib_arguments* params)
+{
     int n=0;
     grib_accessor_codetable* self  = (grib_accessor_codetable*)a;
     grib_action* act=(grib_action*)(a->creator);
 
-    self->tablename = grib_arguments_get_string(a->parent->h,params,n++);
-    self->masterDir = grib_arguments_get_name(a->parent->h,params,n++);
-    self->localDir = grib_arguments_get_name(a->parent->h,params,n++);
+    self->tablename = grib_arguments_get_string(grib_handle_of_accessor(a),params,n++);
+    self->masterDir = grib_arguments_get_name(grib_handle_of_accessor(a),params,n++);
+    self->localDir = grib_arguments_get_name(grib_handle_of_accessor(a),params,n++);
 
     /*if (a->flags & GRIB_ACCESSOR_FLAG_STRING_TYPE)
     printf("-------- %s type string (%ld)\n",a->name,a->flags);*/
@@ -172,44 +193,44 @@ static void init(grib_accessor* a, const long len, grib_arguments* params) {
     if (a->flags & GRIB_ACCESSOR_FLAG_TRANSIENT) {
         a->length = 0;
         if (!a->vvalue)
-            a->vvalue = (grib_virtual_value*)grib_context_malloc_clear(a->parent->h->context,sizeof(grib_virtual_value));
+            a->vvalue = (grib_virtual_value*)grib_context_malloc_clear(a->context,sizeof(grib_virtual_value));
         a->vvalue->type=grib_accessor_get_native_type(a);
         a->vvalue->length=len;
         if (act->default_value!=NULL) {
             const char* p = 0;
-            size_t len = 1;
+            size_t s_len = 1;
             long l;
             int ret=0;
             double d;
             char tmp[1024];
-            grib_expression* expression=grib_arguments_get_expression(a->parent->h,act->default_value,0);
-            int type = grib_expression_native_type(a->parent->h,expression);
+            grib_expression* expression=grib_arguments_get_expression(grib_handle_of_accessor(a),act->default_value,0);
+            int type = grib_expression_native_type(grib_handle_of_accessor(a),expression);
             switch(type) {
             case GRIB_TYPE_DOUBLE:
-                grib_expression_evaluate_double(a->parent->h,expression,&d);
-                grib_pack_double(a,&d,&len);
+                grib_expression_evaluate_double(grib_handle_of_accessor(a),expression,&d);
+                grib_pack_double(a,&d,&s_len);
                 break;
 
             case GRIB_TYPE_LONG:
-                grib_expression_evaluate_long(a->parent->h,expression,&l);
-                grib_pack_long(a,&l,&len);
+                grib_expression_evaluate_long(grib_handle_of_accessor(a),expression,&l);
+                grib_pack_long(a,&l,&s_len);
                 break;
 
             default:
-                len = sizeof(tmp);
-                p = grib_expression_evaluate_string(a->parent->h,expression,tmp,&len,&ret);
+                s_len = sizeof(tmp);
+                p = grib_expression_evaluate_string(grib_handle_of_accessor(a),expression,tmp,&s_len,&ret);
                 if (ret != GRIB_SUCCESS) {
-                    grib_context_log(a->parent->h->context,GRIB_LOG_FATAL,
+                    grib_context_log(a->context,GRIB_LOG_FATAL,
                             "unable to evaluate %s as string",a->name);
                 }
-                len = strlen(p)+1;
-                pack_string(a,p,&len);
+                s_len = strlen(p)+1;
+                pack_string(a,p,&s_len);
                 break;
             }
         }
-    } else
+    } else {
         a->length = len;
-
+    }
 }
 
 static int str_eq(const char* a, const char* b)
@@ -219,7 +240,7 @@ static int str_eq(const char* a, const char* b)
     return 0;
 }
 
-#ifdef DEBUG
+#ifdef DEBUGGING
 static void dump_codetable(grib_codetable* atable)
 {
     grib_codetable* next = NULL;
@@ -242,11 +263,9 @@ static grib_codetable* load_table(grib_accessor_codetable* self)
     grib_codetable* next=NULL ;
     grib_accessor* a=(grib_accessor*)self;
     char *filename=0;
-    char name[1024]={0,};
     char recomposed[1024]={0,};
     char localRecomposed[1024]={0,};
     char *localFilename=0;
-    char localName[1024]={0,};
     char masterDir[1024]={0,};
     char localDir[1024]={0,};
     size_t len=1024;
@@ -259,6 +278,7 @@ static grib_codetable* load_table(grib_accessor_codetable* self)
         grib_get_string(h,self->localDir,localDir,&len);
 
     if (*masterDir!=0) {
+        char name[1024]={0,};
         sprintf(name,"%s/%s",masterDir,self->tablename);
         grib_recompose_name(h, NULL,name, recomposed,0);
         filename=grib_context_full_defs_path(c,recomposed);
@@ -268,10 +288,14 @@ static grib_codetable* load_table(grib_accessor_codetable* self)
     }
 
     if (*localDir!=0) {
+        char localName[1024]={0,};
         sprintf(localName,"%s/%s",localDir,self->tablename);
         grib_recompose_name(h, NULL,localName, localRecomposed,0);
         localFilename=grib_context_full_defs_path(c,localRecomposed);
     }
+
+    GRIB_MUTEX_INIT_ONCE(&once,&thread_init);
+    GRIB_MUTEX_LOCK(&mutex1); /* GRIB-930 */
 
     /*printf("%s: Looking in cache: f=%s lf=%s\n", self->att.name, filename, localFilename);*/
     next=c->codetable;
@@ -281,7 +305,8 @@ static grib_codetable* load_table(grib_accessor_codetable* self)
                         ((localFilename!=0 && next->filename[1]!=NULL)
                                 && strcmp(localFilename,next->filename[1]) ==0)) )
         {
-            return next;
+            t = next;
+            goto the_end;
         }
         /* Special case: see GRIB-735 */
         if (filename==NULL && localFilename!=NULL)
@@ -289,7 +314,8 @@ static grib_codetable* load_table(grib_accessor_codetable* self)
             if ( str_eq(localFilename, next->filename[0]) ||
                  str_eq(localFilename, next->filename[1]) )
             {
-                return next;
+                t = next;
+                goto the_end;
             }
         }
         next = next->next;
@@ -316,11 +342,14 @@ static grib_codetable* load_table(grib_accessor_codetable* self)
 
     if (t->filename[0]==NULL && t->filename[1]==NULL) {
         grib_context_free_persistent(c,t);
-        return NULL;
+        t = NULL;
+        goto the_end;
     }
 
-    return t;
+the_end:
+    GRIB_MUTEX_UNLOCK(&mutex1);
 
+    return t;
 }
 
 static int grib_load_codetable(grib_context* c,const char* filename,
@@ -331,7 +360,7 @@ static int grib_load_codetable(grib_context* c,const char* filename,
     int lineNumber = 0;
     grib_context_log(c,GRIB_LOG_DEBUG,"Loading code table from %s",filename);
 
-    f=fopen(filename, "r");
+    f = codes_fopen(filename, "r");
     if (!f) return GRIB_IO_PROBLEM;
 
     Assert(t!=NULL);
@@ -432,17 +461,15 @@ static int grib_load_codetable(grib_context* c,const char* filename,
         t->entries[code].abbreviation = grib_context_strdup_persistent(c,abbreviation);
         t->entries[code].title        = grib_context_strdup_persistent(c,title);
         t->entries[code].units        = grib_context_strdup_persistent(c,units);
-
     }
 
     fclose(f);
 
     return 0;
-
 }
 
-
-void grib_codetable_delete(grib_context* c) {
+void grib_codetable_delete(grib_context* c)
+{
     grib_codetable* t = c->codetable;
 
     while(t)
@@ -464,10 +491,10 @@ void grib_codetable_delete(grib_context* c) {
         grib_context_free_persistent(c,t);
         t = s;
     }
-
 }
 
-static void dump(grib_accessor* a, grib_dumper* dumper) {
+static void dump(grib_accessor* a, grib_dumper* dumper)
+{
     grib_accessor_codetable* self  = (grib_accessor_codetable*)a;
     char comment[2048];
     grib_codetable* table;
@@ -526,7 +553,6 @@ static void dump(grib_accessor* a, grib_dumper* dumper) {
     strcat(comment,") ");
 
     grib_dump_long(dumper,a,comment);
-
 }
 
 static int unpack_string (grib_accessor* a, char* buffer, size_t *len)
@@ -560,7 +586,6 @@ static int unpack_string (grib_accessor* a, char* buffer, size_t *len)
 #endif
     }
 
-
     l = strlen(tmp) + 1;
 
     if(*len < l)
@@ -590,8 +615,8 @@ static int pack_string(grib_accessor* a, const char* buffer, size_t *len)
     size_t size = 1;
 
     typedef int (*cmpproc)(const char*, const char*);
-#ifndef GRIB_ON_WINDOWS
-    cmpproc cmp = (a->flags & GRIB_ACCESSOR_FLAG_LOWERCASE) ? grib_strcasecmp : strcmp;
+#ifndef ECCODES_ON_WINDOWS
+    cmpproc cmp = (a->flags & GRIB_ACCESSOR_FLAG_LOWERCASE) ? strcmp_nocase : strcmp;
 #else
     /* Microsoft Windows Visual Studio support */
     cmpproc cmp = (a->flags & GRIB_ACCESSOR_FLAG_LOWERCASE) ? stricmp : strcmp;
@@ -604,7 +629,7 @@ static int pack_string(grib_accessor* a, const char* buffer, size_t *len)
         return GRIB_ENCODING_ERROR;
 
     if (a->set) {
-        int err=grib_set_string(a->parent->h,a->set,buffer,len);
+        int err=grib_set_string(grib_handle_of_accessor(a),a->set,buffer,len);
         if (err!=0) return err;
     }
 
@@ -617,34 +642,34 @@ static int pack_string(grib_accessor* a, const char* buffer, size_t *len)
         grib_action* act=(grib_action*)(a->creator);
         if (act->default_value!=NULL) {
             const char* p = 0;
-            size_t len = 1;
+            size_t s_len = 1;
             long l;
             int ret=0;
             double d;
             char tmp[1024];
-            grib_expression* expression=grib_arguments_get_expression(a->parent->h,act->default_value,0);
-            int type = grib_expression_native_type(a->parent->h,expression);
+            grib_expression* expression=grib_arguments_get_expression(grib_handle_of_accessor(a),act->default_value,0);
+            int type = grib_expression_native_type(grib_handle_of_accessor(a),expression);
             switch(type) {
             case GRIB_TYPE_DOUBLE:
-                grib_expression_evaluate_double(a->parent->h,expression,&d);
-                grib_pack_double(a,&d,&len);
+                grib_expression_evaluate_double(grib_handle_of_accessor(a),expression,&d);
+                grib_pack_double(a,&d,&s_len);
                 break;
 
             case GRIB_TYPE_LONG:
-                grib_expression_evaluate_long(a->parent->h,expression,&l);
-                grib_pack_long(a,&l,&len);
+                grib_expression_evaluate_long(grib_handle_of_accessor(a),expression,&l);
+                grib_pack_long(a,&l,&s_len);
                 break;
 
             default:
-                len = sizeof(tmp);
-                p = grib_expression_evaluate_string(a->parent->h,expression,tmp,&len,&ret);
+                s_len = sizeof(tmp);
+                p = grib_expression_evaluate_string(grib_handle_of_accessor(a),expression,tmp,&s_len,&ret);
                 if (ret != GRIB_SUCCESS) {
-                    grib_context_log(a->parent->h->context,GRIB_LOG_FATAL,
+                    grib_context_log(a->context,GRIB_LOG_FATAL,
                             "unable to evaluate %s as string",a->name);
                     return ret;
                 }
-                len = strlen(p)+1;
-                pack_string(a,p,&len);
+                s_len = strlen(p)+1;
+                pack_string(a,p,&s_len);
                 break;
             }
             return GRIB_SUCCESS;
@@ -654,24 +679,31 @@ static int pack_string(grib_accessor* a, const char* buffer, size_t *len)
     return GRIB_ENCODING_ERROR;
 }
 
-static int pack_expression(grib_accessor* a, grib_expression *e){
-    const char* cval;
+static int pack_expression(grib_accessor* a, grib_expression *e)
+{
+    const char* cval=NULL;
     int ret=0;
     long lval=0;
     size_t len = 1;
-    char tmp[1024];
+    grib_handle* hand = grib_handle_of_accessor(a);
 
     if (strcmp(e->cclass->name,"long")==0) {
-        ret=grib_expression_evaluate_long(a->parent->h,e,&lval);
+        ret=grib_expression_evaluate_long(hand,e,&lval);
+        /*if (hand->context->debug)
+            printf("ECCODES DEBUG grib_accessor_class_codetable::pack_expression %s %ld\n", a->name,lval);*/
+
         ret = grib_pack_long(a,&lval,&len);
     } else {
+        char tmp[1024];
         len = sizeof(tmp);
-        cval = grib_expression_evaluate_string(a->parent->h,e,tmp,&len,&ret);
+        cval = grib_expression_evaluate_string(hand,e,tmp,&len,&ret);
         if (ret!=GRIB_SUCCESS) {
-            grib_context_log(a->parent->h->context,GRIB_LOG_ERROR,"grib_accessor_codetable.pack_expression: unable to evaluate string %s to be set in %s\n",grib_expression_get_name(e),a->name);
+            grib_context_log(a->context,GRIB_LOG_ERROR,"grib_accessor_codetable.pack_expression: unable to evaluate string %s to be set in %s\n",grib_expression_get_name(e),a->name);
             return ret;
         }
         len = strlen(cval) + 1;
+        /*if (hand->context->debug)
+            printf("ECCODES DEBUG grib_accessor_class_codetable::pack_expression %s %s\n", a->name, cval);*/
         ret = grib_pack_string(a,cval,&len);
     }
     return ret;
@@ -685,7 +717,8 @@ static void destroy(grib_context* context,grib_accessor* a)
     }
 }
 
-static int  get_native_type(grib_accessor* a){
+static int get_native_type(grib_accessor* a)
+{
     int type=GRIB_TYPE_LONG;
     /*printf("---------- %s flags=%ld GRIB_ACCESSOR_FLAG_STRING_TYPE=%d\n",
          a->name,a->flags,GRIB_ACCESSOR_FLAG_STRING_TYPE);*/
@@ -694,22 +727,27 @@ static int  get_native_type(grib_accessor* a){
     return type;
 }
 
-static int    unpack_long   (grib_accessor* a, long* val, size_t *len)
+static int unpack_long(grib_accessor* a, long* val, size_t *len)
 {
     grib_accessor_codetable* self = (grib_accessor_codetable*)a;
     long rlen = 0;
     int err=0;
     unsigned long i = 0;
     long pos = a->offset*8;
+    grib_handle* hand = NULL;
 
+#ifdef DEBUG
     err=grib_value_count(a,&rlen);
-    if (err) return err;
+    Assert(!err);
+    Assert(rlen == 1);
+#endif
+    rlen = 1; /* ECC-480 Performance: avoid func call overhead of grib_value_count */
 
     if(!self->table) self->table = load_table(self);
 
     if(*len < rlen)
     {
-        grib_context_log(a->parent->h->context, GRIB_LOG_ERROR, " wrong size (%ld) for %s it contains %d values ",*len, a->name , rlen);
+        grib_context_log(a->context, GRIB_LOG_ERROR, " wrong size (%ld) for %s it contains %d values ",*len, a->name , rlen);
         *len = 0;
         return GRIB_ARRAY_TOO_SMALL;
     }
@@ -720,8 +758,12 @@ static int    unpack_long   (grib_accessor* a, long* val, size_t *len)
         return GRIB_SUCCESS;
     }
 
+    /* ECC-480 Performance: inline the grib_handle_of_accessor here to reduce func call overhead */
+    if (a->parent==NULL) hand = a->h;
+    else                 hand = a->parent->h;
+
     for(i=0; i< rlen;i++){
-        val[i] = (long)grib_decode_unsigned_long(a->parent->h->buffer->data , &pos, self->nbytes*8);
+        val[i] = (long)grib_decode_unsigned_long(hand->buffer->data , &pos, self->nbytes*8);
     }
 
     *len = rlen;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2016 ECMWF.
+ * Copyright 2005-2017 ECMWF.
  *
  * This software is licensed under the terms of the Apache Licence Version 2.0
  * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -82,13 +82,15 @@ static grib_accessor_class _grib_accessor_class_change_scanning_direction = {
     &get_native_type,            /* get native type               */
     0,                /* get sub_section                */
     0,               /* grib_pack procedures long      */
-    0,               /* grib_pack procedures long      */
+    0,                 /* grib_pack procedures long      */
     &pack_long,                  /* grib_pack procedures long      */
     0,                /* grib_unpack procedures long    */
     0,                /* grib_pack procedures double    */
     0,              /* grib_unpack procedures double  */
     0,                /* grib_pack procedures string    */
     0,              /* grib_unpack procedures string  */
+    0,          /* grib_pack array procedures string    */
+    0,        /* grib_unpack array procedures string  */
     0,                 /* grib_pack procedures bytes     */
     0,               /* grib_unpack procedures bytes   */
     0,            /* pack_expression */
@@ -101,7 +103,8 @@ static grib_accessor_class _grib_accessor_class_change_scanning_direction = {
     0,                    /* compare vs. another accessor   */
     0,     /* unpack only ith value          */
     0,     /* unpack a subarray         */
-    0,             		/* clear          */
+    0,              		/* clear          */
+    0,               		/* clone accessor          */
 };
 
 
@@ -124,6 +127,8 @@ static void init_class(grib_accessor_class* c)
 	c->unpack_double	=	(*(c->super))->unpack_double;
 	c->pack_string	=	(*(c->super))->pack_string;
 	c->unpack_string	=	(*(c->super))->unpack_string;
+	c->pack_string_array	=	(*(c->super))->pack_string_array;
+	c->unpack_string_array	=	(*(c->super))->unpack_string_array;
 	c->pack_bytes	=	(*(c->super))->pack_bytes;
 	c->unpack_bytes	=	(*(c->super))->unpack_bytes;
 	c->pack_expression	=	(*(c->super))->pack_expression;
@@ -137,6 +142,7 @@ static void init_class(grib_accessor_class* c)
 	c->unpack_double_element	=	(*(c->super))->unpack_double_element;
 	c->unpack_double_subarray	=	(*(c->super))->unpack_double_subarray;
 	c->clear	=	(*(c->super))->clear;
+	c->make_clone	=	(*(c->super))->make_clone;
 }
 
 /* END_CLASS_IMP */
@@ -146,14 +152,14 @@ static void init(grib_accessor* a, const long len , grib_arguments* args )
     int n=0;
     grib_accessor_change_scanning_direction* self= (grib_accessor_change_scanning_direction*)a;
 
-    self->values=grib_arguments_get_name(a->parent->h,args,n++);
-    self->Ni=grib_arguments_get_name(a->parent->h,args,n++);
-    self->Nj=grib_arguments_get_name(a->parent->h,args,n++);
-    self->i_scans_negatively=grib_arguments_get_name(a->parent->h,args,n++);
-    self->j_scans_positively=grib_arguments_get_name(a->parent->h,args,n++);
-    self->first=grib_arguments_get_name(a->parent->h,args,n++);
-    self->last=grib_arguments_get_name(a->parent->h,args,n++);
-    self->axis=grib_arguments_get_name(a->parent->h,args,n++);
+    self->values=grib_arguments_get_name(grib_handle_of_accessor(a),args,n++);
+    self->Ni=grib_arguments_get_name(grib_handle_of_accessor(a),args,n++);
+    self->Nj=grib_arguments_get_name(grib_handle_of_accessor(a),args,n++);
+    self->i_scans_negatively=grib_arguments_get_name(grib_handle_of_accessor(a),args,n++);
+    self->j_scans_positively=grib_arguments_get_name(grib_handle_of_accessor(a),args,n++);
+    self->first=grib_arguments_get_name(grib_handle_of_accessor(a),args,n++);
+    self->last=grib_arguments_get_name(grib_handle_of_accessor(a),args,n++);
+    self->axis=grib_arguments_get_name(grib_handle_of_accessor(a),args,n++);
 
     a->flags |= GRIB_ACCESSOR_FLAG_FUNCTION;
     a->length = 0;
@@ -171,8 +177,8 @@ static int pack_long(grib_accessor* a, const long* val, size_t *len)
     size_t size=0;
     double* values=NULL;
     grib_accessor_change_scanning_direction* self= (grib_accessor_change_scanning_direction*)a;
-    grib_context* c=a->parent->h->context;
-    grib_handle* h=a->parent->h;
+    grib_context* c=a->context;
+    grib_handle* h=grib_handle_of_accessor(a);
 
     if (*val==0) return 0;
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2016 ECMWF.
+ * Copyright 2005-2017 ECMWF.
  *
  * This software is licensed under the terms of the Apache Licence Version 2.0
  * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -16,32 +16,32 @@
 #include "grib_tools.h"
 
 grib_option grib_options[]={
-/*  {id, args, help}, on, command_line, value*/
-    {"f",0,0,0,1,0},
-    {"p:",0,0,0,1,0},
-    {"F:",0,0,1,1,"%g"},
-    {"l:",0,0,0,1,0},
-    {"P:",0,0,0,1,0},
-    {"w:",0,0,0,1,0},
-    {"n:",0,0,1,1,0},
-    {"s:",0,0,0,1,0},
-    {"V",0,0,0,1,0},
-    {"W:",0,0,1,1,"8"},
-    {"m",0,0,0,1,0},
-    {"M",0,0,0,1,0},
-    {"S",0,0,1,0,0},
-    {"g",0,0,0,1,0},
-    {"G",0,0,0,1,0},
-    {"T:",0,0,0,1,0},
-    {"7",0,0,0,1,0},
-    {"v",0,0,1,0,0},
-    {"X:",0,0,0,1,0},
-    {"i:",0,0,0,1,0}
+        /*  {id, args, help}, on, command_line, value*/
+        {"f",0,0,0,1,0},
+        {"p:",0,0,0,1,0},
+        {"F:",0,0,1,1,"%g"},
+        {"l:",0,0,0,1,0},
+        {"P:",0,0,0,1,0},
+        {"w:",0,0,0,1,0},
+        {"n:",0,0,1,1,0},
+        {"s:",0,0,0,1,0},
+        {"V",0,0,0,1,0},
+        {"W:",0,0,1,1,"8"},
+        {"m",0,0,0,1,0},
+        {"M",0,0,0,1,0},
+        {"S",0,0,1,0,0},
+        {"g",0,0,0,1,0},
+        {"G",0,0,0,1,0},
+        {"T:",0,0,0,1,0},
+        {"7",0,0,0,1,0},
+        {"v",0,0,1,0,0},
+        {"X:",0,0,0,1,0},
+        {"i:",0,0,0,1,0}
 };
 
 char* grib_tool_description="Get values of some keys from a grib file."
-                 "\n\tIt is similar to grib_ls, but fails returning an error code "
-         "\n\twhen an error occurs (e.g. key not found).";
+        "\n\tIt is similar to grib_ls, but fails returning an error code "
+        "\n\twhen an error occurs (e.g. key not found).";
 char* grib_tool_name="grib_get";
 char* grib_tool_usage="[options] grib_file grib_file ...";
 
@@ -214,5 +214,11 @@ int grib_tool_finalise_action(grib_runtime_options* options)
 {
     if (n) grib_nearest_delete(n);
 
+    return 0;
+}
+
+int grib_no_handle_action(grib_runtime_options* options, int err)
+{
+    fprintf(dump_file,"\t\t\"ERROR: unreadable message\"\n");
     return 0;
 }

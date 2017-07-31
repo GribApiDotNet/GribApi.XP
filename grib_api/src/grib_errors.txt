@@ -17,7 +17,7 @@ GRIB_DECODING_ERROR                 Decoding invalid
 GRIB_ENCODING_ERROR                 Encoding invalid
 GRIB_NO_MORE_IN_SET                 Code cannot unpack because of string too small
 GRIB_GEOCALCULUS_PROBLEM            Problem with calculation of geographic attributes
-GRIB_OUT_OF_MEMORY                  Out of memory
+GRIB_OUT_OF_MEMORY                  Memory allocation error
 GRIB_READ_ONLY                      Value is read only
 GRIB_INVALID_ARGUMENT               Invalid argument
 GRIB_NULL_HANDLE                    Null handle
@@ -41,6 +41,7 @@ GRIB_MISSING_KEY                    Missing a key from the fieldset
 GRIB_OUT_OF_AREA                    The point is out of the grid area
 /* more errors*/
 GRIB_CONCEPT_NO_MATCH               Concept no match
+GRIB_HASH_ARRAY_NO_MATCH            Hash array no match
 GRIB_NO_DEFINITIONS                 Definitions files not found
 GRIB_WRONG_TYPE                     Wrong type while packing
 GRIB_END                            End of resource
@@ -61,3 +62,13 @@ GRIB_INVALID_BPV                    Invalid number of bits per value
 GRIB_DIFFERENT_EDITION				Edition of two messages is different
 GRIB_VALUE_DIFFERENT                Value is different
 GRIB_INVALID_KEY_VALUE				Invalid key value
+GRIB_STRING_TOO_SMALL					String is smaller than requested
+GRIB_WRONG_CONVERSION         Wrong type conversion
+GRIB_MISSING_BUFR_ENTRY       Missing BUFR table entry for descriptor
+GRIB_NULL_POINTER             Null pointer
+GRIB_ATTRIBUTE_CLASH          Attribute is already present, cannot add
+GRIB_TOO_MANY_ATTRIBUTES      Too many attributes. Increase MAX_ACCESSOR_ATTRIBUTES
+GRIB_ATTRIBUTE_NOT_FOUND      Attribute not found.
+GRIB_UNSUPPORTED_EDITION      Edition not supported.
+GRIB_OUT_OF_RANGE             Value out of coding range
+GRIB_WRONG_BITMAP_SIZE        Size of bitmap is incorrect

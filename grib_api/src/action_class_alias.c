@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2016 ECMWF.
+ * Copyright 2005-2017 ECMWF.
  *
  * This software is licensed under the terms of the Apache Licence Version 2.0
  * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -22,7 +22,6 @@
    IMPLEMENTS = create_accessor
    IMPLEMENTS = dump;xref
    IMPLEMENTS = destroy
-   IMPLEMENTS = compile
    MEMBERS    = char* target
    END_CLASS_DEF
 
@@ -41,7 +40,6 @@ or edit "action.class" and rerun ./make_class.pl
 static void init_class      (grib_action_class*);
 static void dump            (grib_action* d, FILE*,int);
 static void xref            (grib_action* d, FILE* f,const char* path);
-static void compile         (grib_action* a, grib_compiler* compiler);
 static void destroy         (grib_context*,grib_action*);
 static int create_accessor(grib_section*,grib_action*,grib_loader*);
 
@@ -70,7 +68,6 @@ static grib_action_class _grib_action_class_alias = {
     0,                            /* notify_change */
     0,                            /* reparse */
     0,                            /* execute */
-    &compile,                            /* compile */
 };
 
 grib_action_class* grib_action_class_alias = &_grib_action_class_alias;
@@ -79,6 +76,15 @@ static void init_class(grib_action_class* c)
 {
 }
 /* END_CLASS_IMP */
+
+/* Note: A fast cut-down version of grib_inline_strcmp which does NOT return -1 */
+/* 0 means input strings are equal and 1 means not equal */
+GRIB_INLINE static int grib_inline_strcmp(const char* a, const char* b)
+{
+    if (*a != *b) return 1;
+    while((*a!=0 && *b!=0) &&  *(a) == *(b) ) {a++;b++;}
+    return (*a==0 && *b==0) ? 0 : 1;
+}
 
 
 grib_action* grib_action_create_alias(grib_context* context, const char* name, const char* arg1,const char* name_space,int flags)
@@ -102,34 +108,10 @@ grib_action* grib_action_create_alias(grib_context* context, const char* name, c
     return act;
 }
 
-static void compile(grib_action* act, grib_compiler *compiler)
-{
-    grib_action_alias* a  = (grib_action_alias*)act;
-    fprintf(compiler->out,"%s = grib_action_create_alias(ctx,",compiler->var);
-    fprintf(compiler->out,"\"%s\",",act->name);
-    if(a->target) {
-        fprintf(compiler->out,"\"%s\",",a->target);
-    }
-    else
-    {
-        fprintf(compiler->out,"NULL,");
-    }
-    if(act->name_space) {
-        fprintf(compiler->out,"\"%s\",",act->name_space);
-    }
-    else
-    {
-        fprintf(compiler->out,"NULL,");
-    }
-    grib_compile_flags(compiler, act->flags);
-    fprintf(compiler->out,");");
-    fprintf(compiler->out,"\n");
-}
-
 static int same(const char* a,const char* b) 
 {
     if(a == b) return 1;
-    if(a && b) return (strcmp(a,b) == 0);
+    if(a && b) return (grib_inline_strcmp(a,b) == 0);
     return 0;
 }
 
@@ -139,9 +121,10 @@ static int create_accessor( grib_section* p, grib_action* act,grib_loader *h)
     grib_action_alias* self = (grib_action_alias*)act;
     grib_accessor *x=NULL ;
     grib_accessor *y=NULL ;
+    grib_handle* hand = NULL;
 
     /*if alias and target have the same name add only the namespace */
-    if (self->target && !strcmp(act->name,self->target) && act->name_space!=NULL) {
+    if (self->target && !grib_inline_strcmp(act->name,self->target) && act->name_space!=NULL) {
         x = grib_find_accessor_fast(p->h,self->target);
         if(x == NULL)
         {
@@ -159,11 +142,11 @@ static int create_accessor( grib_section* p, grib_action* act,grib_loader *h)
                 act->name_space, act->name);
         i = 0;
         while(i < MAX_ACCESSOR_NAMES) {
-            if(x->all_names[i] != NULL && !strcmp(x->all_names[i],act->name) ) {
+            if(x->all_names[i] != NULL && !grib_inline_strcmp(x->all_names[i],act->name) ) {
                 if (x->all_name_spaces[i]==NULL) {
                     x->all_name_spaces[i] =  act->name_space;
                     return GRIB_SUCCESS;
-                } else if (!strcmp(x->all_name_spaces[i],act->name_space) ) {
+                } else if (!grib_inline_strcmp(x->all_name_spaces[i],act->name_space) ) {
                     return GRIB_SUCCESS;
                 }
             }
@@ -184,7 +167,6 @@ static int create_accessor( grib_section* p, grib_action* act,grib_loader *h)
         return GRIB_INTERNAL_ERROR;
     }
 
-    /* if(self->target == NULL || (act->flags & GRIB_ACCESSOR_FLAG_OVERRIDE)) */
     y = grib_find_accessor_fast(p->h,act->name);
 
     /* delete old alias if already defined */
@@ -230,12 +212,13 @@ static int create_accessor( grib_section* p, grib_action* act,grib_loader *h)
         return GRIB_SUCCESS;
     }
 
-    if (x->parent->h->use_trie) {
-        id=grib_hash_keys_get_id(x->parent->h->context->keys,act->name);
+    hand = grib_handle_of_accessor(x);
+    if (hand->use_trie) {
+        id=grib_hash_keys_get_id(x->context->keys,act->name);
 
-        if (x->parent->h->accessors[id] != x) {
-            /*x->same=x->parent->h->accessors[id];*/
-            x->parent->h->accessors[id]=x;
+        if (hand->accessors[id] != x) {
+            /*x->same=hand->accessors[id];*/
+            hand->accessors[id]=x;
         }
     }
 

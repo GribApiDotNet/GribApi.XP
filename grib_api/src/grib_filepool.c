@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2016 ECMWF.
+ * Copyright 2005-2017 ECMWF.
  *
  * This software is licensed under the terms of the Apache Licence Version 2.0
  * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -48,20 +48,22 @@ static void init()
 
 static short next_id=0;
 
+/* Note: A fast cut-down version of strcmp which does NOT return -1 */
+/* 0 means input strings are equal and 1 means not equal */
 GRIB_INLINE static int grib_inline_strcmp(const char* a,const char* b)
 {
-	if (*a != *b) return 1;
-	while((*a!=0 && *b!=0) &&  *(a) == *(b) ) {a++;b++;}
-	return (*a==0 && *b==0) ? 0 : 1;
+    if (*a != *b) return 1;
+    while((*a!=0 && *b!=0) &&  *(a) == *(b) ) {a++;b++;}
+    return (*a==0 && *b==0) ? 0 : 1;
 }
 
 static grib_file_pool file_pool= {
-             0,                    /* grib_context* context;*/
-             0,                    /* grib_file* first;*/
-             0,                    /* grib_file* current; */
-             0,                    /* size_t size;*/
-             0,                    /* int number_of_opened_files;*/
-  GRIB_MAX_OPENED_FILES            /* int max_opened_files; */
+        0,                    /* grib_context* context;*/
+        0,                    /* grib_file* first;*/
+        0,                    /* grib_file* current; */
+        0,                    /* size_t size;*/
+        0,                    /* int number_of_opened_files;*/
+        GRIB_MAX_OPENED_FILES /* int max_opened_files; */
 };
 
 void grib_file_pool_clean()
@@ -182,7 +184,7 @@ grib_file* grib_file_open(const char* filename, const char* mode,int* err)
     grib_file *file=0,*prev=0;
     int same_mode=0;
     int is_new=0;
-	GRIB_MUTEX_INIT_ONCE(&once,&init);
+    GRIB_MUTEX_INIT_ONCE(&once,&init);
 
     if (!file_pool.context) file_pool.context=grib_context_get_default();
 
@@ -257,15 +259,48 @@ grib_file* grib_file_open(const char* filename, const char* mode,int* err)
     return file;
 }
 
-void grib_file_close(const char* filename,int* err)
+void grib_file_pool_delete_file(grib_file* file) {
+    grib_file* prev=NULL;
+    GRIB_MUTEX_INIT_ONCE(&once,&init);
+    GRIB_MUTEX_LOCK(&mutex1);
+
+    if (file==file_pool.first) {
+        file_pool.first=file->next;
+        file_pool.current=file->next;
+    } else {
+
+        prev=file_pool.first;
+        file_pool.current=file_pool.first;
+        while (prev) {
+            if (prev->next==file) break;
+            prev=prev->next;
+        }
+        Assert(prev);
+        prev->next=file->next;
+    }
+
+    if (file->handle) {
+        file_pool.number_of_opened_files--;
+    }
+    grib_file_delete(file);
+    GRIB_MUTEX_UNLOCK(&mutex1);
+
+}
+
+void grib_file_close(const char* filename, int force, int* err)
 {
     grib_file* file=NULL;
+    grib_context* context = grib_context_get_default();
 
     /* Performance: keep the files open to avoid opening and closing files when writing the output. */
-    /* So only call fclose() when too many files are open */
-    if ( file_pool.number_of_opened_files > GRIB_MAX_OPENED_FILES ) {
-        /*printf("++ closing file %s\n",filename);*/
-		GRIB_MUTEX_INIT_ONCE(&once,&init);
+    /* So only call fclose() when too many files are open. */
+    /* Also see ECC-411 */
+    int do_close = (file_pool.number_of_opened_files > context->file_pool_max_opened_files);
+    if (force == 1) do_close=1; /* Can be overridden with the force argument */
+
+    if ( do_close ) {
+        /*printf("+++++++++++++ closing file %s (n=%d)\n",filename, file_pool.number_of_opened_files);*/
+        GRIB_MUTEX_INIT_ONCE(&once,&init);
         GRIB_MUTEX_LOCK(&mutex1);
         file=grib_get_file(filename,err);
         if (file->handle) {
@@ -288,7 +323,7 @@ void grib_file_close_all(int *err)
     grib_file* file = NULL;
     if (!file_pool.first) return;
 
-	GRIB_MUTEX_INIT_ONCE(&once,&init);
+    GRIB_MUTEX_INIT_ONCE(&once,&init);
     GRIB_MUTEX_LOCK(&mutex1);
 
     file = file_pool.first;
@@ -353,7 +388,7 @@ grib_file* grib_file_new(grib_context* c, const char* name, int* err)
         *err=GRIB_OUT_OF_MEMORY;
         return NULL;
     }
-	GRIB_MUTEX_INIT_ONCE(&once,&init);
+    GRIB_MUTEX_INIT_ONCE(&once,&init);
 
     file->name=strdup(name);
     file->id=next_id;

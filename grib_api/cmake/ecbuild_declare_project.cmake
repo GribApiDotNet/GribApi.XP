@@ -1,4 +1,4 @@
-# (C) Copyright 1996-2016 ECMWF.
+# (C) Copyright 1996-2017 ECMWF.
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -122,27 +122,17 @@ macro( ecbuild_declare_project )
   if( NOT INSTALL_INCLUDE_DIR )
     set( INSTALL_INCLUDE_DIR include )
   endif()
-  if( NOT INSTALL_DATA_DIR )
-    set( INSTALL_DATA_DIR share/${PROJECT_NAME} )
-  endif()
-  if( NOT INSTALL_CMAKE_DIR )
-    set( INSTALL_CMAKE_DIR share/${PROJECT_NAME}/cmake )
-  endif()
+  # INSTALL_DATA_DIR is package specific and needs to be reset for subpackages
+  # in a bundle. Users *cannot* override this directory (ECBUILD-315)
+  set( INSTALL_DATA_DIR share/${PROJECT_NAME} )
+  # share/${PROJECT_NAME}/cmake is a convention - it makes no sense to override it
+  set( INSTALL_CMAKE_DIR share/${PROJECT_NAME}/cmake )
 
   mark_as_advanced( INSTALL_BIN_DIR )
   mark_as_advanced( INSTALL_LIB_DIR )
   mark_as_advanced( INSTALL_INCLUDE_DIR )
   mark_as_advanced( INSTALL_DATA_DIR )
   mark_as_advanced( INSTALL_CMAKE_DIR )
-
-  # overrides of install dirs (deprecated in ecBuild 2.4.0)
-
-  foreach( p LIB BIN INCLUDE DATA CMAKE )
-    if( ${PNAME}_INSTALL_${p}_DIR )
-      ecbuild_deprecate( "Use of ${PNAME}_INSTALL_${p}_DIR is deprecated and will be removed in a future release. Use INSTALL_${p}_DIR instead." )
-      set( INSTALL_${p}_DIR ${${PNAME}_INSTALL_${p}_DIR} )
-    endif()
-  endforeach()
 
   # warnings for non-relocatable projects
 
@@ -197,7 +187,7 @@ macro( ecbuild_declare_project )
 
   # print project header
 
-  message( STATUS "---------------------------------------------------------" )
+  ecbuild_info( "---------------------------------------------------------" )
 
   if( ${PNAME}_GIT_SHA1_SHORT )
     ecbuild_info( "[${PROJECT_NAME}] (${${PNAME}_VERSION_STR}) [${${PNAME}_GIT_SHA1_SHORT}]" )

@@ -1,4 +1,4 @@
-# (C) Copyright 1996-2016 ECMWF.
+# (C) Copyright 1996-2017 ECMWF.
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -62,6 +62,12 @@ if( PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME )
     # Include log macros since these are used right away
     include( ecbuild_log )
 
+    execute_process( COMMAND env OUTPUT_VARIABLE __env )
+    ecbuild_debug( "---------------------------------------------------------" )
+    ecbuild_debug( "Environment:" )
+    ecbuild_debug( "---------------------------------------------------------\n${__env}" )
+    ecbuild_debug( "---------------------------------------------------------" )
+
     ecbuild_info( "ecbuild   ${ecbuild_VERSION_STR}\t${ECBUILD_MACROS_DIR}" )
     ecbuild_info( "cmake     ${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION}.${CMAKE_PATCH_VERSION}\t${CMAKE_COMMAND}" )
 
@@ -78,7 +84,7 @@ if( PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME )
       ecbuild_info( "cache     ${ECBUILD_CACHE}" )
     endif()
 
-    message( STATUS "---------------------------------------------------------" )
+    ecbuild_info( "---------------------------------------------------------" )
 
     # clear the build dir exported targets file (only on the top project)
 
@@ -95,12 +101,6 @@ if( PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME )
 
     # would bring FindEigen in, so for the moment keep it out
     # set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_LIST_DIR}/contrib/GreatCMakeCookOff" )
-
-    include(CTest)                 # add cmake testing support
-    enable_testing()
-
-    # keep this until we modify the meaning to 'check' if installation worked
-    add_custom_target( check COMMAND ${CMAKE_CTEST_COMMAND} )
 
     ############################################################################################
     # define valid build types
@@ -163,6 +163,7 @@ if( PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME )
     include( ecbuild_list_add_pattern )
     include( ecbuild_list_exclude_pattern )
 
+    include( ecbuild_try_run )
     include( ecbuild_check_c_source_return )
     include( ecbuild_check_cxx_source_return )
     include( ecbuild_check_cxx11 )
@@ -243,6 +244,15 @@ if( PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME )
     ecbuild_flush_cache()
 
     ############################################################################################
+    # Testing
+
+    include(CTest)                 # add cmake testing support
+    enable_testing()
+
+    # keep this until we modify the meaning to 'check' if installation worked
+    add_custom_target( check COMMAND ${CMAKE_CTEST_COMMAND} )
+
+    ############################################################################################
     # define the build timestamp, unless the user provided one via EC_BUILD_TIMESTAMP
 
     if( NOT DEFINED EC_BUILD_TIMESTAMP )
@@ -250,7 +260,7 @@ if( PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME )
         set( EC_BUILD_TIMESTAMP  "${EC_BUILD_TIMESTAMP}" CACHE INTERNAL "Build timestamp" )
     endif()
 
-    message( STATUS "---------------------------------------------------------" )
+    ecbuild_info( "---------------------------------------------------------" )
 
 else()
 
@@ -259,7 +269,7 @@ else()
     # or
     #     set( ECBUILD_CONFIG "<subproject-config>.cmake" )
     if( ECBUILD_CONFIG )
-        message( STATUS "---------------------------------------------------------" )
+        ecbuild_info( "---------------------------------------------------------" )
         ecbuild_info( "config    ${ECBUILD_CONFIG}" )
         include( ${ECBUILD_CONFIG} )
     endif()

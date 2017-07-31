@@ -1,4 +1,4 @@
-# Copyright 2005-2016 ECMWF.
+# Copyright 2005-2017 ECMWF.
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -15,7 +15,7 @@
 constant gridDescriptionSectionPresent = 1;
 position offsetSection3;
 
-length[4] section3Length ;
+section_length[4] section3Length ;
 meta section3Pointer section_pointer(offsetSection3,section3Length,3);
 
 #  Number of section
@@ -90,7 +90,7 @@ concept gridType {
  "stretched_gg"          = { gridDefinitionTemplateNumber=42; PLPresent=0;  }
  "reduced_stretched_gg"  = { gridDefinitionTemplateNumber=42; PLPresent=1; numberOfOctectsForNumberOfPoints=2;iDirectionIncrementGiven=0;numberOfPointsAlongAParallel = missing(); }
 
- "stretched_rotated_gg"         = { gridDefinitionTemplateNumber=43; PLPresent=0; }
+ "stretched_rotated_gg"  = { gridDefinitionTemplateNumber=43; PLPresent=0;  }
  "reduced_stretched_rotated_gg" = { gridDefinitionTemplateNumber=43; PLPresent=1; numberOfOctectsForNumberOfPoints=2;iDirectionIncrementGiven=0;numberOfPointsAlongAParallel = missing(); }
 
 # For consistency add the prefix regular_

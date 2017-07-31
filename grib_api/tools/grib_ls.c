@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2016 ECMWF.
+ * Copyright 2005-2017 ECMWF.
  *
  * This software is licensed under the terms of the Apache Licence Version 2.0
  * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -141,7 +141,7 @@ int grib_tool_init(grib_runtime_options* options)
                 options->lats,options->lons,options->mask_values,options->distances,options->indexes,&size),0);
         grib_nearest_delete(n);
         n=NULL;
-        grib_handle_delete(hh);
+        grib_handle_delete( hh);
 
         options->latlon_idx=-1;
         max=options->distances[0];
@@ -388,4 +388,10 @@ int grib_tool_finalise_action(grib_runtime_options* options)
     if (json_latlon) printf("\n]\n");
 
     return 0;
+}
+
+int grib_no_handle_action(grib_runtime_options* options, int err)
+{
+  fprintf(dump_file,"\t\t\"ERROR: unreadable message\"\n");
+  return 0;
 }

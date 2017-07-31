@@ -1,5 +1,9 @@
 # data/CMakeLists.txt
 add_subdirectory(tigge)
+add_subdirectory(bufr)
+add_subdirectory(metar)
+add_subdirectory(gts)
+
 
 # Download all the binary GRIB data from website
 
@@ -11,12 +15,9 @@ endif()
 
 
 # Download all data files doing md5 check on each
-ecbuild_get_test_multidata( TARGET grib_api_download_gribs
+ecbuild_get_test_multidata( TARGET eccodes_download_gribs
+                            NOCHECK
                             NAMES ${files_to_download} )
-
-if( ENABLE_TESTS )
-  set_property( TEST grib_api_download_gribs APPEND PROPERTY LABELS download_data )
-endif()
 
 
 # Copy other files - e.g. reference data, text files etc from the source data dir
@@ -59,6 +60,7 @@ LIST(APPEND other_files
     step_grib1.log
     typeOfProcessedData.ok
     tigge_pf_ecmwf.grib2.ref
+    grib_data_files.txt
 )
 
 foreach( file ${other_files} )

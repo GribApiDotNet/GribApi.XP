@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2016 ECMWF.
+ * Copyright 2005-2017 ECMWF.
  *
  * This software is licensed under the terms of the Apache Licence Version 2.0
  * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -57,10 +57,16 @@ DIGIT     [0-9]
 NSIGNED   {SIGN}?{DIGIT}+
 NUMB      {DIGIT}+
 EXP       {E}{NSIGNED}
-IDENT     [_A-Za-z]+[_0-9A-Za-z]*
 FLOAT1    {NSIGNED}+"."{DIGIT}*{EXP}?
 FLOAT2    {NSIGNED}*"."{DIGIT}+{EXP}?
 FLOAT3    {NSIGNED}+{EXP}?
+IDENT1     [_A-Za-z]+[_0-9A-Za-z]*
+IDENT2     "\/"{IDENT1}"\="({NSIGNED}|{FLOAT1}|{FLOAT2}|{FLOAT3})"\/"{IDENT1}
+IDENT3     "\#"{NUMB}"\#"{IDENT1}
+IDENT4     {NUMB}+{IDENT1}
+IDENT_ATTR  "->"{IDENT1}
+IDENT5    ({IDENT1}|{IDENT3}|{IDENT4})({IDENT_ATTR})+
+IDENT     {IDENT1}|{IDENT2}|{IDENT3}|{IDENT4}|{IDENT5}
 
 %%
 
@@ -86,6 +92,9 @@ FLOAT3    {NSIGNED}+{EXP}?
 "null"        return NIL   ;
 "~"           return DUMMY   ;
 
+"substr"        return SUBSTR   ;
+"close"        return CLOSE   ;
+"length"        return LENGTH   ;
 "lowercase" return LOWERCASE;
 "if"        return IF       ;
 "_if"        return IF_TRANSIENT       ;
@@ -105,9 +114,13 @@ FLOAT3    {NSIGNED}+{EXP}?
 "signed"    return SIGNED   ;
 "codetable" return CODETABLE;
 "getenv" return GETENV;
+"smart_table" return SMART_TABLE;
+"dict_search" return DICTIONARY;
 "complex_codetable" return CODETABLE;
 "flags"     return FLAG     ;
 "lookup"    return LOOKUP   ;
+"group"    return GROUP  ;
+"non_alpha"    return NON_ALPHA   ;
 "meta"      return META     ;
 "padtoeven"     return PADTOEVEN    ;
 "padto"     return PADTO    ;
@@ -115,6 +128,7 @@ FLOAT3    {NSIGNED}+{EXP}?
 "pad"       return PAD      ;
 "section_padding"       return SECTION_PADDING      ;
 "message"       return MESSAGE      ;
+"message_copy"       return MESSAGE_COPY      ;
 "alias"     return ALIAS    ;
 "unalias"     return UNALIAS    ;
 "position"  return POS      ;
@@ -137,8 +151,16 @@ FLOAT3    {NSIGNED}+{EXP}?
 
 "export"     return EXPORT;
 "remove"     return REMOVE;
+"rename"     return RENAME;
+"is_in_list"     return IS_IN_LIST;
+"is_in_dict"     return IS_IN_DICT;
+"to_integer"     return TO_INTEGER;
+"to_string"     return TO_STRING;
+"sexagesimal2decimal" return SEX2DEC;
+"is_integer"     return IS_INTEGER;
+"is_number"     return IS_INTEGER;
 
-"length"          return SECTION_LENGTH     ;
+"section_length"          return SECTION_LENGTH     ;
 
 "assert"     return ASSERT    ;
 
@@ -182,6 +204,7 @@ FLOAT3    {NSIGNED}+{EXP}?
 "default"     return DEFAULT;
 "concept"     return CONCEPT;
 "concept_nofail"     return CONCEPT_NOFAIL;
+"hash_array"     return HASH_ARRAY;
 "write"       return WRITE;
 "append"       return APPEND;
 "print"       return PRINT;
@@ -209,10 +232,13 @@ FLOAT3    {NSIGNED}+{EXP}?
 
            yyleng = 0;
 
-           while((c = GET_INPUT()) && c != q && c != '\n')
+           while((c = GET_INPUT()) && c != q )
            {
                if(c == '\\') yytext[yyleng++] = GET_INPUT();
-               else yytext[yyleng++] =  c;
+               else {
+									 yytext[yyleng++] =  c;
+									 if (c =='\n') yylineno++;
+							 }
             }
 
             yytext[yyleng++] = 0;

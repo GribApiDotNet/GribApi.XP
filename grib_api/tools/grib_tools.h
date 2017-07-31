@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2016 ECMWF.
+ * Copyright 2005-2017 ECMWF.
  *
  * This software is licensed under the terms of the Apache Licence Version 2.0
  * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -8,9 +8,13 @@
  * virtue of its status as an intergovernmental organisation nor does it submit to any jurisdiction.
  */
 
+#ifdef __gnu_hurd__
+ #define _FILE_OFFSET_BITS 64 /* 64-bit offsets off_t not the default on Hurd/i386 */
+#endif
+
 #include "grib_api_internal.h"
 #include <stdio.h>
-#ifndef GRIB_ON_WINDOWS
+#ifndef ECCODES_ON_WINDOWS
 #  include <unistd.h>
 #endif
 #include <string.h>
@@ -38,7 +42,9 @@
 #define MODE_GRIB 	      0
 #define MODE_GTS          1
 #define MODE_BUFR         2
-#define MODE_ANY          3
+#define MODE_METAR        3
+#define MODE_TAF          5
+#define MODE_ANY          6
 
 typedef union grib_typed_value {
   long*        long_value;
@@ -191,7 +197,8 @@ void grib_print_full_statistics(grib_runtime_options* options);
 int grib_get_runtime_options(int argc,char** argv,grib_runtime_options* options);
 int grib_process_runtime_options(grib_context* c,int argc,char** argv,grib_runtime_options* options);
 void grib_tools_write_message(grib_runtime_options* options, grib_handle* h);
-int grib_tool_new_filename_action(grib_runtime_options* options,const char* file);
+int grib_tool_new_filename_action(grib_runtime_options* options,const char* file); 
+int grib_no_handle_action(grib_runtime_options* options,int err);
 
 #endif
 

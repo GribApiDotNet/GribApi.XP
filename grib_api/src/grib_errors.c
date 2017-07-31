@@ -20,7 +20,7 @@ static const char *errors[] = {
 "Encoding invalid",		/* -14 GRIB_ENCODING_ERROR */
 "Code cannot unpack because of string too small",		/* -15 GRIB_NO_MORE_IN_SET */
 "Problem with calculation of geographic attributes",		/* -16 GRIB_GEOCALCULUS_PROBLEM */
-"Out of memory",		/* -17 GRIB_OUT_OF_MEMORY */
+"Memory allocation error",		/* -17 GRIB_OUT_OF_MEMORY */
 "Value is read only",		/* -18 GRIB_READ_ONLY */
 "Invalid argument",		/* -19 GRIB_INVALID_ARGUMENT */
 "Null handle",		/* -20 GRIB_NULL_HANDLE */
@@ -40,25 +40,36 @@ static const char *errors[] = {
 "Missing a key from the fieldset",		/* -34 GRIB_MISSING_KEY */
 "The point is out of the grid area",		/* -35 GRIB_OUT_OF_AREA */
 "Concept no match",		/* -36 GRIB_CONCEPT_NO_MATCH */
-"Definitions files not found",		/* -37 GRIB_NO_DEFINITIONS */
-"Wrong type while packing",		/* -38 GRIB_WRONG_TYPE */
-"End of resource",		/* -39 GRIB_END */
-"Unable to code a field without values",		/* -40 GRIB_NO_VALUES */
-"Grid description is wrong or inconsistent",		/* -41 GRIB_WRONG_GRID */
-"End of index reached",		/* -42 GRIB_END_OF_INDEX */
-"Null index",		/* -43 GRIB_NULL_INDEX */
-"End of resource reached when reading message",		/* -44 GRIB_PREMATURE_END_OF_FILE */
-"An internal array is too small",		/* -45 GRIB_INTERNAL_ARRAY_TOO_SMALL */
-"Message is too large for the current architecture",		/* -46 GRIB_MESSAGE_TOO_LARGE */
-"Constant field",		/* -47 GRIB_CONSTANT_FIELD */
-"Switch unable to find a matching case",		/* -48 GRIB_SWITCH_NO_MATCH */
-"Underflow",		/* -49 GRIB_UNDERFLOW */
-"Message malformed",		/* -50 GRIB_MESSAGE_MALFORMED */
-"Index is corrupted",		/* -51 GRIB_CORRUPTED_INDEX */
-"Invalid number of bits per value",		/* -52 GRIB_INVALID_BPV */
-"Edition of two messages is different",		/* -53 GRIB_DIFFERENT_EDITION */
-"Value is different",		/* -54 GRIB_VALUE_DIFFERENT */
-"Invalid key value",		/* -55 GRIB_INVALID_KEY_VALUE */
+"Hash array no match",		/* -37 GRIB_HASH_ARRAY_NO_MATCH */
+"Definitions files not found",		/* -38 GRIB_NO_DEFINITIONS */
+"Wrong type while packing",		/* -39 GRIB_WRONG_TYPE */
+"End of resource",		/* -40 GRIB_END */
+"Unable to code a field without values",		/* -41 GRIB_NO_VALUES */
+"Grid description is wrong or inconsistent",		/* -42 GRIB_WRONG_GRID */
+"End of index reached",		/* -43 GRIB_END_OF_INDEX */
+"Null index",		/* -44 GRIB_NULL_INDEX */
+"End of resource reached when reading message",		/* -45 GRIB_PREMATURE_END_OF_FILE */
+"An internal array is too small",		/* -46 GRIB_INTERNAL_ARRAY_TOO_SMALL */
+"Message is too large for the current architecture",		/* -47 GRIB_MESSAGE_TOO_LARGE */
+"Constant field",		/* -48 GRIB_CONSTANT_FIELD */
+"Switch unable to find a matching case",		/* -49 GRIB_SWITCH_NO_MATCH */
+"Underflow",		/* -50 GRIB_UNDERFLOW */
+"Message malformed",		/* -51 GRIB_MESSAGE_MALFORMED */
+"Index is corrupted",		/* -52 GRIB_CORRUPTED_INDEX */
+"Invalid number of bits per value",		/* -53 GRIB_INVALID_BPV */
+"Edition of two messages is different",		/* -54 GRIB_DIFFERENT_EDITION */
+"Value is different",		/* -55 GRIB_VALUE_DIFFERENT */
+"Invalid key value",		/* -56 GRIB_INVALID_KEY_VALUE */
+"String is smaller than requested",		/* -57 GRIB_STRING_TOO_SMALL */
+"Wrong type conversion",		/* -58 GRIB_WRONG_CONVERSION */
+"Missing BUFR table entry for descriptor",		/* -59 GRIB_MISSING_BUFR_ENTRY */
+"Null pointer",		/* -60 GRIB_NULL_POINTER */
+"Attribute is already present, cannot add",		/* -61 GRIB_ATTRIBUTE_CLASH */
+"Too many attributes. Increase MAX_ACCESSOR_ATTRIBUTES",		/* -62 GRIB_TOO_MANY_ATTRIBUTES */
+"Attribute not found.",		/* -63 GRIB_ATTRIBUTE_NOT_FOUND */
+"Edition not supported.",		/* -64 GRIB_UNSUPPORTED_EDITION */
+"Value out of coding range",		/* -65 GRIB_OUT_OF_RANGE */
+"Size of bitmap is incorrect",		/* -66 GRIB_WRONG_BITMAP_SIZE */
 "Value mismatch",		/* 1 GRIB_VALUE_MISMATCH */
 "double values are different",		/* 2 GRIB_DOUBLE_VALUE_MISMATCH */
 "long values are different",		/* 3 GRIB_LONG_VALUE_MISMATCH */
@@ -99,44 +110,6 @@ void grib_check(const char* call,const char*  file,int line,int e,const char* ms
 		} else {
 			grib_context_log(c,GRIB_LOG_ERROR,"%s",grib_get_error_message(e));
 		}
-        grib_exit(e);
+        exit(e);
     }
-}
-
-grib_fail_proc _grib_fail = NULL;
-
-void grib_set_fail_proc(grib_fail_proc p) 
-{
-	_grib_fail = p;
-}
-
-void grib_fail_default(const char* expr, const char* file, int line) 
-{
-	fprintf(stderr, "%s at line %d: assertion failure Assert(%s)\n", file, line, expr);
-	abort();
-}
-
-void grib_fail(const char* expr,const char* file,int line)
-{
-	if (_grib_fail) {
-		_grib_fail(expr, file, line);
-	} else {
-		grib_fail_default(expr, file, line);
-	}
-}
-
-grib_exit_proc _grib_exit = NULL;
-
-void grib_set_exit_proc(grib_exit_proc p)
-{
-	_grib_exit = p;
-}
-
-void grib_exit(int code)
-{
-	if (_grib_exit) {
-		_grib_exit(code);
-	} else {
-		exit(code);
-	}
 }

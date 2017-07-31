@@ -1,4 +1,4 @@
-# (C) Copyright 1996-2016 ECMWF.
+# (C) Copyright 1996-2017 ECMWF.
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -94,6 +94,10 @@ if( CMAKE_CXX_COMPILER_LOADED AND ENABLE_OS_TESTS )
     # check for sstream
     ecbuild_cache_check_cxx_source_compiles( "#include <sstream>\nint main() { std::stringstream s; }"
 	  EC_HAVE_CXX_SSTREAM )
+
+    # test c++ __int128
+    ecbuild_cache_check_cxx_source_compiles( "int main(){ __int128 i = 0; return 0;}\n"
+      EC_HAVE_CXX_INT_128 )
 
 endif()
 

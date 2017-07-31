@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2016 ECMWF.
+ * Copyright 2005-2017 ECMWF.
  *
  * This software is licensed under the terms of the Apache Licence Version 2.0
  * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -33,11 +33,12 @@ void grib_concept_value_delete(grib_context* c,grib_concept_value* v)
 	grib_context_free_persistent(c,v);
 }
 
-grib_concept_condition* grib_concept_condition_new(grib_context* c,const char* name,grib_expression* expression)
+grib_concept_condition* grib_concept_condition_new(grib_context* c,const char* name,grib_expression* expression, grib_iarray* iarray)
 {
 	grib_concept_condition* v = (grib_concept_condition*)grib_context_malloc_clear_persistent(c,sizeof(grib_concept_condition));
 	v->name = grib_context_strdup_persistent(c,name);
 	v->expression = expression;
+  v->iarray=iarray;
 	return v;
 }
 

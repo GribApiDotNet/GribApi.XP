@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2016 ECMWF.
+ * Copyright 2005-2017 ECMWF.
  *
  * This software is licensed under the terms of the Apache Licence Version 2.0
  * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -1058,7 +1058,7 @@ static err to_expand_mem(field *g)
         if(g->handle)
             grib_get_message(g->handle, &dummy, &g->length);
 
-        grib_file_close(file->name, &e);
+        grib_file_close(file->name, 0, &e);
         if(!g->handle)
             return -1;
 
@@ -1074,7 +1074,7 @@ static err to_expand_mem(field *g)
 
         if((e = grib_get_size(g->handle, "values", &g->value_count)))
         {
-            grib_context_log(ctx, GRIB_LOG_ERROR, "grib_api: cannot get number of values %s", grib_get_error_message(e));
+            grib_context_log(ctx, GRIB_LOG_ERROR, "ecCodes: cannot get number of values %s", grib_get_error_message(e));
             return e;
         }
 
@@ -1082,23 +1082,23 @@ static err to_expand_mem(field *g)
 
         if((e = grib_set_double(g->handle, "missingValue", global_missing_value)))
         {
-            grib_context_log(ctx, GRIB_LOG_ERROR, "grib_api: cannot set missingValue %s", grib_get_error_message(e));
+            grib_context_log(ctx, GRIB_LOG_ERROR, "ecCodes: cannot set missingValue %s", grib_get_error_message(e));
             return e;
         }
 
         g->values = (double*) grib_context_malloc(ctx, sizeof(double) * g->value_count);
         if((e = grib_get_double_array(g->handle, "values", g->values, &count)))
         {
-            grib_context_log(ctx, GRIB_LOG_ERROR, "grib_api: cannot get decode values %s", grib_get_error_message(e));
+            grib_context_log(ctx, GRIB_LOG_ERROR, "ecCodes: cannot get decode values %s", grib_get_error_message(e));
             return e;
         }
 
         if(count != g->value_count)
-            grib_context_log(ctx, GRIB_LOG_FATAL, "grib_api: value count mismatch %d %d", count, g->value_count);
+            grib_context_log(ctx, GRIB_LOG_FATAL, "ecCodes: value count mismatch %d %d", count, g->value_count);
 
         if((e = grib_get_long(g->handle, "bitmapPresent", &bitmap)))
         {
-            grib_context_log(ctx, GRIB_LOG_ERROR, "grib_api: cannot get bitmapPresent %s", grib_get_error_message(e));
+            grib_context_log(ctx, GRIB_LOG_ERROR, "ecCodes: cannot get bitmapPresent %s", grib_get_error_message(e));
             return e;
         }
 
@@ -1641,7 +1641,7 @@ static hypercube *new_hypercube(const request *r)
     int total = 0, count = 0;
     int n = 0;
     const char *val = 0;
-
+    Assert(h);
     h->r = clone_one_request(r);
     h->cube = empty_request("CUBE");
 
@@ -1746,8 +1746,10 @@ static hypercube *new_hypercube_from_mars_request(const request *r)
     }
 
     n = count_values(s.c->cube, "axis");
-    if(n)
+    if(n) {
         s.c->compare = (namecmp*)calloc(sizeof(namecmp), n);
+        Assert(s.c->compare);
+    }
 
     for(i = 0; i < n; i++)
         s.c->compare[i] = comparator(get_value(s.c->cube, "axis", i));
@@ -1771,8 +1773,10 @@ static hypercube *new_simple_hypercube_from_mars_request(const request *r)
 
     free_one_request(s.r);
     n = count_values(s.c->cube, "axis");
-    if(n)
+    if(n) {
         s.c->compare = (namecmp*)calloc(sizeof(namecmp), n);
+        Assert(s.c->compare);
+    }
 
     for(i = 0; i < n; i++)
         s.c->compare[i] = comparator(get_value(s.c->cube, "axis", i));
@@ -1852,13 +1856,13 @@ struct nc_types_values {
 {
         /* In some occasions, SHRT_MIN-2 for the minimum value, makes ncview display
  missing values for -32766, while NC_FILL_SHORT=-32767, and SHRT_MIN=-32768 */
-        { 0, 0, 0 }, /* NC_NAT,   'Not A Type' (c.f. NaN) */
-        { 0x7f, NC_FILL_BYTE +1, NC_FILL_BYTE }, /* NC_BYTE,   signed 1 byte integer */
-        { 0xff, NC_FILL_CHAR +1, NC_FILL_CHAR }, /* NC_CHAR,   ISO/ASCII character */
+        { 0, 0, 0 },                                 /* NC_NAT,   'Not A Type' (c.f. NaN) */
+        { 0x7f, NC_FILL_BYTE +1, NC_FILL_BYTE },     /* NC_BYTE,   signed 1 byte integer */
+        { 0xff, NC_FILL_CHAR +1, NC_FILL_CHAR },     /* NC_CHAR,   ISO/ASCII character */
         { 0x7fff, NC_FILL_SHORT+1 , NC_FILL_SHORT }, /* NC_SHORT,  signed 2 byte integer */
         { 0x7ffffff, NC_FILL_INT + 1, NC_FILL_INT }, /* NC_INT,    signed 4 byte integer */
-        { FLT_MAX, -FLT_MAX, NC_FILL_FLOAT }, /* NC_FLOAT,  single precision floating point number */
-        { DBL_MAX, -DBL_MAX, NC_FILL_DOUBLE }, /* NC_DOUBLE, double precision floating point number */
+        { FLT_MAX, -FLT_MAX, NC_FILL_FLOAT },        /* NC_FLOAT,  single precision floating point number */
+        { DBL_MAX, -DBL_MAX, NC_FILL_DOUBLE },       /* NC_DOUBLE, double precision floating point number */
 };
 
 static long fcmonth2days(long date, long months)
@@ -2142,7 +2146,7 @@ static int def_latlon(int ncid, fieldset *fs)
     size = sizeof(grid_type);
     if((e = grib_get_string(g->handle, "typeOfGrid", grid_type, &size)) != GRIB_SUCCESS)
     {
-        grib_context_log(ctx, GRIB_LOG_ERROR, "grib_api: cannot get typeOfGrid %s", grib_get_error_message(e));
+        grib_context_log(ctx, GRIB_LOG_ERROR, "ecCodes: cannot get typeOfGrid %s", grib_get_error_message(e));
         return e;
     }
 
@@ -2155,7 +2159,7 @@ static int def_latlon(int ncid, fieldset *fs)
     /* Define longitude */
     if((e = grib_get_size(g->handle, "distinctLongitudes", &l)) != GRIB_SUCCESS)
     {
-        grib_context_log(ctx, GRIB_LOG_ERROR, "grib_api: cannot get distinctLongitudes %s", grib_get_error_message(e));
+        grib_context_log(ctx, GRIB_LOG_ERROR, "ecCodes: cannot get distinctLongitudes %s", grib_get_error_message(e));
         return e;
     }
     n = l;
@@ -2164,7 +2168,7 @@ static int def_latlon(int ncid, fieldset *fs)
     /* Define latitude */
     if((e = grib_get_size(g->handle, "distinctLatitudes", &l)) != GRIB_SUCCESS)
     {
-        grib_context_log(ctx, GRIB_LOG_ERROR, "grib_api: cannot get distinctLatitudes %s", grib_get_error_message(e));
+        grib_context_log(ctx, GRIB_LOG_ERROR, "ecCodes: cannot get distinctLatitudes %s", grib_get_error_message(e));
         return e;
     }
     n = l;
@@ -2198,26 +2202,26 @@ static int put_latlon(int ncid, fieldset *fs)
     /* Get info in degrees */
     if((e = grib_get_double(g->handle, "iDirectionIncrementInDegrees", &ew_stride)) != GRIB_SUCCESS)
     {
-        grib_context_log(ctx, GRIB_LOG_ERROR, "grib_api: cannot get iDirectionIncrementInDegrees %s", grib_get_error_message(e));
+        grib_context_log(ctx, GRIB_LOG_ERROR, "ecCodes: cannot get iDirectionIncrementInDegrees %s", grib_get_error_message(e));
         return e;
     }
 
     if((e = grib_get_double(g->handle, "jDirectionIncrementInDegrees", &ns_stride)) != GRIB_SUCCESS)
     {
-        grib_context_log(ctx, GRIB_LOG_ERROR, "grib_api: cannot get jDirectionIncrementInDegrees %s", grib_get_error_message(e));
+        grib_context_log(ctx, GRIB_LOG_ERROR, "ecCodes: cannot get jDirectionIncrementInDegrees %s", grib_get_error_message(e));
         return e;
     }
 
     /* Define longitude */
     if((e = grib_get_long(g->handle, "Ni", &ni)) != GRIB_SUCCESS)
     {
-        grib_context_log(ctx, GRIB_LOG_ERROR, "grib_api: cannot get Ni %s", grib_get_error_message(e));
+        grib_context_log(ctx, GRIB_LOG_ERROR, "ecCodes: cannot get Ni %s", grib_get_error_message(e));
         return e;
     }
     /* Define latitude */
     if((e = grib_get_long(g->handle, "Nj", &nj)) != GRIB_SUCCESS)
     {
-        grib_context_log(ctx, GRIB_LOG_ERROR, "grib_api: cannot get Nj %s", grib_get_error_message(e));
+        grib_context_log(ctx, GRIB_LOG_ERROR, "ecCodes: cannot get Nj %s", grib_get_error_message(e));
         return e;
     }
 
@@ -2225,14 +2229,14 @@ static int put_latlon(int ncid, fieldset *fs)
 
     if((e = grib_get_size(g->handle, "distinctLatitudes", &nj)) != GRIB_SUCCESS)
     {
-        grib_context_log(ctx, GRIB_LOG_ERROR, "grib_api: cannot get distinctLatitudes %s", grib_get_error_message(e));
+        grib_context_log(ctx, GRIB_LOG_ERROR, "ecCodes: cannot get distinctLatitudes %s", grib_get_error_message(e));
         return e;
 
     }
 
     if((e = grib_get_size(g->handle, "distinctLongitudes", &ni)) != GRIB_SUCCESS)
     {
-        grib_context_log(ctx, GRIB_LOG_ERROR, "grib_api: cannot get distinctLongitudes %s", grib_get_error_message(e));
+        grib_context_log(ctx, GRIB_LOG_ERROR, "ecCodes: cannot get distinctLongitudes %s", grib_get_error_message(e));
         return e;
 
     }
@@ -2250,7 +2254,7 @@ static int put_latlon(int ncid, fieldset *fs)
     check_err(stat, __LINE__, __FILE__);
     if((e = grib_get_double_array(g->handle, "distinctLongitudes", dvalues, &n)) != GRIB_SUCCESS)
     {
-        grib_context_log(ctx, GRIB_LOG_ERROR, "grib_api: cannot get distinctLongitudes %s", grib_get_error_message(e));
+        grib_context_log(ctx, GRIB_LOG_ERROR, "ecCodes: cannot get distinctLongitudes %s", grib_get_error_message(e));
         return e;
     }
     Assert(n == ni);
@@ -2266,7 +2270,7 @@ static int put_latlon(int ncid, fieldset *fs)
     check_err(stat, __LINE__, __FILE__);
     if((e = grib_get_double_array(g->handle, "distinctLatitudes", dvalues, &n)) != GRIB_SUCCESS)
     {
-        grib_context_log(ctx, GRIB_LOG_ERROR, "grib_api: cannot get distinctLatitudes %s", grib_get_error_message(e));
+        grib_context_log(ctx, GRIB_LOG_ERROR, "ecCodes: cannot get distinctLatitudes %s", grib_get_error_message(e));
         return e;
     }
 
@@ -2315,7 +2319,7 @@ static int compute_scale(dataset_t *subset)
 
         if((e = grib_get_size(g->handle, "values", &len)) != GRIB_SUCCESS)
         {
-            grib_context_log(ctx, GRIB_LOG_ERROR, "grib_api: cannot get size of values %s", grib_get_error_message(e));
+            grib_context_log(ctx, GRIB_LOG_ERROR, "ecCodes: cannot get size of values %s", grib_get_error_message(e));
             return e;
         }
 
@@ -2328,7 +2332,7 @@ static int compute_scale(dataset_t *subset)
         }
         if((e = grib_get_double_array(g->handle, "values", vals, &len)) != GRIB_SUCCESS)
         {
-            grib_context_log(ctx, GRIB_LOG_ERROR, "grib_api: cannot get values %s", grib_get_error_message(e));
+            grib_context_log(ctx, GRIB_LOG_ERROR, "ecCodes: cannot get values %s", grib_get_error_message(e));
             return e;
         }
 
@@ -2698,13 +2702,13 @@ static int put_data(hypercube *h, int ncid, const char *name, dataset_t *subset)
     /* Define longitude */
     if((e = grib_get_long(f->handle, "Ni", &ni)) != GRIB_SUCCESS)
     {
-        grib_context_log(ctx, GRIB_LOG_ERROR, "grib_api: cannot get Ni %s", grib_get_error_message(e));
+        grib_context_log(ctx, GRIB_LOG_ERROR, "ecCodes: cannot get Ni %s", grib_get_error_message(e));
         return e;
     }
     /* Define latitude */
     if((e = grib_get_long(f->handle, "Nj", &nj)) != GRIB_SUCCESS)
     {
-        grib_context_log(ctx, GRIB_LOG_ERROR, "grib_api: cannot get Nj %s", grib_get_error_message(e));
+        grib_context_log(ctx, GRIB_LOG_ERROR, "ecCodes: cannot get Nj %s", grib_get_error_message(e));
         return e;
     }
 
@@ -2744,7 +2748,7 @@ static int put_data(hypercube *h, int ncid, const char *name, dataset_t *subset)
 
         if((e = grib_get_size(g->handle, "values", &len)) != GRIB_SUCCESS)
         {
-            grib_context_log(ctx, GRIB_LOG_ERROR, "grib_api: cannot get size of values %s", grib_get_error_message(e));
+            grib_context_log(ctx, GRIB_LOG_ERROR, "ecCodes: cannot get size of values %s", grib_get_error_message(e));
             return e;
         }
 
@@ -2757,7 +2761,7 @@ static int put_data(hypercube *h, int ncid, const char *name, dataset_t *subset)
         }
         if((e = grib_get_double_array(g->handle, "values", vals, &len)) != GRIB_SUCCESS)
         {
-            grib_context_log(ctx, GRIB_LOG_ERROR, "grib_api: cannot get values %s", grib_get_error_message(e));
+            grib_context_log(ctx, GRIB_LOG_ERROR, "ecCodes: cannot get values %s", grib_get_error_message(e));
             return e;
         }
 
@@ -2784,13 +2788,13 @@ static int put_data(hypercube *h, int ncid, const char *name, dataset_t *subset)
 
             if((e = grib_get_long(g->handle, "Ni", &ni)) != GRIB_SUCCESS)
             {
-                grib_context_log(ctx, GRIB_LOG_ERROR, "grib_api: cannot get Ni %s", grib_get_error_message(e));
+                grib_context_log(ctx, GRIB_LOG_ERROR, "ecCodes: cannot get Ni %s", grib_get_error_message(e));
                 return e;
             }
             /* Define latitude */
             if((e = grib_get_long(g->handle, "Nj", &nj)) != GRIB_SUCCESS)
             {
-                grib_context_log(ctx, GRIB_LOG_ERROR, "grib_api: cannot get Nj %s", grib_get_error_message(e));
+                grib_context_log(ctx, GRIB_LOG_ERROR, "ecCodes: cannot get Nj %s", grib_get_error_message(e));
                 return e;
             }
 
@@ -3127,9 +3131,9 @@ static int define_netcdf_dimensions(hypercube *h, fieldset *fs, int ncid, datase
         }
         else
         {
-            int major = GRIB_API_MAJOR_VERSION;
-            int minor = GRIB_API_MINOR_VERSION;
-            int revision = GRIB_API_REVISION_VERSION;
+            int major = ECCODES_MAJOR_VERSION;
+            int minor = ECCODES_MINOR_VERSION;
+            int revision = ECCODES_REVISION_VERSION;
 
             time(&now);
             strftime(timestamp, sizeof(timestamp), "%Y-%m-%d %H:%M:%S GMT", gmtime(&now));
@@ -4094,7 +4098,7 @@ int grib_tool_new_filename_action(grib_runtime_options* options, const char* fil
         grib_handle_delete(h);
     }
 
-    grib_file_close(file->name, &e);
+    grib_file_close(file->name, 0, &e);
 
     {
         /* Now do some checks */
@@ -4243,6 +4247,13 @@ int grib_tool_finalise_action(grib_runtime_options* options)
     return 0;
 }
 
+int grib_no_handle_action(grib_runtime_options* options, int err)
+{
+    fprintf(dump_file,"\t\t\"ERROR: unreadable message\"\n");
+    return 0;
+}
+
+
 #else
 #include <stdio.h>
 #include <stdlib.h>
@@ -4251,7 +4262,7 @@ int main(int argc, char** argv)
     printf("\n");
     printf("grib_to_netcdf:\n");
     printf("\n");
-    printf(" GRIB API was not compiled with NETCDF enabled\n");
+    printf(" ecCodes was not compiled with NETCDF enabled\n");
     printf("\n");
     exit(1);
 }

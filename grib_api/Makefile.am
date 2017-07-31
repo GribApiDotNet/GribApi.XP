@@ -8,7 +8,7 @@ CONFIGURE_DEPENDENCIES = $(top_srcdir)/version.sh
 $(top_srcdir)/configure: $(top_srcdir)/version.sh
 
 pkgconfigdir = $(libdir)/pkgconfig
-pkgconfig_DATA = rpms/grib_api.pc rpms/grib_api_f90.pc
+pkgconfig_DATA = rpms/eccodes.pc rpms/eccodes_f90.pc
 
 if WITH_PERL
   PERL_OPT = @PERLDIR@
@@ -78,10 +78,11 @@ EXTRA_DIST = README AUTHORS NOTICE LICENSE ChangeLog version.sh html \
 		CMakeLists.txt \
 		project_summary.cmake \
 		VERSION.cmake \
-		grib_api_config.h.in \
+		eccodes_config.h.in \
 		examples/CMakeLists.txt \
 		data/CMakeLists.txt \
 		data/tigge/CMakeLists.txt \
+		data/bufr/CMakeLists.txt \
 		ifs_samples/grib1/CMakeLists.txt \
 		ifs_samples/grib1_mlgrib2_ieee64/CMakeLists.txt \
 		ifs_samples/grib1_mlgrib2_ieee32/CMakeLists.txt \

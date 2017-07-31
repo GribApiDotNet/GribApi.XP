@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2016 ECMWF.
+ * Copyright 2005-2017 ECMWF.
  *
  * This software is licensed under the terms of the Apache Licence Version 2.0
  * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -77,13 +77,15 @@ static grib_accessor_class _grib_accessor_class_octahedral_gaussian = {
     0,            /* get native type               */
     0,                /* get sub_section                */
     0,               /* grib_pack procedures long      */
-    0,               /* grib_pack procedures long      */
+    0,                 /* grib_pack procedures long      */
     &pack_long,                  /* grib_pack procedures long      */
     &unpack_long,                /* grib_unpack procedures long    */
     0,                /* grib_pack procedures double    */
     0,              /* grib_unpack procedures double  */
     0,                /* grib_pack procedures string    */
     0,              /* grib_unpack procedures string  */
+    0,          /* grib_pack array procedures string    */
+    0,        /* grib_unpack array procedures string  */
     0,                 /* grib_pack procedures bytes     */
     0,               /* grib_unpack procedures bytes   */
     0,            /* pack_expression */
@@ -96,7 +98,8 @@ static grib_accessor_class _grib_accessor_class_octahedral_gaussian = {
     0,                    /* compare vs. another accessor   */
     0,     /* unpack only ith value          */
     0,     /* unpack a subarray         */
-    0,             		/* clear          */
+    0,              		/* clear          */
+    0,               		/* clone accessor          */
 };
 
 
@@ -119,6 +122,8 @@ static void init_class(grib_accessor_class* c)
 	c->unpack_double	=	(*(c->super))->unpack_double;
 	c->pack_string	=	(*(c->super))->pack_string;
 	c->unpack_string	=	(*(c->super))->unpack_string;
+	c->pack_string_array	=	(*(c->super))->pack_string_array;
+	c->unpack_string_array	=	(*(c->super))->unpack_string_array;
 	c->pack_bytes	=	(*(c->super))->pack_bytes;
 	c->unpack_bytes	=	(*(c->super))->unpack_bytes;
 	c->pack_expression	=	(*(c->super))->pack_expression;
@@ -132,19 +137,20 @@ static void init_class(grib_accessor_class* c)
 	c->unpack_double_element	=	(*(c->super))->unpack_double_element;
 	c->unpack_double_subarray	=	(*(c->super))->unpack_double_subarray;
 	c->clear	=	(*(c->super))->clear;
+	c->make_clone	=	(*(c->super))->make_clone;
 }
 
 /* END_CLASS_IMP */
 
 static void init(grib_accessor* a,const long l, grib_arguments* c)
 {
-  grib_accessor_octahedral_gaussian* self = (grib_accessor_octahedral_gaussian*)a;
-  int n = 0;
+    grib_accessor_octahedral_gaussian* self = (grib_accessor_octahedral_gaussian*)a;
+    int n = 0;
 
-  self->N            = grib_arguments_get_name(a->parent->h,c,n++);
-  self->Ni           = grib_arguments_get_name(a->parent->h,c,n++);
-  self->plpresent    = grib_arguments_get_name(a->parent->h,c,n++);
-  self->pl           = grib_arguments_get_name(a->parent->h,c,n++);
+    self->N            = grib_arguments_get_name(grib_handle_of_accessor(a),c,n++);
+    self->Ni           = grib_arguments_get_name(grib_handle_of_accessor(a),c,n++);
+    self->plpresent    = grib_arguments_get_name(grib_handle_of_accessor(a),c,n++);
+    self->pl           = grib_arguments_get_name(grib_handle_of_accessor(a),c,n++);
 }
 
 /* For an Octahedral grid, this is the number of points on the top-most latitude (near pole) */
@@ -159,12 +165,12 @@ static int unpack_long(grib_accessor* a, long* val, size_t *len)
     long* pl=NULL; /* pl array */
     size_t plsize=0, i=0, mid=0;
 
-    grib_context* c=a->parent->h->context;
+    grib_context* c=a->context;
 
-    if((ret = grib_get_long_internal(a->parent->h, self->N,&N)) != GRIB_SUCCESS)
+    if((ret = grib_get_long_internal(grib_handle_of_accessor(a), self->N,&N)) != GRIB_SUCCESS)
         return ret;
 
-    if((ret = grib_get_long_internal(a->parent->h, self->Ni,&Ni)) != GRIB_SUCCESS)
+    if((ret = grib_get_long_internal(grib_handle_of_accessor(a), self->Ni,&Ni)) != GRIB_SUCCESS)
         return ret;
 
     /* If Ni is not missing, then this is a plain gaussian grid and not reduced. */
@@ -174,14 +180,14 @@ static int unpack_long(grib_accessor* a, long* val, size_t *len)
         return GRIB_SUCCESS;
     }
 
-    if((ret = grib_get_long_internal(a->parent->h, self->plpresent,&plpresent)) != GRIB_SUCCESS)
+    if((ret = grib_get_long_internal(grib_handle_of_accessor(a), self->plpresent,&plpresent)) != GRIB_SUCCESS)
         return ret;
     if (!plpresent) {
         *val = 0; /* Not octahedral */
         return GRIB_SUCCESS;
     }
 
-    if((ret = grib_get_size(a->parent->h,self->pl,&plsize)) != GRIB_SUCCESS)
+    if((ret = grib_get_size(grib_handle_of_accessor(a),self->pl,&plsize)) != GRIB_SUCCESS)
         return ret;
     Assert(plsize);
     if (plsize != 2*N) {
@@ -192,7 +198,7 @@ static int unpack_long(grib_accessor* a, long* val, size_t *len)
     if (!pl) {
         return GRIB_OUT_OF_MEMORY;
     }
-    if ((ret = grib_get_long_array_internal(a->parent->h,self->pl,pl, &plsize)) != GRIB_SUCCESS)
+    if ((ret = grib_get_long_array_internal(grib_handle_of_accessor(a),self->pl,pl, &plsize)) != GRIB_SUCCESS)
         return ret;
     if (pl[0] != NUM_POINTS_ON_LAT_NEAR_POLE) {
         *val=0; /* Not octahedral */
@@ -217,5 +223,5 @@ static int unpack_long(grib_accessor* a, long* val, size_t *len)
 
 static int pack_long(grib_accessor* a, const long* val, size_t *len)
 {
-  return GRIB_NOT_IMPLEMENTED;
+    return GRIB_NOT_IMPLEMENTED;
 }

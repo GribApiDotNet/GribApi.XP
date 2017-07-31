@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2016 ECMWF.
+ * Copyright 2005-2017 ECMWF.
  *
  * This software is licensed under the terms of the Apache Licence Version 2.0
  * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -21,10 +21,9 @@
 
 #define MAXOPTSSIZE 1024
 
-int grib_jasper_decode(grib_context *c,unsigned char *buf, size_t *buflen, double *values, size_t *no_values) {
-
+int grib_jasper_decode(grib_context *c,unsigned char *buf, size_t *buflen, double *values, size_t *no_values)
+{
     /*jas_setdbglevel(99999);*/
-
     jas_image_t  *image = NULL;
     jas_stream_t *jpeg  = NULL;
     int code = GRIB_SUCCESS;
@@ -37,6 +36,8 @@ int grib_jasper_decode(grib_context *c,unsigned char *buf, size_t *buflen, doubl
         code = GRIB_DECODING_ERROR;
         goto cleanup;
     }
+
+    grib_context_log(c, GRIB_LOG_DEBUG, "grib_jasper_decode: Jasper version %s", jas_getversion());
 
     image = jpc_decode(jpeg,NULL);
     if(!image) {
@@ -77,8 +78,8 @@ cleanup:
     return code;
 }
 
-int grib_jasper_encode(grib_context *c, j2k_encode_helper *helper) {
-
+int grib_jasper_encode(grib_context *c, j2k_encode_helper *helper)
+{
     int code = GRIB_SUCCESS;
     int jaserr;
 
@@ -95,8 +96,7 @@ int grib_jasper_encode(grib_context *c, j2k_encode_helper *helper) {
     unsigned char *encoded = NULL;
     unsigned char *p = NULL;
 
-
-    jas_image_t image = {0,};
+    jas_image_t image = {0};
     jas_stream_t *jpcstream = 0;
     jas_stream_t *istream = 0;
     jas_image_cmpt_t cmpt = {0,};
@@ -110,7 +110,13 @@ int grib_jasper_encode(grib_context *c, j2k_encode_helper *helper) {
     image.maxcmpts_ = 1;
     image.clrspc_   = JAS_CLRSPC_SGRAY;
     image.cmprof_   = 0;
+
+#if JASPER_VERSION_MAJOR == 1
+    /* ECC-396: Support for Jasper 2.0
+     * Jasper version 1 had the 'inmem_' data member but
+     * version 2 removed it from the interface */
     image.inmem_    = 1;
+#endif
 
     cmpt.tlx_       = 0;
     cmpt.tly_       = 0;
@@ -134,7 +140,7 @@ int grib_jasper_encode(grib_context *c, j2k_encode_helper *helper) {
     }
 
     buflen = 0;
-    p       = encoded;
+    p      = encoded;
 
     for(i=0;i< no_values;i++){
         long blen = bits8;
@@ -155,8 +161,8 @@ int grib_jasper_encode(grib_context *c, j2k_encode_helper *helper) {
     if( helper->compression != 0)
     {
         /* Lossy */
-#ifndef GRIB_ON_WINDOWS
-        snprintf(opts,MAXOPTSSIZE,"mode=real\nrate=%f",1.0/helper->compression);
+#ifndef ECCODES_ON_WINDOWS
+        snprintf (opts, MAXOPTSSIZE, "mode=real\nrate=%f", 1.0/helper->compression);
 #else
         /* Microsoft Windows Visual Studio support */
         _snprintf(opts, MAXOPTSSIZE, "mode=real\nrate=%f", 1.0/helper->compression);
@@ -164,6 +170,7 @@ int grib_jasper_encode(grib_context *c, j2k_encode_helper *helper) {
     }
 
     Assert(cmpt.width_ * cmpt.height_ * cmpt.cps_ == buflen);
+    grib_context_log(c, GRIB_LOG_DEBUG, "grib_jasper_encode: Jasper version %s", jas_getversion());
 
     pcmpt           = &cmpt;
     image.cmpts_    = &pcmpt;
@@ -207,13 +214,15 @@ cleanup:
 
 #else
 
-int grib_jasper_decode(grib_context *c, unsigned char *buf, size_t *buflen, double *val, size_t *n_vals) {
+int grib_jasper_decode(grib_context *c, unsigned char *buf, size_t *buflen, double *val, size_t *n_vals)
+{
     grib_context_log(c, GRIB_LOG_ERROR,
             "grib_accessor_data_jpeg2000_packing: Jasper JPEG support not enabled.");
     return GRIB_NOT_IMPLEMENTED;
 }
 
-int grib_jasper_encode(grib_context *c, j2k_encode_helper *helper) {
+int grib_jasper_encode(grib_context *c, j2k_encode_helper *helper)
+{
     grib_context_log(c, GRIB_LOG_ERROR,
             "grib_accessor_data_jpeg2000_packing: Jasper JPEG support not enabled.");
     return GRIB_NOT_IMPLEMENTED;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2016 ECMWF.
+ * Copyright 2005-2017 ECMWF.
  *
  * This software is licensed under the terms of the Apache Licence Version 2.0
  * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -18,16 +18,16 @@
 #include "omp.h"
 #endif
 
-#define mask1(i)    (1u << i)
+#define mask1(i)    (1UL << i)
 #define test(n,i)    !!((n) & mask1(i))
 
 long GRIB_MASK = -1;       /* Mask of sword bits */
 
 # define VALUE(p,q,b) \
-        (((b)==max_nbits ? GRIB_MASK : ~(GRIB_MASK<<(b))) & ((p)>>(max_nbits-((q)+(b)))))
+ (((b)==max_nbits ? GRIB_MASK : ~(GRIB_MASK<<(b))) & ((p)>>(max_nbits-((q)+(b)))))
 
 # define MASKVALUE(q,b) \
-        ((b)==max_nbits ? GRIB_MASK : (~(GRIB_MASK<<(b))<<(max_nbits-((q)+(b)))))
+ ((b)==max_nbits ? GRIB_MASK : (~(GRIB_MASK<<(b))<<(max_nbits-((q)+(b)))))
 
 
 static unsigned long dmasks[] = { 0xFF, 0xFE, 0xFC, 0xF8, 0xF0, 0xE0, 0xC0, 0x80, 0x00, };
@@ -106,6 +106,13 @@ static void grib_set_bit_on( unsigned char* p, long* bitp){
     p +=  *bitp/8;
     *p |=  (1u << (7-((*bitp)%8)));
     (*bitp)++;
+}
+
+void grib_set_bits_on( unsigned char* p, long* bitp,long nbits){
+    int i;
+    for (i=0;i<nbits;i++) {
+      grib_set_bit_on(p,bitp);
+    }
 }
 
 static void grib_set_bit_off( unsigned char* p, long* bitp){

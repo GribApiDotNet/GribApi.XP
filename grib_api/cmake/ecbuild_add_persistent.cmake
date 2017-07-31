@@ -1,4 +1,4 @@
-# (C) Copyright 1996-2016 ECMWF.
+# (C) Copyright 1996-2017 ECMWF.
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -60,6 +60,8 @@ macro( ecbuild_add_persistent )
     ecbuild_critical("The call to ecbuild_add_persistent() doesn't specify the FILES.")
   endif()
 
+  ecbuild_debug( "ecbuild_add_persistent: adding persistent layer for ${_PAR_FILES}" )
+
   foreach( file ${_PAR_FILES} )
 
     get_filename_component( _file_dir    ${file} PATH )
@@ -71,7 +73,7 @@ macro( ecbuild_add_persistent )
       set( file ${_file_dir}/${_file_we} )
     endif()
 
-    # ecbuild_debug_var(file)
+    ecbuild_debug( "ecbuild_add_persistent: adding persistent layer for ${file}.b with namespace ${_PAR_NAMESPACE} from ${file}.h in ${CMAKE_CURRENT_BINARY_DIR}/${_file_dir}" )
 
     add_custom_command( OUTPUT  ${file}.b
                         COMMAND ${PERL_EXECUTABLE} ${sg_perl} ${CMAKE_CURRENT_SOURCE_DIR}/${file}.h

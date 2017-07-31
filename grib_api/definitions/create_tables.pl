@@ -59,7 +59,8 @@ sub create_parameter_tables {
 				%records=();
 				@keys=();
 			}
-            open($out,"> $tableFile") or die "unable to open $tableFile";
+			system("p4 edit $tableFile");
+         open($out,"> $tableFile") or die "unable to open $tableFile";
       }
       next if ($code !~ /^\s*[0-9]/);
 		if (!$units) { $units="-"; }
@@ -105,7 +106,8 @@ sub create_tables {
 				%records=();
 				@keys=();
 			}
-            open($out,"> $tableFile") or die "unable to open $tableFile";
+			system("p4 edit $tableFile");
+         open($out,"> $tableFile") or die "unable to open $tableFile";
         }
 		next if ($code =~ /-/) ; 
 		$records{$code}="$code $code $meaning";
@@ -116,3 +118,4 @@ sub create_tables {
 create_parameter_tables();
  
 #create_tables();
+

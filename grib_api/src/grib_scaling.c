@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2016 ECMWF.
+ * Copyright 2005-2017 ECMWF.
  *
  * This software is licensed under the terms of the Apache Licence Version 2.0
  * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -14,11 +14,12 @@
 
 #include "grib_api_internal.h"
 
-#define GRIB_EPSILON  10E-12
-
+/* Return n to the power of s */
 double grib_power(long s,long n)
 {
     double divisor = 1.0;
+    if (s==0) return 1.0;
+    if (s==1) return n;
     while(s < 0)
     {
         divisor /= n;
@@ -38,9 +39,18 @@ long grib_get_binary_scale_fact(double max, double min, long bpval,int *ret)
     double  zs     = 1;
     long    scale  = 0;
     const long last = 127; /* Depends on edition, should be parameter */
+    unsigned long maxint = 0;
 
-    unsigned long maxint = grib_power(bpval,2) - 1;
-    double dmaxint=(double)maxint;
+    /* See ECC-246
+      unsigned long maxint = grib_power(bpval,2) - 1;
+      double dmaxint=(double)maxint;
+    */
+    const double dmaxint = grib_power(bpval,2) - 1;
+    if (dmaxint >= ULONG_MAX) {
+        *ret = GRIB_OUT_OF_RANGE; /*overflow*/
+        return 0;
+    }
+    maxint = (unsigned long)dmaxint; /* Now it's safe to cast */
 
     *ret=0;
     if (bpval < 1) {

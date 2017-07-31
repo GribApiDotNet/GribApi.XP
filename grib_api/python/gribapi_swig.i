@@ -12,14 +12,10 @@
 #include "grib_interface.h"
 %}
 
-#if defined(NUMPY)
-
 %include "numpy.i"
 %init %{
 import_array();
 %}
-
-#endif
 
 /* Converts a PyFile instance to a stdio FILE* */
 %typemap(in) FILE* {
@@ -32,19 +28,25 @@ import_array();
 }
 
 %pointer_class(int, intp);
+%pointer_class(size_t, sizetp);
 %pointer_class(long, longp);
 %pointer_class(double, doublep);
 %array_functions(double, doubleArray);
 %array_functions(long, longArray);
 %array_functions(int, intArray);
+%array_functions(char*, stringArray);
 
 // creation
 int grib_c_new_from_file(FILE* f, int* INOUT, int headers_only);
+int grib_c_new_any_from_file(FILE* f, int headers_only, int* INOUT);
 int grib_c_new_bufr_from_file(FILE* f, int headers_only, int* INOUT);
 int grib_c_new_gts_from_file(FILE* f, int headers_only, int* INOUT);
+int grib_c_new_metar_from_file(FILE* f, int headers_only, int* INOUT);
 int grib_c_iterator_new(int* INPUT, int* OUTPUT, int* INPUT);
 int grib_c_keys_iterator_new(int* INPUT, int* OUTPUT, char* name_space);
-int grib_c_new_from_samples(int* INOUT, char* name);
+int codes_c_bufr_keys_iterator_new(int* INPUT, int* OUTPUT);
+int grib_c_grib_new_from_samples(int* INOUT, char* name);
+int grib_c_bufr_new_from_samples(int* INOUT, char* name);
 int grib_c_index_new_from_file(char* file, char* keys, int* OUTPUT);
 int grib_c_index_add_file(int* INPUT, char* file);
 int grib_c_new_from_index(int *INPUT, int *INOUT);
@@ -90,7 +92,9 @@ int grib_c_gribex_mode_off(void);
 
 // keys iterator
 int grib_c_keys_iterator_next(int* iterid);
+int codes_c_bufr_keys_iterator_next(int* iterid);
 int grib_c_keys_iterator_delete(int* iterid);
+int codes_c_bufr_keys_iterator_delete(int* iterid);
 int grib_c_skip_computed(int* iterid);
 int grib_c_skip_coded(int* iterid);
 int grib_c_skip_edition_specific(int* iterid);
@@ -98,9 +102,13 @@ int grib_c_skip_duplicates(int* iterid);
 int grib_c_skip_read_only(int* iterid);
 int grib_c_skip_function(int* iterid);
 int grib_c_keys_iterator_rewind(int* iterid);
+int codes_c_bufr_keys_iterator_rewind(int* iterid);
+int grib_c_bufr_copy_data(int* gid, int* INOUT);
+
 
 %cstring_bounded_output(char* name, 1024);
 int grib_c_keys_iterator_get_name(int* iterid, char* name, int len);
+int codes_c_bufr_keys_iterator_get_name(int* iterid, char* name, int len);
 // ---
 
 // indexing routines
@@ -123,6 +131,7 @@ int grib_c_iterator_next(int* iterid, double* OUTPUT, double* OUTPUT, double* OU
 // getting/setting key values
 %cstring_output_withsize(char* string_val, size_t* string_size)
 int grib_c_get_string(int* gid, char* key, char* string_val, size_t* string_size);
+int grib_c_get_string_array(int* gid, char* key, char** array_string_val, size_t* size);
 int grib_c_set_string(int* gid, char* key, char* sval, int len2);
 int grib_c_get_long(int* gid, char* key, long* OUTPUT);
 int grib_c_set_long(int* gid, char* key, long* INPUT);
@@ -139,8 +148,37 @@ int grib_c_set_key_vals(int* gid, char* keyvals);
 int grib_c_is_missing(int* gid, char* key, int* OUTPUT);
 int grib_c_is_defined(int* gid, char* key, int* OUTPUT);
 
-#if defined(NUMPY)
+// http://www.swig.org/Doc1.3/Python.html
+// This tells SWIG to treat char ** as a special case
+%typemap(in) char ** {
+  /* Check if is a list */
+  if (PyList_Check($input)) {
+    int size = PyList_Size($input);
+    int i = 0;
+    $1 = (char **) malloc((size+1)*sizeof(char *));
+    for (i = 0; i < size; i++) {
+      PyObject *o = PyList_GetItem($input,i);
+      if (PyString_Check(o))
+        $1[i] = PyString_AsString(PyList_GetItem($input,i));
+      else {
+        PyErr_SetString(PyExc_TypeError,"list must contain strings");
+        free($1);
+        return NULL;
+      }
+    }
+    $1[i] = 0;  /* Last entry set to NULL */
+  } else {
+    PyErr_SetString(PyExc_TypeError,"not a list");
+    return NULL;
+  }
+}
+// This cleans up the char ** array we malloc'd before the function call
+%typemap(freearg) char ** {
+  free((char *) $1);
+}
+int grib_c_set_string_array(int *gid, char *key, const char** val);
 
+// Numpy Support
 %apply (double* IN_ARRAY1, int DIM1) {(double* dpin_val, int dpin_val_dim1)};
 %apply (long* IN_ARRAY1, int DIM1) {(long* lpin_val, int lpin_val_dim1)};
 %apply (int* IN_ARRAY1, int DIM1) {(int* ipin_index, int ipin_index_dim1)};
@@ -148,9 +186,9 @@ int grib_c_is_defined(int* gid, char* key, int* OUTPUT);
 %apply (long* ARGOUT_ARRAY1, int DIM1) {(long* lpout_val, int lpout_val_dim1)};
 
 %inline %{
-void with_numpy() {
-    return;
-}
+//void with_numpy() {
+//    return;
+//}
 int grib_set_double_ndarray(int* gid, char* key, double* dpin_val, int dpin_val_dim1) {
     return grib_c_set_real8_array(gid,key,dpin_val,&dpin_val_dim1);
 }
@@ -173,7 +211,6 @@ int grib_get_double_ndelements(int* gid, char* key, int* ipin_index, int ipin_in
 %clear double* dpout_val, int dpout_val_dim1;
 %clear long* lpout_val, int lpout_val_dim1;
 
-#endif
 // ---
 
 // nearest
@@ -207,3 +244,8 @@ void no_fail_on_wrong_length(int flag);
 long grib_c_get_api_version();
 void grib_c_gts_header_on();
 void grib_c_gts_header_off();
+void grib_c_set_definitions_path(const char* path);
+void grib_c_set_samples_path(const char* path);
+
+
+

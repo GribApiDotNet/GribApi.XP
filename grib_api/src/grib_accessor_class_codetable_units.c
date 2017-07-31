@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2016 ECMWF.
+ * Copyright 2005-2017 ECMWF.
  *
  * This software is licensed under the terms of the Apache Licence Version 2.0
  * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -69,13 +69,15 @@ static grib_accessor_class _grib_accessor_class_codetable_units = {
     &get_native_type,            /* get native type               */
     0,                /* get sub_section                */
     0,               /* grib_pack procedures long      */
-    0,               /* grib_pack procedures long      */
+    0,                 /* grib_pack procedures long      */
     0,                  /* grib_pack procedures long      */
     0,                /* grib_unpack procedures long    */
     0,                /* grib_pack procedures double    */
     0,              /* grib_unpack procedures double  */
     0,                /* grib_pack procedures string    */
     &unpack_string,              /* grib_unpack procedures string  */
+    0,          /* grib_pack array procedures string    */
+    0,        /* grib_unpack array procedures string  */
     0,                 /* grib_pack procedures bytes     */
     0,               /* grib_unpack procedures bytes   */
     0,            /* pack_expression */
@@ -88,7 +90,8 @@ static grib_accessor_class _grib_accessor_class_codetable_units = {
     0,                    /* compare vs. another accessor   */
     0,     /* unpack only ith value          */
     0,     /* unpack a subarray         */
-    0,             		/* clear          */
+    0,              		/* clear          */
+    0,               		/* clone accessor          */
 };
 
 
@@ -111,6 +114,8 @@ static void init_class(grib_accessor_class* c)
 	c->pack_double	=	(*(c->super))->pack_double;
 	c->unpack_double	=	(*(c->super))->unpack_double;
 	c->pack_string	=	(*(c->super))->pack_string;
+	c->pack_string_array	=	(*(c->super))->pack_string_array;
+	c->unpack_string_array	=	(*(c->super))->unpack_string_array;
 	c->pack_bytes	=	(*(c->super))->pack_bytes;
 	c->unpack_bytes	=	(*(c->super))->unpack_bytes;
 	c->pack_expression	=	(*(c->super))->pack_expression;
@@ -124,6 +129,7 @@ static void init_class(grib_accessor_class* c)
 	c->unpack_double_element	=	(*(c->super))->unpack_double_element;
 	c->unpack_double_subarray	=	(*(c->super))->unpack_double_subarray;
 	c->clear	=	(*(c->super))->clear;
+	c->make_clone	=	(*(c->super))->make_clone;
 }
 
 /* END_CLASS_IMP */
@@ -146,7 +152,7 @@ typedef struct grib_accessor_codetable {
 static void init(grib_accessor* a, const long len, grib_arguments* params) {
 	grib_accessor_codetable_units* self = (grib_accessor_codetable_units*)a;
 	int n=0;
-	self->codetable = grib_arguments_get_name(a->parent->h,params,n++);
+	self->codetable = grib_arguments_get_name(grib_handle_of_accessor(a),params,n++);
 	a->length=0;
 	a->flags |= GRIB_ACCESSOR_FLAG_READ_ONLY;
 }
@@ -166,7 +172,7 @@ static int unpack_string (grib_accessor* a, char* buffer, size_t *len)
   int err = GRIB_SUCCESS;
   char tmp[1024];
   size_t l = 1024;
-  grib_accessor_codetable* ca=(grib_accessor_codetable*)grib_find_accessor(a->parent->h,self->codetable);
+  grib_accessor_codetable* ca=(grib_accessor_codetable*)grib_find_accessor(grib_handle_of_accessor(a),self->codetable);
 
   if( (err = grib_unpack_long((grib_accessor*)ca,&value,&size)) != GRIB_SUCCESS)
     return err;

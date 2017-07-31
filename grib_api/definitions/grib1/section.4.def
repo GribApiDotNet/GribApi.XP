@@ -1,4 +1,4 @@
-# Copyright 2005-2016 ECMWF.
+# Copyright 2005-2017 ECMWF.
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -15,7 +15,7 @@ position offsetSection4;
 
 # Due to a trick done by GRIBEX to support large GRIBs, we need a special treatment
 # of the message length and of the section4 lenth, so instead of
-# length[3] section4Length                     ;
+# section_length[3] section4Length                     ;
 # we get:
 g1_section4_length[3] section4Length(totalLength);
 
@@ -156,6 +156,7 @@ alias numberOfBitsContainingEachPackedValue = bitsPerValue;
         referenceValue,
         binaryScaleFactor,
         decimalScaleFactor,
+        optimizeScaleFactor,
         halfByte,
 		packingType,
 		grid_ieee,precision,

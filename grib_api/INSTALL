@@ -1,4 +1,4 @@
-How to build and install GRIB API library/tools
+How to build and install ecCodes library/tools
 ================================================
 
 Building and installation has been tested on several platforms and with several compilers.
@@ -14,17 +14,19 @@ Installation using CMake
 This is the recommended method of installation.
 However it requires that cmake be installed on your system.
 
-1. Download GRIB API from https://software.ecmwf.int/wiki/display/GRIB/Releases
+1. Download ecCodes from https://software.ecmwf.int/wiki/display/ECC/Releases
 
 2. Unpack distribution:
-   > tar -xzf grib_api-x.y.z-Source.tar.gz
+   > tar -xzf eccodes-x.y.z-Source.tar.gz
 
-3. Create a separate directory for the build:
+3. Create a separate directory where to build ecCodes:
    > mkdir build
    > cd build
 
-4. Run cmake pointing to the source and specify the installation location
-   > cmake  ../grib_api-x.y.z-Source -DCMAKE_INSTALL_PREFIX=/path/to/where/you/install/gribapi
+4. Run cmake pointing to the source and specify the installation location:
+   > cmake  ../eccodes-x.y.z-Source -DCMAKE_INSTALL_PREFIX=/path/to/where/you/install/eccodes
+
+   It is recommended that you install into a clean directory
 
 5. Compile, test and install:
    > make
@@ -33,36 +35,13 @@ However it requires that cmake be installed on your system.
 
 You can also pass options to the cmake command above. Some typical examples are:
 
- -DBUILD_SHARED_LIBS=OFF         Install static libraries, not shared
- -DENABLE_JPG=ON                 Enable JPEG encoding/decoding
+ -DENABLE_NETCDF=ON              Enable GRIB to netCDF conversion
+ -DENABLE_ECCODES_THREADS=ON     Enable POSIX threads
+ -DENABLE_JPG=ON                 Enable JPEG encoding/decoding (for GRIB packing)
  -DCMAKE_Fortran_COMPILER=pgf90  Set Fortran compiler to Portland Group F90 compiler
  -DCMAKE_C_FLAGS="-O2 -Wall"     Prepend the specified flags at the front
                                  of the compilation command for C source files
 
 For more details, please see:
-https://software.ecmwf.int/wiki/display/GRIB/GRIB+API+CMake+installation
+https://software.ecmwf.int/wiki/display/ECC/ecCodes+installation
 
-
-Installation using Autotools
-----------------------------
-GRIB API also supports installation via the "configure" script (Autotools).
-However this feature is deprecated and may not be supported in the future.
-We would recommend all users to switch to CMake.
-
-1. Download GRIB API from https://software.ecmwf.int/wiki/display/GRIB/Releases
-
-2. Unpack distribution:
-   > tar -xzf grib_api-x.y.z-Source.tar.gz
-
-3. Run the configure script in the directory created:
-   > cd grib_api-x.y.z-Source
-   > ./configure --prefix=/path/to/where/you/install/gribapi
-
-5. make, check and install:
-
-   > make
-   > make check
-   > make install
-
-For more details, please see:
-https://software.ecmwf.int/wiki/display/GRIB/GRIB+API+Autotools+installation

@@ -1,4 +1,4 @@
-! Copyright 2005-2016 ECMWF.
+! Copyright 2005-2017 ECMWF.
 !
 ! This software is licensed under the terms of the Apache Licence Version 2.0
 ! which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -14,7 +14,7 @@
   !> exit with an error message.\n Otherwise the error message can be
   !> gathered with @ref grib_get_error_string.
   !>
-  !> \b Examples: \ref index.f90 "index.f90"
+  !> \b Examples: \ref grib_index.f90 "grib_index.f90"
   !>
   !> @param  indexid   id of an index created from a file. The index must have been created with the key in argument.
   !> @param key        key for wich the values are returned
@@ -34,15 +34,15 @@
   !> exit with an error message.\n Otherwise the error message can be
   !> gathered with @ref grib_get_error_string.
   !>
-  !> \b Examples: \ref index.f90 "index.f90"
+  !> \b Examples: \ref grib_index.f90 "grib_index.f90"
   !>
   !> @param  indexid     id of an index created from a file. The index must have been created with the key in argument.
   !> @param key        key for which the number of values is computed
   !> @param size       number of distinct values of the key in the index
   !> @param status      GRIB_SUCCESS if OK, integer value on error
   interface grib_index_get_size
-  module procedure  grib_index_get_size_int, &
-                    grib_index_get_size_long
+    module procedure grib_index_get_size_int, &
+                     grib_index_get_size_long
   end interface grib_index_get_size
                                  
   !> Select the message subset with key==value. 
@@ -52,7 +52,7 @@
   !> exit with an error message.\n Otherwise the error message can be
   !> gathered with @ref grib_get_error_string.
   !>
-  !> \b Examples: \ref index.f90 "index.f90"
+  !> \b Examples: \ref grib_index.f90 "grib_index.f90"
   !>
   !> @param  indexid   id of an index created from a file. The index must have been created with the key in argument.
   !> @param key        key to be selected
@@ -85,7 +85,7 @@
   !> exit with an error message.\n Otherwise the error message can be
   !> gathered with @ref grib_get_error_string.
   !>
-  !> \b Examples: \ref get.f90 "get.f90", \ref print_data.f90 "print_data.f90"
+  !> \b Examples: \ref grib_get_keys.f90 "grib_get_keys.f90", \ref grib_print_data.f90 "grib_print_data.f90"
   !>
   !> @see grib_new_from_file, grib_release, grib_set
   !>
@@ -137,7 +137,7 @@
   !> exit with an error message.\n Otherwise the error message can be
   !> gathered with @ref grib_get_error_string.
   !>
-  !> \b Examples: \ref set.f90 "set.f90"
+  !> \b Examples: \ref grib_set_keys.f90 "grib_set_keys.f90"
   !>
   !> @see grib_new_from_file, grib_release, grib_get
   !>
@@ -162,4 +162,3 @@
     module procedure grib_set_force_real4_array, &
                      grib_set_force_real8_array
   end interface grib_set_force
-

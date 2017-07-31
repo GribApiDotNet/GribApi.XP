@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2016 ECMWF.
+ * Copyright 2005-2017 ECMWF.
  *
  * This software is licensed under the terms of the Apache Licence Version 2.0
  * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -75,13 +75,15 @@ static grib_accessor_class _grib_accessor_class_second_order_bits_per_value = {
     0,            /* get native type               */
     0,                /* get sub_section                */
     0,               /* grib_pack procedures long      */
-    0,               /* grib_pack procedures long      */
+    0,                 /* grib_pack procedures long      */
     &pack_long,                  /* grib_pack procedures long      */
     &unpack_long,                /* grib_unpack procedures long    */
     0,                /* grib_pack procedures double    */
     0,              /* grib_unpack procedures double  */
     0,                /* grib_pack procedures string    */
     0,              /* grib_unpack procedures string  */
+    0,          /* grib_pack array procedures string    */
+    0,        /* grib_unpack array procedures string  */
     0,                 /* grib_pack procedures bytes     */
     0,               /* grib_unpack procedures bytes   */
     0,            /* pack_expression */
@@ -94,7 +96,8 @@ static grib_accessor_class _grib_accessor_class_second_order_bits_per_value = {
     0,                    /* compare vs. another accessor   */
     0,     /* unpack only ith value          */
     0,     /* unpack a subarray         */
-    0,             		/* clear          */
+    0,              		/* clear          */
+    0,               		/* clone accessor          */
 };
 
 
@@ -117,6 +120,8 @@ static void init_class(grib_accessor_class* c)
 	c->unpack_double	=	(*(c->super))->unpack_double;
 	c->pack_string	=	(*(c->super))->pack_string;
 	c->unpack_string	=	(*(c->super))->unpack_string;
+	c->pack_string_array	=	(*(c->super))->pack_string_array;
+	c->unpack_string_array	=	(*(c->super))->unpack_string_array;
 	c->pack_bytes	=	(*(c->super))->pack_bytes;
 	c->unpack_bytes	=	(*(c->super))->unpack_bytes;
 	c->pack_expression	=	(*(c->super))->pack_expression;
@@ -130,10 +135,12 @@ static void init_class(grib_accessor_class* c)
 	c->unpack_double_element	=	(*(c->super))->unpack_double_element;
 	c->unpack_double_subarray	=	(*(c->super))->unpack_double_subarray;
 	c->clear	=	(*(c->super))->clear;
+	c->make_clone	=	(*(c->super))->make_clone;
 }
 
 /* END_CLASS_IMP */
 
+/*
 static unsigned long nbits[32]={
         0x1, 0x2, 0x4, 0x8, 0x10, 0x20,
         0x40, 0x80, 0x100, 0x200, 0x400, 0x800,
@@ -142,13 +149,32 @@ static unsigned long nbits[32]={
         0x1000000, 0x2000000, 0x4000000, 0x8000000, 0x10000000, 0x20000000,
         0x40000000, 0x80000000
 };
+*/
+static unsigned long nbits[64]={
+        0x1,                 0x2,                 0x4,                 0x8,
+        0x10,                0x20,                0x40,                0x80,
+        0x100,               0x200,               0x400,               0x800,
+        0x1000,              0x2000,              0x4000,              0x8000,
+        0x10000,             0x20000,             0x40000,             0x80000,
+        0x100000,            0x200000,            0x400000,            0x800000,
+        0x1000000,           0x2000000,           0x4000000,           0x8000000,
+        0x10000000,          0x20000000,          0x40000000,          0x80000000,
+        0x100000000,         0x200000000,         0x400000000,         0x800000000,
+        0x1000000000,        0x2000000000,        0x4000000000,        0x8000000000,
+        0x10000000000,       0x20000000000,       0x40000000000,       0x80000000000,
+        0x100000000000,      0x200000000000,      0x400000000000,      0x800000000000,
+        0x1000000000000,     0x2000000000000,     0x4000000000000,     0x8000000000000,
+        0x10000000000000,    0x20000000000000,    0x40000000000000,    0x80000000000000,
+        0x100000000000000,   0x200000000000000,   0x400000000000000,   0x800000000000000,
+        0x1000000000000000,  0x2000000000000000,  0x4000000000000000,  0x8000000000000000
+};
 
 static int number_of_bits(unsigned long x, long* result)
 {
     unsigned long *n=nbits;
     const int count = sizeof(nbits)/sizeof(nbits[0]);
     *result=0;
-    while (x >= *n) {
+    while (x>=*n) {
         n++;
         (*result)++;
         if (*result >= count) {
@@ -162,9 +188,9 @@ static void init(grib_accessor* a,const long l, grib_arguments* c)
 {
     int n=0;
     grib_accessor_second_order_bits_per_value* self = (grib_accessor_second_order_bits_per_value*)a;
-    self->values = grib_arguments_get_name(a->parent->h,c,n++);
-    self->binaryScaleFactor = grib_arguments_get_name(a->parent->h,c,n++);
-    self->decimalScaleFactor = grib_arguments_get_name(a->parent->h,c,n++);
+    self->values = grib_arguments_get_name(grib_handle_of_accessor(a),c,n++);
+    self->binaryScaleFactor = grib_arguments_get_name(grib_handle_of_accessor(a),c,n++);
+    self->decimalScaleFactor = grib_arguments_get_name(grib_handle_of_accessor(a),c,n++);
     self->bitsPerValue=0;
 
     a->length=0;
@@ -179,7 +205,7 @@ static int pack_long(grib_accessor* a, const long* val,size_t *len)
     return 0;
 }
 
-static int  unpack_long(grib_accessor* a, long* val, size_t *len)
+static int unpack_long(grib_accessor* a, long* val, size_t *len)
 {
     int ret=GRIB_SUCCESS;
     size_t size=0;
@@ -194,31 +220,31 @@ static int  unpack_long(grib_accessor* a, long* val, size_t *len)
         return GRIB_SUCCESS;
     }
 
-    if((ret = grib_get_size(a->parent->h, self->values,&size)) != GRIB_SUCCESS) {
+    if((ret = grib_get_size(grib_handle_of_accessor(a), self->values,&size)) != GRIB_SUCCESS) {
         *val=self->bitsPerValue;
         return GRIB_SUCCESS;
     }
 
-    if((ret = grib_get_long(a->parent->h, self->binaryScaleFactor,&binaryScaleFactor)) != GRIB_SUCCESS)
+    if((ret = grib_get_long(grib_handle_of_accessor(a), self->binaryScaleFactor,&binaryScaleFactor)) != GRIB_SUCCESS)
         return ret;
 
-    if((ret = grib_get_long_internal(a->parent->h, self->decimalScaleFactor,&decimalScaleFactor)) != GRIB_SUCCESS)
+    if((ret = grib_get_long_internal(grib_handle_of_accessor(a), self->decimalScaleFactor,&decimalScaleFactor)) != GRIB_SUCCESS)
         return ret;
 
-    values=(double*)grib_context_malloc_clear(a->parent->h->context,sizeof(double)*size);
+    values=(double*)grib_context_malloc_clear(a->context,sizeof(double)*size);
     if (!values) {
-        grib_context_log(a->parent->h->context,GRIB_LOG_FATAL,"%s unable to allocate %ld bytes",
+        grib_context_log(a->context,GRIB_LOG_FATAL,"%s unable to allocate %ld bytes",
                 a->name,(long)size);
         return GRIB_OUT_OF_MEMORY;
     }
-    if((ret = grib_get_double_array_internal(a->parent->h, self->values,values,&size)) != GRIB_SUCCESS)
+    if((ret = grib_get_double_array_internal(grib_handle_of_accessor(a), self->values,values,&size)) != GRIB_SUCCESS)
         return ret;
 
     max=values[0];
     min=max;
     for (i=1;i<size;i++) {
-        if (max<values[i]) max=values[i];
-        if (min>values[i]) min=values[i];
+        if      (max<values[i]) max=values[i];
+        else if (min>values[i]) min=values[i];
     }
 
     d=grib_power(decimalScaleFactor,10);
@@ -231,7 +257,7 @@ static int  unpack_long(grib_accessor* a, long* val, size_t *len)
         return ret;
     *val=self->bitsPerValue;
 
-    grib_context_free(a->parent->h->context,values);
+    grib_context_free(a->context,values);
 
     return ret;
 }

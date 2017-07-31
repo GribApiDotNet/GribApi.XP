@@ -111,6 +111,7 @@ GRIB_INVALID_ORDERBY = _gribapi_swig.GRIB_INVALID_ORDERBY
 GRIB_MISSING_KEY = _gribapi_swig.GRIB_MISSING_KEY
 GRIB_OUT_OF_AREA = _gribapi_swig.GRIB_OUT_OF_AREA
 GRIB_CONCEPT_NO_MATCH = _gribapi_swig.GRIB_CONCEPT_NO_MATCH
+GRIB_HASH_ARRAY_NO_MATCH = _gribapi_swig.GRIB_HASH_ARRAY_NO_MATCH
 GRIB_NO_DEFINITIONS = _gribapi_swig.GRIB_NO_DEFINITIONS
 GRIB_WRONG_TYPE = _gribapi_swig.GRIB_WRONG_TYPE
 GRIB_END = _gribapi_swig.GRIB_END
@@ -130,6 +131,16 @@ GRIB_INVALID_BPV = _gribapi_swig.GRIB_INVALID_BPV
 GRIB_DIFFERENT_EDITION = _gribapi_swig.GRIB_DIFFERENT_EDITION
 GRIB_VALUE_DIFFERENT = _gribapi_swig.GRIB_VALUE_DIFFERENT
 GRIB_INVALID_KEY_VALUE = _gribapi_swig.GRIB_INVALID_KEY_VALUE
+GRIB_STRING_TOO_SMALL = _gribapi_swig.GRIB_STRING_TOO_SMALL
+GRIB_WRONG_CONVERSION = _gribapi_swig.GRIB_WRONG_CONVERSION
+GRIB_MISSING_BUFR_ENTRY = _gribapi_swig.GRIB_MISSING_BUFR_ENTRY
+GRIB_NULL_POINTER = _gribapi_swig.GRIB_NULL_POINTER
+GRIB_ATTRIBUTE_CLASH = _gribapi_swig.GRIB_ATTRIBUTE_CLASH
+GRIB_TOO_MANY_ATTRIBUTES = _gribapi_swig.GRIB_TOO_MANY_ATTRIBUTES
+GRIB_ATTRIBUTE_NOT_FOUND = _gribapi_swig.GRIB_ATTRIBUTE_NOT_FOUND
+GRIB_UNSUPPORTED_EDITION = _gribapi_swig.GRIB_UNSUPPORTED_EDITION
+GRIB_OUT_OF_RANGE = _gribapi_swig.GRIB_OUT_OF_RANGE
+GRIB_WRONG_BITMAP_SIZE = _gribapi_swig.GRIB_WRONG_BITMAP_SIZE
 class intp(_object):
     __swig_setmethods__ = {}
     __setattr__ = lambda self, name, value: _swig_setattr(self, intp, name, value)
@@ -153,6 +164,30 @@ intp_swigregister(intp)
 def intp_frompointer(*args):
   return _gribapi_swig.intp_frompointer(*args)
 intp_frompointer = _gribapi_swig.intp_frompointer
+
+class sizetp(_object):
+    __swig_setmethods__ = {}
+    __setattr__ = lambda self, name, value: _swig_setattr(self, sizetp, name, value)
+    __swig_getmethods__ = {}
+    __getattr__ = lambda self, name: _swig_getattr(self, sizetp, name)
+    __repr__ = _swig_repr
+    def __init__(self): 
+        this = _gribapi_swig.new_sizetp()
+        try: self.this.append(this)
+        except: self.this = this
+    __swig_destroy__ = _gribapi_swig.delete_sizetp
+    __del__ = lambda self : None;
+    def assign(self, *args): return _gribapi_swig.sizetp_assign(self, *args)
+    def value(self): return _gribapi_swig.sizetp_value(self)
+    def cast(self): return _gribapi_swig.sizetp_cast(self)
+    __swig_getmethods__["frompointer"] = lambda x: _gribapi_swig.sizetp_frompointer
+    if _newclass:frompointer = staticmethod(_gribapi_swig.sizetp_frompointer)
+sizetp_swigregister = _gribapi_swig.sizetp_swigregister
+sizetp_swigregister(sizetp)
+
+def sizetp_frompointer(*args):
+  return _gribapi_swig.sizetp_frompointer(*args)
+sizetp_frompointer = _gribapi_swig.sizetp_frompointer
 
 class longp(_object):
     __swig_setmethods__ = {}
@@ -251,9 +286,29 @@ def intArray_setitem(*args):
   return _gribapi_swig.intArray_setitem(*args)
 intArray_setitem = _gribapi_swig.intArray_setitem
 
+def new_stringArray(*args):
+  return _gribapi_swig.new_stringArray(*args)
+new_stringArray = _gribapi_swig.new_stringArray
+
+def delete_stringArray(*args):
+  return _gribapi_swig.delete_stringArray(*args)
+delete_stringArray = _gribapi_swig.delete_stringArray
+
+def stringArray_getitem(*args):
+  return _gribapi_swig.stringArray_getitem(*args)
+stringArray_getitem = _gribapi_swig.stringArray_getitem
+
+def stringArray_setitem(*args):
+  return _gribapi_swig.stringArray_setitem(*args)
+stringArray_setitem = _gribapi_swig.stringArray_setitem
+
 def grib_c_new_from_file(*args):
   return _gribapi_swig.grib_c_new_from_file(*args)
 grib_c_new_from_file = _gribapi_swig.grib_c_new_from_file
+
+def grib_c_new_any_from_file(*args):
+  return _gribapi_swig.grib_c_new_any_from_file(*args)
+grib_c_new_any_from_file = _gribapi_swig.grib_c_new_any_from_file
 
 def grib_c_new_bufr_from_file(*args):
   return _gribapi_swig.grib_c_new_bufr_from_file(*args)
@@ -263,6 +318,10 @@ def grib_c_new_gts_from_file(*args):
   return _gribapi_swig.grib_c_new_gts_from_file(*args)
 grib_c_new_gts_from_file = _gribapi_swig.grib_c_new_gts_from_file
 
+def grib_c_new_metar_from_file(*args):
+  return _gribapi_swig.grib_c_new_metar_from_file(*args)
+grib_c_new_metar_from_file = _gribapi_swig.grib_c_new_metar_from_file
+
 def grib_c_iterator_new(*args):
   return _gribapi_swig.grib_c_iterator_new(*args)
 grib_c_iterator_new = _gribapi_swig.grib_c_iterator_new
@@ -271,9 +330,17 @@ def grib_c_keys_iterator_new(*args):
   return _gribapi_swig.grib_c_keys_iterator_new(*args)
 grib_c_keys_iterator_new = _gribapi_swig.grib_c_keys_iterator_new
 
-def grib_c_new_from_samples(*args):
-  return _gribapi_swig.grib_c_new_from_samples(*args)
-grib_c_new_from_samples = _gribapi_swig.grib_c_new_from_samples
+def codes_c_bufr_keys_iterator_new(*args):
+  return _gribapi_swig.codes_c_bufr_keys_iterator_new(*args)
+codes_c_bufr_keys_iterator_new = _gribapi_swig.codes_c_bufr_keys_iterator_new
+
+def grib_c_grib_new_from_samples(*args):
+  return _gribapi_swig.grib_c_grib_new_from_samples(*args)
+grib_c_grib_new_from_samples = _gribapi_swig.grib_c_grib_new_from_samples
+
+def grib_c_bufr_new_from_samples(*args):
+  return _gribapi_swig.grib_c_bufr_new_from_samples(*args)
+grib_c_bufr_new_from_samples = _gribapi_swig.grib_c_bufr_new_from_samples
 
 def grib_c_index_new_from_file(*args):
   return _gribapi_swig.grib_c_index_new_from_file(*args)
@@ -375,9 +442,17 @@ def grib_c_keys_iterator_next(*args):
   return _gribapi_swig.grib_c_keys_iterator_next(*args)
 grib_c_keys_iterator_next = _gribapi_swig.grib_c_keys_iterator_next
 
+def codes_c_bufr_keys_iterator_next(*args):
+  return _gribapi_swig.codes_c_bufr_keys_iterator_next(*args)
+codes_c_bufr_keys_iterator_next = _gribapi_swig.codes_c_bufr_keys_iterator_next
+
 def grib_c_keys_iterator_delete(*args):
   return _gribapi_swig.grib_c_keys_iterator_delete(*args)
 grib_c_keys_iterator_delete = _gribapi_swig.grib_c_keys_iterator_delete
+
+def codes_c_bufr_keys_iterator_delete(*args):
+  return _gribapi_swig.codes_c_bufr_keys_iterator_delete(*args)
+codes_c_bufr_keys_iterator_delete = _gribapi_swig.codes_c_bufr_keys_iterator_delete
 
 def grib_c_skip_computed(*args):
   return _gribapi_swig.grib_c_skip_computed(*args)
@@ -407,9 +482,21 @@ def grib_c_keys_iterator_rewind(*args):
   return _gribapi_swig.grib_c_keys_iterator_rewind(*args)
 grib_c_keys_iterator_rewind = _gribapi_swig.grib_c_keys_iterator_rewind
 
+def codes_c_bufr_keys_iterator_rewind(*args):
+  return _gribapi_swig.codes_c_bufr_keys_iterator_rewind(*args)
+codes_c_bufr_keys_iterator_rewind = _gribapi_swig.codes_c_bufr_keys_iterator_rewind
+
+def grib_c_bufr_copy_data(*args):
+  return _gribapi_swig.grib_c_bufr_copy_data(*args)
+grib_c_bufr_copy_data = _gribapi_swig.grib_c_bufr_copy_data
+
 def grib_c_keys_iterator_get_name(*args):
   return _gribapi_swig.grib_c_keys_iterator_get_name(*args)
 grib_c_keys_iterator_get_name = _gribapi_swig.grib_c_keys_iterator_get_name
+
+def codes_c_bufr_keys_iterator_get_name(*args):
+  return _gribapi_swig.codes_c_bufr_keys_iterator_get_name(*args)
+codes_c_bufr_keys_iterator_get_name = _gribapi_swig.codes_c_bufr_keys_iterator_get_name
 
 def grib_c_index_get_size_long(*args):
   return _gribapi_swig.grib_c_index_get_size_long(*args)
@@ -454,6 +541,10 @@ grib_c_iterator_next = _gribapi_swig.grib_c_iterator_next
 def grib_c_get_string(*args):
   return _gribapi_swig.grib_c_get_string(*args)
 grib_c_get_string = _gribapi_swig.grib_c_get_string
+
+def grib_c_get_string_array(*args):
+  return _gribapi_swig.grib_c_get_string_array(*args)
+grib_c_get_string_array = _gribapi_swig.grib_c_get_string_array
 
 def grib_c_set_string(*args):
   return _gribapi_swig.grib_c_set_string(*args)
@@ -515,9 +606,9 @@ def grib_c_is_defined(*args):
   return _gribapi_swig.grib_c_is_defined(*args)
 grib_c_is_defined = _gribapi_swig.grib_c_is_defined
 
-def with_numpy():
-  return _gribapi_swig.with_numpy()
-with_numpy = _gribapi_swig.with_numpy
+def grib_c_set_string_array(*args):
+  return _gribapi_swig.grib_c_set_string_array(*args)
+grib_c_set_string_array = _gribapi_swig.grib_c_set_string_array
 
 def grib_set_double_ndarray(*args):
   return _gribapi_swig.grib_set_double_ndarray(*args)
@@ -570,5 +661,13 @@ grib_c_gts_header_on = _gribapi_swig.grib_c_gts_header_on
 def grib_c_gts_header_off():
   return _gribapi_swig.grib_c_gts_header_off()
 grib_c_gts_header_off = _gribapi_swig.grib_c_gts_header_off
+
+def grib_c_set_definitions_path(*args):
+  return _gribapi_swig.grib_c_set_definitions_path(*args)
+grib_c_set_definitions_path = _gribapi_swig.grib_c_set_definitions_path
+
+def grib_c_set_samples_path(*args):
+  return _gribapi_swig.grib_c_set_samples_path(*args)
+grib_c_set_samples_path = _gribapi_swig.grib_c_set_samples_path
 
 

@@ -1,8 +1,8 @@
-! Copyright 2005-2016 ECMWF.
+! Copyright 2005-2017 ECMWF.
 !
 ! This software is licensed under the terms of the Apache Licence Version 2.0
 ! which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
-! 
+!
 ! In applying this licence, ECMWF does not waive the privileges and immunities granted to it by
 ! virtue of its status as an intergovernmental organisation nor does it submit to any jurisdiction.
 !
@@ -13,53 +13,41 @@
 !
 !
 program print_data_fortran
-use grib_api
+use eccodes
 implicit none
 integer            :: ifile
-integer            :: iret
 integer            :: igrib
 integer            :: i
 real(kind=8), dimension(:), allocatable       :: values
-integer(kind=4)    :: numberOfValues
 real(kind=8)       :: average
 real(kind=8)       :: max
 real(kind=8)       :: min
-character(len=256) :: error
 
-call grib_open_file(ifile, &
+  call codes_open_file(ifile, &
            '../../data/constant_field.grib1','r')
 
-!     a new grib message is loaded from file
-!     igrib is the grib id to be used in subsequent calls
-      call grib_new_from_file(ifile,igrib)
+  ! A new grib message is loaded from file
+  ! igrib is the grib id to be used in subsequent calls
+  call codes_grib_new_from_file(ifile,igrib)
 
+  call codes_get(igrib,'values',values)
 
-!     get the size of the values array
-      call grib_get(igrib,'numberOfValues',numberOfValues)
-
-!     get data values
-  print*, 'number of values ', numberOfValues
-  allocate(values(numberOfValues), stat=iret)
-
-  call grib_get(igrib,'values',values)
-
-  do i=1,numberOfValues
+  do i=1,size(values)
     write(*,*)'  ',i,values(i)
   enddo
 
+  write(*,*)size(values),' values found '
 
-  write(*,*)numberOfValues,' values found '
-
-  call grib_get(igrib,'max',max)
+  call codes_get(igrib,'max',max)
   write(*,*) 'max=',max
-  call grib_get(igrib,'min',min)
+  call codes_get(igrib,'min',min)
   write(*,*) 'min=',min
-  call grib_get(igrib,'average',average)
+  call codes_get(igrib,'average',average)
   write(*,*) 'average=',average
 
-  call grib_release(igrib)
+  call codes_release(igrib)
 
-  call grib_close_file(ifile)
+  call codes_close_file(ifile)
 
   deallocate(values)
 end program print_data_fortran

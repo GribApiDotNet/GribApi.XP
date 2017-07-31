@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2016 ECMWF.
+ * Copyright 2005-2017 ECMWF.
  *
  * This software is licensed under the terms of the Apache Licence Version 2.0
  * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -18,7 +18,7 @@
 
    START_CLASS_DEF
    CLASS      = action
-   IMPLEMENTS = dump;destroy;xref;execute;compile
+   IMPLEMENTS = dump;destroy;xref;execute
    END_CLASS_DEF
 
  */
@@ -36,7 +36,6 @@ or edit "action.class" and rerun ./make_class.pl
 static void init_class      (grib_action_class*);
 static void dump            (grib_action* d, FILE*,int);
 static void xref            (grib_action* d, FILE* f,const char* path);
-static void compile         (grib_action* a, grib_compiler* compiler);
 static void destroy         (grib_context*,grib_action*);
 static int execute(grib_action* a,grib_handle* h);
 
@@ -64,7 +63,6 @@ static grib_action_class _grib_action_class_noop = {
     0,                            /* notify_change */
     0,                            /* reparse */
     &execute,                            /* execute */
-    &compile,                            /* compile */
 };
 
 grib_action_class* grib_action_class_noop = &_grib_action_class_noop;
@@ -76,41 +74,32 @@ static void init_class(grib_action_class* c)
 
 grib_action* grib_action_create_noop( grib_context* context,const char* fname)
 {
-  char buf[1024];
+    char buf[1024];
 
-  grib_action_noop* a ;
-  grib_action_class* c   = grib_action_class_noop;
-  grib_action* act       = (grib_action*)grib_context_malloc_clear_persistent(context,c->size);
-  act->op                = grib_context_strdup_persistent(context,"section");
+    grib_action_noop* a ;
+    grib_action_class* c   = grib_action_class_noop;
+    grib_action* act       = (grib_action*)grib_context_malloc_clear_persistent(context,c->size);
+    act->op                = grib_context_strdup_persistent(context,"section");
 
-  act->cclass       = c;
-  a                 = (grib_action_noop*)act;
-  act->context      = context;
+    act->cclass       = c;
+    a                 = (grib_action_noop*)act;
+    act->context      = context;
 
-  sprintf(buf,"_noop%p",(void*)a);
+    sprintf(buf,"_noop%p",(void*)a);
 
-  act->name      = grib_context_strdup_persistent(context,buf);
+    act->name      = grib_context_strdup_persistent(context,buf);
 
-  return act;
-}
-
-static void compile(grib_action* act, grib_compiler *compiler)
-{
-    fprintf(compiler->out,"%s = grib_action_create_noop(ctx,",compiler->var);
-    fprintf(compiler->out,"\"%s\"",act->name);
-    fprintf(compiler->out,");");
-    fprintf(compiler->out,"\n");
+    return act;
 }
 
 static void dump(grib_action* act, FILE* f, int lvl)
 {
 }
 
-
 static void destroy(grib_context* context,grib_action* act)
 {
-  grib_context_free_persistent(context, act->name);
-  grib_context_free_persistent(context, act->op);
+    grib_context_free_persistent(context, act->name);
+    grib_context_free_persistent(context, act->op);
 }
 
 static void xref(grib_action* d, FILE* f,const char* path)

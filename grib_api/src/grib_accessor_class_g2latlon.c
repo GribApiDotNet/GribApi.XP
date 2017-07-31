@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2016 ECMWF.
+ * Copyright 2005-2017 ECMWF.
  *
  * This software is licensed under the terms of the Apache Licence Version 2.0
  * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -76,13 +76,15 @@ static grib_accessor_class _grib_accessor_class_g2latlon = {
     0,            /* get native type               */
     0,                /* get sub_section                */
     &pack_missing,               /* grib_pack procedures long      */
-    &is_missing,               /* grib_pack procedures long      */
+    &is_missing,                 /* grib_pack procedures long      */
     0,                  /* grib_pack procedures long      */
     0,                /* grib_unpack procedures long    */
     &pack_double,                /* grib_pack procedures double    */
     &unpack_double,              /* grib_unpack procedures double  */
     0,                /* grib_pack procedures string    */
     0,              /* grib_unpack procedures string  */
+    0,          /* grib_pack array procedures string    */
+    0,        /* grib_unpack array procedures string  */
     0,                 /* grib_pack procedures bytes     */
     0,               /* grib_unpack procedures bytes   */
     0,            /* pack_expression */
@@ -95,7 +97,8 @@ static grib_accessor_class _grib_accessor_class_g2latlon = {
     0,                    /* compare vs. another accessor   */
     0,     /* unpack only ith value          */
     0,     /* unpack a subarray         */
-    0,             		/* clear          */
+    0,              		/* clear          */
+    0,               		/* clone accessor          */
 };
 
 
@@ -116,6 +119,8 @@ static void init_class(grib_accessor_class* c)
 	c->unpack_long	=	(*(c->super))->unpack_long;
 	c->pack_string	=	(*(c->super))->pack_string;
 	c->unpack_string	=	(*(c->super))->unpack_string;
+	c->pack_string_array	=	(*(c->super))->pack_string_array;
+	c->unpack_string_array	=	(*(c->super))->unpack_string_array;
 	c->pack_bytes	=	(*(c->super))->pack_bytes;
 	c->unpack_bytes	=	(*(c->super))->unpack_bytes;
 	c->pack_expression	=	(*(c->super))->pack_expression;
@@ -129,6 +134,7 @@ static void init_class(grib_accessor_class* c)
 	c->unpack_double_element	=	(*(c->super))->unpack_double_element;
 	c->unpack_double_subarray	=	(*(c->super))->unpack_double_subarray;
 	c->clear	=	(*(c->super))->clear;
+	c->make_clone	=	(*(c->super))->make_clone;
 }
 
 /* END_CLASS_IMP */
@@ -138,9 +144,9 @@ static void init(grib_accessor* a,const long l, grib_arguments* c)
   grib_accessor_g2latlon* self = (grib_accessor_g2latlon*)a;
   int n = 0;
 
-  self->grid     = grib_arguments_get_name(a->parent->h,c,n++);
-  self->index    = grib_arguments_get_long(a->parent->h,c,n++);
-  self->given    = grib_arguments_get_name(a->parent->h,c,n++);
+  self->grid     = grib_arguments_get_name(grib_handle_of_accessor(a),c,n++);
+  self->index    = grib_arguments_get_long(grib_handle_of_accessor(a),c,n++);
+  self->given    = grib_arguments_get_name(grib_handle_of_accessor(a),c,n++);
 }
 
 static int unpack_double   (grib_accessor* a, double* val, size_t *len)
@@ -158,7 +164,7 @@ static int unpack_double   (grib_accessor* a, double* val, size_t *len)
   }
 
   if(self->given)
-    if((ret = grib_get_long_internal(a->parent->h, self->given,&given)) != GRIB_SUCCESS)
+    if((ret = grib_get_long_internal(grib_handle_of_accessor(a), self->given,&given)) != GRIB_SUCCESS)
       return ret;
 
   if(!given)
@@ -168,7 +174,7 @@ static int unpack_double   (grib_accessor* a, double* val, size_t *len)
   }
 
 
-  if((ret = grib_get_double_array_internal(a->parent->h, self->grid,grid,&size)) != GRIB_SUCCESS)
+  if((ret = grib_get_double_array_internal(grib_handle_of_accessor(a), self->grid,grid,&size)) != GRIB_SUCCESS)
     return ret;
 
   *val = grid[self->index];
@@ -193,18 +199,18 @@ static int pack_double(grib_accessor* a, const double* val, size_t *len)
   if(self->given)
   {
     long given        = *val != GRIB_MISSING_DOUBLE;
-    if((ret = grib_set_long_internal(a->parent->h, self->given,given)) != GRIB_SUCCESS)
+    if((ret = grib_set_long_internal(grib_handle_of_accessor(a), self->given,given)) != GRIB_SUCCESS)
       return ret;
   }
 
 
-  if((ret = grib_get_double_array_internal(a->parent->h, self->grid,grid,&size)) != GRIB_SUCCESS)
+  if((ret = grib_get_double_array_internal(grib_handle_of_accessor(a), self->grid,grid,&size)) != GRIB_SUCCESS)
     return ret;
 
   if ( (self->index == 1 || self->index == 3) && *val < 0 ) grid[self->index] = 360+*val;
   else grid[self->index] = *val;
 
-  return grib_set_double_array_internal(a->parent->h, self->grid,grid,size);
+  return grib_set_double_array_internal(grib_handle_of_accessor(a), self->grid,grid,size);
 }
 
 static int pack_missing(grib_accessor* a)
@@ -225,7 +231,7 @@ static int is_missing(grib_accessor* a)
   long given        = 1;
 
 
-  if(self->given) grib_get_long_internal(a->parent->h, self->given,&given);
+  if(self->given) grib_get_long_internal(grib_handle_of_accessor(a), self->given,&given);
 
 
   return !given;

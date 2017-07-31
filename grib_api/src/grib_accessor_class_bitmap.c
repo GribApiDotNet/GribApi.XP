@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2016 ECMWF.
+ * Copyright 2005-2017 ECMWF.
  *
  * This software is licensed under the terms of the Apache Licence Version 2.0
  * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -80,13 +80,15 @@ static grib_accessor_class _grib_accessor_class_bitmap = {
     0,            /* get native type               */
     0,                /* get sub_section                */
     0,               /* grib_pack procedures long      */
-    0,               /* grib_pack procedures long      */
+    0,                 /* grib_pack procedures long      */
     0,                  /* grib_pack procedures long      */
     &unpack_long,                /* grib_unpack procedures long    */
     0,                /* grib_pack procedures double    */
     &unpack_double,              /* grib_unpack procedures double  */
     0,                /* grib_pack procedures string    */
     &unpack_string,              /* grib_unpack procedures string  */
+    0,          /* grib_pack array procedures string    */
+    0,        /* grib_unpack array procedures string  */
     0,                 /* grib_pack procedures bytes     */
     0,               /* grib_unpack procedures bytes   */
     0,            /* pack_expression */
@@ -99,7 +101,8 @@ static grib_accessor_class _grib_accessor_class_bitmap = {
     0,                    /* compare vs. another accessor   */
     &unpack_double_element,     /* unpack only ith value          */
     0,     /* unpack a subarray         */
-    0,             		/* clear          */
+    0,              		/* clear          */
+    0,               		/* clone accessor          */
 };
 
 
@@ -119,6 +122,8 @@ static void init_class(grib_accessor_class* c)
 	c->pack_long	=	(*(c->super))->pack_long;
 	c->pack_double	=	(*(c->super))->pack_double;
 	c->pack_string	=	(*(c->super))->pack_string;
+	c->pack_string_array	=	(*(c->super))->pack_string_array;
+	c->unpack_string_array	=	(*(c->super))->unpack_string_array;
 	c->pack_bytes	=	(*(c->super))->pack_bytes;
 	c->unpack_bytes	=	(*(c->super))->unpack_bytes;
 	c->pack_expression	=	(*(c->super))->pack_expression;
@@ -130,6 +135,7 @@ static void init_class(grib_accessor_class* c)
 	c->compare	=	(*(c->super))->compare;
 	c->unpack_double_subarray	=	(*(c->super))->unpack_double_subarray;
 	c->clear	=	(*(c->super))->clear;
+	c->make_clone	=	(*(c->super))->make_clone;
 }
 
 /* END_CLASS_IMP */
@@ -139,19 +145,20 @@ static void compute_size(grib_accessor* a)
 {
     long slen = 0;
     long off = 0;
+    grib_handle* hand = grib_handle_of_accessor(a);
 
     grib_accessor_bitmap* self = (grib_accessor_bitmap*)a;
-    grib_get_long_internal(a->parent->h, self->offsetbsec,&off);
-    grib_get_long_internal(a->parent->h, self->sLength, &slen);
+    grib_get_long_internal(hand, self->offsetbsec,&off);
+    grib_get_long_internal(hand, self->sLength, &slen);
 
     if(slen == 0)
     {
         grib_accessor* seclen;
         size_t size;
         /* Assume reparsing */
-        Assert(a->parent->h->loader != 0);
-        if (a->parent->h->loader != 0) {
-            seclen = grib_find_accessor(a->parent->h, self->sLength);
+        Assert(hand->loader != 0);
+        if (hand->loader != 0) {
+            seclen = grib_find_accessor(hand, self->sLength);
             Assert(seclen);
             grib_get_block_length(seclen->parent,&size);
             slen = size;
@@ -168,7 +175,7 @@ static void compute_size(grib_accessor* a)
     if(a->length < 0)
     {
         /* Assume reparsing */
-        /*Assert(a->parent->h->loader != 0);*/
+        /*Assert(hand->loader != 0);*/
         a->length = 0;
     }
 
@@ -177,14 +184,14 @@ static void compute_size(grib_accessor* a)
 
 static void init(grib_accessor* a, const long len , grib_arguments* arg )
 {
-
     grib_accessor_bitmap* self = (grib_accessor_bitmap*)a;
+    grib_handle* hand = grib_handle_of_accessor(a);
     int n = 0;
 
-    self->tableReference = grib_arguments_get_name(a->parent->h,arg,n++);
-    self->missing_value  = grib_arguments_get_name(a->parent->h,arg,n++);
-    self->offsetbsec     = grib_arguments_get_name(a->parent->h,arg,n++);
-    self->sLength        = grib_arguments_get_name(a->parent->h,arg,n++);
+    self->tableReference = grib_arguments_get_name(hand,arg,n++);
+    self->missing_value  = grib_arguments_get_name(hand,arg,n++);
+    self->offsetbsec     = grib_arguments_get_name(hand,arg,n++);
+    self->sLength        = grib_arguments_get_name(hand,arg,n++);
 
     compute_size(a);
 }
@@ -211,20 +218,21 @@ static int unpack_long(grib_accessor* a, long* val, size_t *len)
     long tlen=0;
     long i=0;
     int err=0;
+    grib_handle* hand = grib_handle_of_accessor(a);
 
     err = grib_value_count(a,&tlen);
     if (err) return err;
 
     if(*len < tlen)
     {
-        grib_context_log(a->parent->h->context, GRIB_LOG_ERROR, "Wrong size for %s it contains %d values ", a->name , tlen );
+        grib_context_log(a->context, GRIB_LOG_ERROR, "Wrong size for %s it contains %d values ", a->name , tlen );
         *len = 0;
         return GRIB_ARRAY_TOO_SMALL;
     }
 
     for(i=0;i<tlen;i++)
     {
-        val[i] = (long)grib_decode_unsigned_long(a->parent->h->buffer->data, &pos,1);
+        val[i] = (long)grib_decode_unsigned_long(hand->buffer->data, &pos,1);
     }
     *len = tlen;
     return GRIB_SUCCESS;
@@ -236,20 +244,21 @@ static int unpack_double   (grib_accessor* a, double* val, size_t *len)
     long tlen;
     long i;
     int err=0;
+    grib_handle* hand = grib_handle_of_accessor(a);
 
     err = grib_value_count(a,&tlen);
     if (err) return err;
 
     if(*len < tlen)
     {
-        grib_context_log(a->parent->h->context, GRIB_LOG_ERROR, "Wrong size for %s it contains %d values ", a->name , tlen );
+        grib_context_log(a->context, GRIB_LOG_ERROR, "Wrong size for %s it contains %d values ", a->name , tlen );
         *len = 0;
         return GRIB_ARRAY_TOO_SMALL;
     }
 
     for(i=0;i<tlen;i++)
     {
-        val[i] = (double)grib_decode_unsigned_long(a->parent->h->buffer->data, &pos,1);
+        val[i] = (double)grib_decode_unsigned_long(hand->buffer->data, &pos,1);
     }
     *len = tlen;
     return GRIB_SUCCESS;
@@ -260,7 +269,7 @@ static int unpack_double_element   (grib_accessor* a, size_t idx, double* val)
     long pos = a->offset*8;
 
     pos+=idx;
-    *val = (double)grib_decode_unsigned_long(a->parent->h->buffer->data, &pos,1);
+    *val = (double)grib_decode_unsigned_long(grib_handle_of_accessor(a)->buffer->data, &pos,1);
 
     return GRIB_SUCCESS;
 }
@@ -273,16 +282,17 @@ static void update_size(grib_accessor* a,size_t s)
 static int unpack_string(grib_accessor* a, char* val, size_t *len)
 {
     int i = 0;
+    grib_handle* hand = grib_handle_of_accessor(a);
 
     if(len[0] < (a->length))
     {
-        grib_context_log(a->parent->h->context, GRIB_LOG_ERROR, "unpack_string: Wrong size (%d) for %s it contains %d values ", len[0], a->name , a->length );
+        grib_context_log(a->context, GRIB_LOG_ERROR, "unpack_string: Wrong size (%d) for %s it contains %d values ", len[0], a->name , a->length );
         len[0] = 0;
         return GRIB_ARRAY_TOO_SMALL;
     }
 
     for ( i = 0; i < a->length; i++)
-        val[i] = a->parent->h->buffer->data[a->offset+i];
+        val[i] = hand->buffer->data[a->offset+i];
 
     len[0] = a->length;
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2016 ECMWF.
+ * Copyright 2005-2017 ECMWF.
  *
  * This software is licensed under the terms of the Apache Licence Version 2.0
  * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -13,14 +13,14 @@
  ***************************************************************************/
 #include "grib_api_internal.h"
 
+/* Note: A fast cut-down version of strcmp which does NOT return -1 */
+/* 0 means input strings are equal and 1 means not equal */
 GRIB_INLINE static int grib_inline_strcmp(const char* a,const char* b)
 {
     if (*a != *b) return 1;
     while((*a!=0 && *b!=0) &&  *(a) == *(b) ) {a++;b++;}
     return (*a==0 && *b==0) ? 0 : 1;
 }
-
-#define SWAP(a,b) temp=(a);(a)=(b);(b)=temp;
 
 int grib_set_expression(grib_handle* h, const char* name,grib_expression* e)
 {
@@ -66,7 +66,7 @@ int grib_set_long_internal(grib_handle* h, const char* name, long val)
     a = grib_find_accessor(h, name);
 
     if (h->context->debug)
-        printf("GRIB_API DEBUG grib_set_long_internal %s=%ld\n",name,(long)val);
+        printf("ECCODES DEBUG grib_set_long_internal %s=%ld\n",name,(long)val);
 
     if(a){
         ret = grib_pack_long(a, &val, &l);
@@ -92,7 +92,7 @@ int grib_set_long(grib_handle* h, const char* name, long val)
     a = grib_find_accessor(h, name);
 
     if (h->context->debug)
-        printf("GRIB_API DEBUG grib_set_long %s=%ld\n",name,(long)val);
+        printf("ECCODES DEBUG grib_set_long %s=%ld\n",name,(long)val);
 
     if(a){
         if(a->flags & GRIB_ACCESSOR_FLAG_READ_ONLY)
@@ -116,7 +116,7 @@ int grib_set_double_internal(grib_handle* h, const char* name, double val)
     a = grib_find_accessor(h, name);
 
     if (h->context->debug)
-        printf("GRIB_API DEBUG grib_set_double_internal %s=%g\n",name,val);
+        printf("ECCODES DEBUG grib_set_double_internal %s=%g\n",name,val);
 
     if(a){
         ret = grib_pack_double(a, &val, &l);
@@ -142,8 +142,8 @@ struct grib_key_err {
 
 int grib_copy_namespace(grib_handle* dest, const char* name, grib_handle* src)
 {
-    int *err=0;
-    int type;
+    int *err=NULL;
+    int type, error_code=0;
     size_t len;
     char *sval = NULL;
     unsigned char *uval = NULL;
@@ -157,7 +157,7 @@ int grib_copy_namespace(grib_handle* dest, const char* name, grib_handle* src)
 
     if (!dest || !src) return GRIB_NULL_HANDLE;
 
-    iter=grib_keys_iterator_new(src,0,(char*)name);
+    iter=grib_keys_iterator_new(src,0,name);
 
     if (!iter) {
         grib_context_log(src->context,GRIB_LOG_ERROR,"grib_copy_namespace: unable to get iterator for %s",name );
@@ -252,6 +252,7 @@ int grib_copy_namespace(grib_handle* dest, const char* name, grib_handle* src)
                 if((*err = grib_set_double_array(dest,key,dval,len)) != GRIB_SUCCESS)
                     return *err;
 
+                grib_context_free(src->context,dval);
                 break;
 
             case GRIB_TYPE_BYTES:
@@ -285,6 +286,7 @@ int grib_copy_namespace(grib_handle* dest, const char* name, grib_handle* src)
             key_err=key_err->next;
         }
     }
+    error_code = *err; /* copy the error code before cleanup */
     grib_keys_iterator_delete(iter);
     key_err=first;
     while (key_err) {
@@ -294,7 +296,7 @@ int grib_copy_namespace(grib_handle* dest, const char* name, grib_handle* src)
         key_err=next;
     }
 
-    return *err;
+    return error_code;
 }
 
 int grib_set_double(grib_handle* h, const char* name, double val)
@@ -306,7 +308,7 @@ int grib_set_double(grib_handle* h, const char* name, double val)
     a = grib_find_accessor(h, name);
 
     if (h->context->debug)
-        printf("GRIB_API DEBUG grib_set_double %s=%g\n",name,val);
+        printf("ECCODES DEBUG grib_set_double %s=%g\n",name,val);
 
     if(a){
 
@@ -331,7 +333,7 @@ int grib_set_string_internal(grib_handle* h, const char* name,
     a = grib_find_accessor(h, name);
 
     if (h->context->debug)
-        printf("GRIB_API DEBUG grib_set_string_internal %s=%s\n",name,val);
+        printf("ECCODES DEBUG grib_set_string_internal %s=%s\n",name,val);
 
     if(a){
         ret = grib_pack_string(a, val, length);
@@ -356,14 +358,14 @@ int grib_set_string(grib_handle* h, const char* name, const char* val, size_t *l
     /* Second order doesn't have a proper representation for constant fields.
        So best not to do the change of packing type.
        Use strncmp to catch all flavours of second order packing e.g. grid_second_order_boustrophedonic
-    */
+     */
     if (!grib_inline_strcmp(name,"packingType") && !strncmp(val,"grid_second_order", 17)) {
         long bitsPerValue=0;
         size_t numCodedVals = 0;
         grib_get_long(h,"bitsPerValue",&bitsPerValue);
         if (bitsPerValue==0) {
             if (h->context->debug) {
-                printf("GRIB_API DEBUG grib_set_string packingType: Constant field cannot be encoded in second order. Packing not changed\n");
+                printf("ECCODES DEBUG grib_set_string packingType: Constant field cannot be encoded in second order. Packing not changed\n");
             }
             return 0;
         }
@@ -372,7 +374,7 @@ int grib_set_string(grib_handle* h, const char* name, const char* val, size_t *l
         ret = grib_get_size(h, "codedValues", &numCodedVals);
         if (ret == GRIB_SUCCESS && numCodedVals < 3) {
             if (h->context->debug) {
-                printf("GRIB_API DEBUG grib_set_string packingType: not enough coded values for second order. Packing not changed\n");
+                printf("ECCODES DEBUG grib_set_string packingType: not enough coded values for second order. Packing not changed\n");
             }
             return 0;
         }
@@ -381,7 +383,7 @@ int grib_set_string(grib_handle* h, const char* name, const char* val, size_t *l
     a = grib_find_accessor(h, name);
 
     if (h->context->debug)
-        printf("GRIB_API DEBUG grib_set_string %s=%s\n",name,val);
+        printf("ECCODES DEBUG grib_set_string %s=|%s|\n",name,val);
 
     if(a)
     {
@@ -389,6 +391,31 @@ int grib_set_string(grib_handle* h, const char* name, const char* val, size_t *l
             return GRIB_READ_ONLY;
 
         ret=grib_pack_string(a, val, length);
+        if(ret == GRIB_SUCCESS){
+            return grib_dependency_notify_change(a);
+        }
+        return ret;
+    }
+    return GRIB_NOT_FOUND;
+}
+
+int grib_set_string_array(grib_handle* h, const char* name, const char** val, size_t length)
+{
+    int ret=0;
+    grib_accessor* a;
+
+    a = grib_find_accessor(h, name);
+
+    if (h->context->debug) {
+        printf("ECCODES DEBUG grib_set_string_array key=%s %ld values\n",name,(long)length);
+    }
+
+    if(a)
+    {
+        if(a->flags & GRIB_ACCESSOR_FLAG_READ_ONLY)
+            return GRIB_READ_ONLY;
+
+        ret=grib_pack_string_array(a, val, &length);
         if(ret == GRIB_SUCCESS){
             return grib_dependency_notify_change(a);
         }
@@ -493,7 +520,8 @@ int grib_set_missing(grib_handle* h, const char* name)
             return GRIB_READ_ONLY;
 
         if(a->flags & GRIB_ACCESSOR_FLAG_CAN_BE_MISSING) {
-            if (h->context->debug) printf("GRIB_API DEBUG grib_set_missing %s\n",name);
+            if (h->context->debug) printf("ECCODES DEBUG grib_set_missing %s\n",name);
+
             ret=grib_pack_missing(a);
             if(ret == GRIB_SUCCESS)
                 return grib_dependency_notify_change(a);
@@ -508,21 +536,58 @@ int grib_set_missing(grib_handle* h, const char* name)
     return GRIB_NOT_FOUND;
 }
 
-int grib_is_missing(grib_handle* h, const char* name,int* err)
+int grib_is_missing_long(grib_accessor* a,long x)
 {
-    grib_accessor* a = grib_find_accessor(h, name);
-    *err=GRIB_SUCCESS;
+    int ret = ( a==NULL || (a->flags & GRIB_ACCESSOR_FLAG_CAN_BE_MISSING)) && (x==GRIB_MISSING_LONG) ? 1 : 0;
+    return ret;
+}
+int grib_is_missing_double(grib_accessor* a,double x)
+{
+    int ret = ( a==NULL || (a->flags & GRIB_ACCESSOR_FLAG_CAN_BE_MISSING)) && (x==GRIB_MISSING_DOUBLE) ? 1 : 0;
+    return ret;
+}
 
-    if(a) {
+int grib_is_missing_string(grib_accessor* a, unsigned char* x, size_t len)
+{
+    /* For a string value to be missing, every character has to be */
+    /* all 1's (i.e. 0xFF) */
+    int ret;
+    size_t i=0;
+
+    if (len==0) return 0;
+    ret=1;
+    for (i=0;i<len;i++) {
+        if (x[i] != 0xFF ) {
+            ret=0;
+            break;
+        }
+    }
+
+    ret = ( a==NULL || ( (a->flags & GRIB_ACCESSOR_FLAG_CAN_BE_MISSING) && ret==1 )) ? 1 : 0;
+    return ret;
+}
+
+int grib_accessor_is_missing(grib_accessor* a,int* err)
+{
+    *err=GRIB_SUCCESS;
+    if(a)
+    {
         if(a->flags & GRIB_ACCESSOR_FLAG_CAN_BE_MISSING)
             return grib_is_missing_internal(a);
         else
             return 0;
     }
-    else {
+    else
+    {
         *err=GRIB_NOT_FOUND;
         return 1;
     }
+}
+
+int grib_is_missing(grib_handle* h, const char* name,int* err)
+{
+    grib_accessor* a = grib_find_accessor(h, name);
+    return grib_accessor_is_missing(a,err);
 }
 
 /* Return true if the given key exists (is defined) in our grib message */
@@ -583,7 +648,13 @@ static int _grib_set_double_array(grib_handle* h, const char* name,
     grib_accessor* a = grib_find_accessor(h, name);
     int err=0;
 
-    err = a ?_grib_set_double_array_internal(h,a,val,length,&encoded,check) : GRIB_NOT_FOUND ;
+    if (!a) return GRIB_NOT_FOUND ;
+    if (name[0]=='/' || name[0]=='#' ) {
+        if(check && (a->flags & GRIB_ACCESSOR_FLAG_READ_ONLY))
+            return GRIB_READ_ONLY;
+        err=grib_pack_double(a, val, &length);
+        encoded=length;
+    } else err=_grib_set_double_array_internal(h,a,val,length,&encoded,check);
 
     if(err == GRIB_SUCCESS && length > encoded)
         err = GRIB_ARRAY_TOO_SMALL;
@@ -599,7 +670,7 @@ int grib_set_double_array_internal(grib_handle* h, const char* name, const doubl
     int ret=0;
 
     if (h->context->debug)
-        printf("GRIB_API DEBUG grib_set_double_array_internal key=%s %ld values\n",name, (long)length);
+        printf("ECCODES DEBUG grib_set_double_array_internal key=%s %ld values\n",name,(long)length);
 
     if (length==0) {
         grib_accessor* a = grib_find_accessor(h, name);
@@ -611,7 +682,7 @@ int grib_set_double_array_internal(grib_handle* h, const char* name, const doubl
     if (ret!=GRIB_SUCCESS)
         grib_context_log(h->context,GRIB_LOG_ERROR,"unable to set double array %s (%s)",
                 name,grib_get_error_message(ret));
-    /*if (h->context->debug==-1) printf("GRIB_API DEBUG grib_set_double_array_internal key=%s --DONE\n",name);*/
+    /*if (h->context->debug) printf("ECCODES DEBUG grib_set_double_array_internal key=%s --DONE\n",name);*/
     return ret;
 }
 
@@ -621,7 +692,7 @@ static int __grib_set_double_array(grib_handle* h, const char* name, const doubl
     int constant,i;
 
     if (h->context->debug)
-        printf("GRIB_API DEBUG grib_set_double_array key=%s %ld values\n",name,(long)length);
+        printf("ECCODES DEBUG grib_set_double_array key=%s %ld values\n",name,(long)length);
 
     if (length==0) {
         grib_accessor* a = grib_find_accessor(h, name);
@@ -656,20 +727,20 @@ static int __grib_set_double_array(grib_handle* h, const char* name, const doubl
 
             grib_get_string(h,"packingType",packingType,&slen);
             if (!strcmp(packingType,"grid_second_order") ||
-                !strcmp(packingType,"grid_second_order_no_SPD") ||
-                !strcmp(packingType,"grid_second_order_SPD1") ||
-                !strcmp(packingType,"grid_second_order_SPD2") ||
-                !strcmp(packingType,"grid_second_order_SPD3")
+                    !strcmp(packingType,"grid_second_order_no_SPD") ||
+                    !strcmp(packingType,"grid_second_order_SPD1") ||
+                    !strcmp(packingType,"grid_second_order_SPD2") ||
+                    !strcmp(packingType,"grid_second_order_SPD3")
             ) {
-                int ret = 0;
+                ret = 0;
                 slen=11; /*length of 'grid_simple' */
                 if (h->context->debug) {
-                    printf("GRIB_API DEBUG __grib_set_double_array: Cannot use second order packing for constant fields. Using simple packing\n");
+                    printf("ECCODES DEBUG __grib_set_double_array: Cannot use second order packing for constant fields. Using simple packing\n");
                 }
                 ret = grib_set_string(h,"packingType","grid_simple",&slen);
                 if (ret != GRIB_SUCCESS) {
                     if (h->context->debug) {
-                        printf("GRIB_API DEBUG __grib_set_double_array: could not switch to simple packing!\n");
+                        printf("ECCODES DEBUG __grib_set_double_array: could not switch to simple packing!\n");
                     }
                 }
             }
@@ -724,7 +795,20 @@ static int _grib_set_long_array(grib_handle* h, const char* name, const long* va
 {
     size_t encoded = 0;
     grib_accessor* a = grib_find_accessor(h, name);
-    int err = a ?_grib_set_long_array_internal(h,a,val,length,&encoded,check) : GRIB_NOT_FOUND ;
+    int err =0;
+
+    if (!a) return GRIB_NOT_FOUND ;
+
+    if (h->context->debug) {
+        printf("ECCODES DEBUG _grib_set_long_array key=%s %ld values\n",name,(long)length);
+    }
+
+    if (name[0]=='/' || name[0]=='#' ) {
+        if(check && (a->flags & GRIB_ACCESSOR_FLAG_READ_ONLY))
+            return GRIB_READ_ONLY;
+        err=grib_pack_long(a, val, &length);
+        encoded=length;
+    } else err=_grib_set_long_array_internal(h,a,val,length,&encoded,check);
 
     if(err == GRIB_SUCCESS && length > encoded)
         err = GRIB_ARRAY_TOO_SMALL;
@@ -762,16 +846,43 @@ int grib_get_long_internal(grib_handle* h, const char* name, long* val)
     return ret;
 }
 
+int grib_is_in_dump(grib_handle* h, const char* name)
+{
+    grib_accessor* a=grib_find_accessor(h, name);
+    if (a!=NULL && (a->flags & GRIB_ACCESSOR_FLAG_DUMP))
+        return 1;
+    else
+        return 0;
+}
+
+int grib_attributes_count(grib_accessor* a, size_t* size)
+{
+    if (a) {
+        *size=0;
+        while (a->attributes[*size]!=NULL) {(*size)++;}
+        return GRIB_SUCCESS;
+    }
+
+    return GRIB_NOT_FOUND;
+}
+
 int grib_get_long(grib_handle* h, const char* name, long* val)
 {
-    grib_accessor* act = NULL;
-    size_t l = 1;
+    size_t length = 1;
+    grib_accessor* a = NULL;
+    grib_accessors_list* al=NULL;
     int ret=0;
 
-    act = grib_find_accessor(h, name);
-
-    ret = act ? grib_unpack_long(act, val, &l) : GRIB_NOT_FOUND;
-
+    if (name[0] == '/' ) {
+        al=grib_find_accessors_list(h,name);
+        if (!al) return GRIB_NOT_FOUND;
+        ret=grib_unpack_long(al->accessor, val , &length);
+        grib_context_free(h->context,al);
+    } else  {
+        a=grib_find_accessor(h, name);
+        if(!a) return GRIB_NOT_FOUND;
+        ret=grib_unpack_long(a, val , &length);
+    }
     return ret;
 }
 
@@ -789,13 +900,22 @@ int grib_get_double_internal(grib_handle* h, const char* name, double* val)
 
 int grib_get_double(grib_handle* h, const char* name, double* val)
 {
-    grib_accessor* act = grib_find_accessor(h, name);
-    size_t l = 1;
+    size_t length = 1;
+    grib_accessor* a = NULL;
+    grib_accessors_list* al=NULL;
+    int ret=0;
 
-    if(act)
-        return grib_unpack_double(act, val, &l);
-
-    return GRIB_NOT_FOUND;
+    if (name[0] == '/' ) {
+        al=grib_find_accessors_list(h,name);
+        if (!al) return GRIB_NOT_FOUND;
+        ret=grib_unpack_double(al->accessor, val , &length);
+        grib_context_free(h->context,al);
+    } else  {
+        a=grib_find_accessor(h, name);
+        if(!a) return GRIB_NOT_FOUND;
+        ret=grib_unpack_double(a, val , &length);
+    }
+    return ret;
 }
 
 int grib_get_double_element_internal(grib_handle* h, const char* name, int i,double* val)
@@ -814,9 +934,9 @@ int grib_get_double_element(grib_handle* h, const char* name, int i, double* val
 {
     grib_accessor* act = grib_find_accessor(h, name);
 
-    if(act)
+    if (act) {
         return grib_unpack_double_element(act, i,val);
-
+    }
     return GRIB_NOT_FOUND;
 }
 
@@ -832,41 +952,54 @@ int grib_points_get_values(grib_handle* h, grib_points* points, double* val)
         if (ret) return ret;
         val+=points->group_len[i];
     }
-    return 0;
+    return GRIB_SUCCESS;
 }
 
-int grib_get_double_elements(grib_handle* h, const char* name, int* i, long len,double* val)
+int grib_get_double_elements(grib_handle* h, const char* name, int* index_array, long len, double* val_array)
 {
     double* values=0;
-    int ret=0;
-    size_t size=0;
-    int j=0;
+    int err=0;
+    size_t size=0, num_bytes = 0;
+    long j = 0;
     grib_accessor* act =NULL;
 
     act= grib_find_accessor(h, name);
+    if (!act) return GRIB_NOT_FOUND;
 
-    ret=_grib_get_size(h,act,&size);
+    err=_grib_get_size(h,act,&size);
 
-    if (ret!=GRIB_SUCCESS) {
+    if (err!=GRIB_SUCCESS) {
         grib_context_log(h->context,GRIB_LOG_ERROR,"grib_get_double_elements: cannot get size of %s\n",name);
-        return ret;
+        return err;
     }
 
-    values=(double*)grib_context_malloc( h->context,size * sizeof(double));
+    /* Check index array has valid values */
+    for (j=0;j<len;j++) {
+        const int anIndex = index_array[j];
+        if (anIndex < 0 || anIndex >= size) {
+            grib_context_log(h->context,GRIB_LOG_ERROR,
+                    "grib_get_double_elements: index out of range: %d (should be between 0 and %ld)", anIndex, size-1);
+            return GRIB_INVALID_ARGUMENT;
+        }
+    }
 
+    num_bytes = size * sizeof(double);
+    values=(double*)grib_context_malloc(h->context, num_bytes);
     if (!values) {
-        grib_context_log(h->context,GRIB_LOG_ERROR,"grib_get_double_elements: unable to allocate %ld bytes\n",
-                size*sizeof(double));
+        grib_context_log(h->context,GRIB_LOG_ERROR,"grib_get_double_elements: unable to allocate %ld bytes\n", num_bytes);
         return GRIB_OUT_OF_MEMORY;
     }
 
-    ret = grib_unpack_double(act, values, &size);
-
-    for (j=0;j<len;j++) val[j]=values[i[j]];
+    err = grib_unpack_double(act, values, &size);
+    if (!err) {
+        for (j=0;j<len;j++) {
+            val_array[j] = values[index_array[j]];
+        }
+    }
 
     grib_context_free(h->context,values);
 
-    return GRIB_SUCCESS;
+    return err;
 }
 
 int grib_get_string_internal(grib_handle* h, const char* name, char* val, size_t *length)
@@ -883,10 +1016,21 @@ int grib_get_string_internal(grib_handle* h, const char* name, char* val, size_t
 
 int grib_get_string(grib_handle* h, const char* name, char* val, size_t *length)
 {
-    grib_accessor* act = grib_find_accessor(h, name);
-    if(act)
-        return grib_unpack_string(act, val, length);
-    return GRIB_NOT_FOUND;
+    grib_accessor* a = NULL;
+    grib_accessors_list* al=NULL;
+    int ret=0;
+
+    if (name[0] == '/' ) {
+        al=grib_find_accessors_list(h,name);
+        if (!al) return GRIB_NOT_FOUND;
+        ret=grib_unpack_string(al->accessor, val, length);
+        grib_context_free(h->context,al);
+        return ret;
+    } else  {
+        a=grib_find_accessor(h, name);
+        if(!a) return GRIB_NOT_FOUND;
+        return grib_unpack_string(a, val , length);
+    }
 }
 
 int grib_get_bytes_internal(grib_handle* h, const char* name, unsigned char* val, size_t *length)
@@ -907,20 +1051,30 @@ int grib_get_bytes(grib_handle* h, const char* name, unsigned char* val, size_t 
     grib_accessor* act = grib_find_accessor(h, name);
     err = act? grib_unpack_bytes(act, val, length) : GRIB_NOT_FOUND;
     if(err) grib_context_log(h->context,GRIB_LOG_ERROR,
-            "grib_get_bytes_internal %s failed %s",  name, grib_get_error_message(err));
+            "grib_get_bytes %s failed %s",  name, grib_get_error_message(err));
     return err;
 }
 
 int grib_get_native_type(grib_handle* h, const char* name,int* type)
 {
-    grib_accessor* act = grib_find_accessor(h, name);
+    grib_accessors_list* al=NULL;
+    grib_accessor* a =NULL;
     *type = GRIB_TYPE_UNDEFINED;
 
-    if(act) {
-        *type = grib_accessor_get_native_type(act);
-        return GRIB_SUCCESS;
+    DebugAssert( name != NULL && strlen(name) > 0 );
+
+    if (name[0] == '/' ) {
+        al=grib_find_accessors_list(h,name);
+        if (!al) return GRIB_NOT_FOUND;
+        *type = grib_accessor_get_native_type(al->accessor);
+        grib_context_free(h->context,al);
+    } else  {
+        a=grib_find_accessor(h, name);
+        if(!a) return GRIB_NOT_FOUND;
+        *type = grib_accessor_get_native_type(a);
     }
-    return GRIB_NOT_FOUND;
+
+    return GRIB_SUCCESS;
 }
 
 const char* grib_get_accessor_class_name(grib_handle* h, const char* name)
@@ -934,7 +1088,7 @@ int _grib_get_double_array_internal(grib_handle* h,grib_accessor* a,double* val,
     if(a) {
         int err = _grib_get_double_array_internal(h,a->same,val,buffer_len,decoded_length);
 
-        if(err == GRIB_SUCCESS)
+        if ( err == GRIB_SUCCESS )
         {
             size_t len = buffer_len - *decoded_length;
             err  = grib_unpack_double(a, val + *decoded_length, &len);
@@ -963,18 +1117,31 @@ int grib_get_double_array_internal(grib_handle* h, const char* name, double* val
 int grib_get_double_array(grib_handle* h, const char* name, double* val, size_t *length)
 {
     size_t len = *length;
-    grib_accessor* a = grib_find_accessor(h, name);
-    if(!a) return GRIB_NOT_FOUND;
+    grib_accessor* a = NULL;
+    grib_accessors_list* al=NULL;
+    int ret=0;
 
-    *length = 0;
-    return _grib_get_double_array_internal(h,a,val,len,length);
+    if (name[0] == '/' ) {
+        al=grib_find_accessors_list(h,name);
+        if (!al) return GRIB_NOT_FOUND;
+        ret=grib_accessors_list_unpack_double(al,val,length);
+        grib_context_free(h->context,al);
+        return ret;
+    } else  {
+        a=grib_find_accessor(h, name);
+        if(!a) return GRIB_NOT_FOUND;
+        if (name[0] == '#') {
+            return grib_unpack_double(a, val , length);
+        } else {
+            *length = 0;
+            return _grib_get_double_array_internal(h,a,val,len,length);
+        }
+    }
 }
 
-int grib_get_string_length(grib_handle* h, const char* name,size_t* size)
+int _grib_get_string_length(grib_accessor* a, size_t* size)
 {
-    grib_accessor* a = grib_find_accessor(h, name);
     size_t s=0;
-    if(!a) return GRIB_NOT_FOUND;
 
     *size = 0;
     while(a) {
@@ -987,10 +1154,57 @@ int grib_get_string_length(grib_handle* h, const char* name,size_t* size)
     return GRIB_SUCCESS;
 }
 
-int grib_get_size(grib_handle* h, const char* name,size_t* size)
+int grib_get_string_length(grib_handle* h, const char* name,size_t* size)
 {
     grib_accessor* a = grib_find_accessor(h, name);
-    return _grib_get_size(h, a,size);
+    if(!a) return GRIB_NOT_FOUND;
+
+    return _grib_get_string_length(a,size);
+}
+
+int _grib_get_size(grib_handle* h, grib_accessor* a,size_t* size)
+{
+    long count=0;
+    int err=0;
+
+    if(!a) return GRIB_NOT_FOUND;
+
+    *size = 0;
+    while(a) {
+        if (err==0)
+        {
+            err=grib_value_count(a,&count);
+            if (err) return err;
+            *size += count;
+        }
+        a = a->same;
+    }
+    return GRIB_SUCCESS;
+}
+
+int grib_get_size(grib_handle* h, const char* name,size_t* size)
+{
+    grib_accessor* a =NULL;
+    grib_accessors_list* al=NULL;
+    int ret=0;
+    *size=0;
+
+    if (name[0] == '/') {
+        al=grib_find_accessors_list(h,name);
+        if (!al) return GRIB_NOT_FOUND;
+        ret=grib_accessors_list_value_count(al,size);
+        grib_context_free(h->context,al);
+        return ret;
+    } else {
+        a=grib_find_accessor(h, name);
+        if(!a) return GRIB_NOT_FOUND;
+        if (name[0]=='#') {
+            long count=*size;
+            ret=grib_value_count(a,&count);
+            *size=count;
+            return ret;
+        } else return _grib_get_size(h, a,size);
+    }
 }
 
 int grib_get_length(grib_handle* h, const char* name, size_t* length)
@@ -1011,26 +1225,6 @@ int grib_get_count(grib_handle* h, const char* name,size_t* size)
     return GRIB_SUCCESS;
 }
 
-int _grib_get_size(grib_handle* h, grib_accessor* a,size_t* size)
-{
-    long count=0;
-    int err=0;
-
-    if(!a) return GRIB_NOT_FOUND;
-
-    *size = 0;
-    while(a) {
-       if (err==0)
-       {
-          err=grib_value_count(a,&count);
-          if (err) return err;
-          *size += count;
-       }
-       a = a->same;
-    }
-    return GRIB_SUCCESS;
-}
-
 int grib_get_offset(grib_handle* h, const char* key,size_t* val)
 {
     grib_accessor* act = grib_find_accessor(h, key);
@@ -1039,6 +1233,50 @@ int grib_get_offset(grib_handle* h, const char* key,size_t* val)
         return GRIB_SUCCESS;
     }
     return GRIB_NOT_FOUND;
+}
+
+int _grib_get_string_array_internal(grib_handle* h,grib_accessor* a,char** val, size_t buffer_len,size_t *decoded_length)
+{
+    if(a) {
+        int err = _grib_get_string_array_internal(h,a->same,val,buffer_len,decoded_length);
+
+        if(err == GRIB_SUCCESS)
+        {
+            size_t len = buffer_len - *decoded_length;
+            err  = grib_unpack_string_array(a, val + *decoded_length, &len);
+            *decoded_length += len;
+        }
+
+        return err;
+
+    } else {
+        return GRIB_SUCCESS;
+    }
+}
+
+int grib_get_string_array(grib_handle* h, const char* name, char** val, size_t *length)
+{
+    size_t len = *length;
+    grib_accessor* a = NULL;
+    grib_accessors_list* al=NULL;
+    int ret=0;
+
+    if (name[0] == '/' ) {
+        al=grib_find_accessors_list(h,name);
+        if (!al) return GRIB_NOT_FOUND;
+        ret=grib_accessors_list_unpack_string(al,val,length);
+        grib_context_free(h->context,al);
+        return ret;
+    } else  {
+        a=grib_find_accessor(h, name);
+        if(!a) return GRIB_NOT_FOUND;
+        if (name[0]=='#') {
+            return grib_unpack_string_array(a, val , length);
+        } else {
+            *length = 0;
+            return _grib_get_string_array_internal(h,a,val,len,length);
+        }
+    }
 }
 
 int _grib_get_long_array_internal(grib_handle* h,grib_accessor* a,long* val, size_t buffer_len,size_t *decoded_length)
@@ -1075,11 +1313,27 @@ int grib_get_long_array_internal(grib_handle* h, const char* name, long* val, si
 int grib_get_long_array(grib_handle* h, const char* name, long* val, size_t *length)
 {
     size_t len = *length;
-    grib_accessor* a = grib_find_accessor(h, name);
-    if(!a) return GRIB_NOT_FOUND;
+    grib_accessor* a = NULL;
+    grib_accessors_list* al=NULL;
+    int ret=0;
 
-    *length = 0;
-    return _grib_get_long_array_internal(h,a,val,len,length);
+    if (name[0] == '/' ) {
+        al=grib_find_accessors_list(h,name);
+        if (!al) return GRIB_NOT_FOUND;
+        ret=grib_accessors_list_unpack_long(al,val,length);
+        grib_context_free(h->context,al);
+        return ret;
+    } else  {
+        a=grib_find_accessor(h, name);
+        if(!a) return GRIB_NOT_FOUND;
+        if (name[0]=='#') {
+            return grib_unpack_long(a, val , length);
+        } else {
+            *length = 0;
+            return _grib_get_long_array_internal(h,a,val,len,length);
+        }
+    }
+    return ret;
 }
 
 static void grib_clean_key_value(grib_context* c,grib_key_value_list* kv)
@@ -1099,51 +1353,51 @@ static void grib_clean_key_value(grib_context* c,grib_key_value_list* kv)
 
 static int grib_get_key_value(grib_handle* h,grib_key_value_list* kv)
 {
-    int ret=0;
+    int err=0;
     size_t size=0;
     grib_keys_iterator* iter=NULL;
     grib_key_value_list* list=NULL;
 
     if (kv->has_value) grib_clean_key_value(h->context,kv);
 
-    ret=grib_get_size(h,kv->name,&size);
-    if (ret) {
-        kv->error=ret;
-        return ret;
+    err=grib_get_size(h,kv->name,&size);
+    if (err) {
+        kv->error=err;
+        return err;
     }
     if (size==0) size=512;
 
     switch (kv->type) {
     case GRIB_TYPE_LONG:
         kv->long_value=(long*)grib_context_malloc_clear(h->context,size*sizeof(long));
-        ret=grib_get_long_array(h,kv->name,kv->long_value,&size);
-        kv->error=ret;
+        err=grib_get_long_array(h,kv->name,kv->long_value,&size);
+        kv->error=err;
         break;
     case GRIB_TYPE_DOUBLE:
         kv->double_value=(double*)grib_context_malloc_clear(h->context,size*sizeof(double));
-        ret=grib_get_double_array(h,kv->name,kv->double_value,&size);
-        kv->error=ret;
+        err=grib_get_double_array(h,kv->name,kv->double_value,&size);
+        kv->error=err;
         break;
     case GRIB_TYPE_STRING:
         grib_get_string_length(h,kv->name,&size);
         kv->string_value=(char*)grib_context_malloc_clear(h->context,size*sizeof(char));
-        ret=grib_get_string(h,kv->name,kv->string_value,&size);
-        kv->error=ret;
+        err=grib_get_string(h,kv->name,kv->string_value,&size);
+        kv->error=err;
         break;
     case GRIB_TYPE_BYTES:
         kv->string_value=(char*)grib_context_malloc_clear(h->context,size*sizeof(char));
-        ret=grib_get_bytes(h,kv->name,(unsigned char*)kv->string_value,&size);
-        kv->error=ret;
+        err=grib_get_bytes(h,kv->name,(unsigned char*)kv->string_value,&size);
+        kv->error=err;
         break;
     case GRIB_NAMESPACE:
-        iter=grib_keys_iterator_new(h,0,(char*)kv->name);
+        iter=grib_keys_iterator_new(h,0,kv->name);
         list=(grib_key_value_list*)grib_context_malloc_clear(h->context,sizeof(grib_key_value_list));
         kv->namespace_value=list;
         while(grib_keys_iterator_next(iter))
         {
             list->name=grib_keys_iterator_get_name(iter);
-            ret=grib_get_native_type(h,list->name,&(list->type));
-            ret=grib_get_key_value(h,list);
+            err=grib_get_native_type(h,list->name,&(list->type));
+            err=grib_get_key_value(h,list);
             list->next=(grib_key_value_list*)grib_context_malloc_clear(h->context,sizeof(grib_key_value_list));
             list=list->next;
         }
@@ -1151,26 +1405,26 @@ static int grib_get_key_value(grib_handle* h,grib_key_value_list* kv)
         break;
 
     default:
-        ret=grib_get_native_type(h,kv->name,&(kv->type));
-        ret=grib_get_key_value(h,kv);
+        err=grib_get_native_type(h,kv->name,&(kv->type));
+        err=grib_get_key_value(h,kv);
         break;
     }
     kv->has_value=1;
-    return ret;
+    return err;
 }
 
 grib_key_value_list* grib_key_value_list_clone(grib_context* c,grib_key_value_list* list)
 {
     grib_key_value_list* next=list;
-    grib_key_value_list* clone=(grib_key_value_list*)grib_context_malloc_clear(c,sizeof(grib_key_value_list));
-    grib_key_value_list* p=clone;
+    grib_key_value_list* the_clone=(grib_key_value_list*)grib_context_malloc_clear(c,sizeof(grib_key_value_list));
+    grib_key_value_list* p=the_clone;
 
     while (next && next->name) {
         p->name=grib_context_strdup(c,next->name);
         p->type=next->type;
         next=next->next;
     }
-    return clone;
+    return the_clone;
 }
 
 void grib_key_value_list_delete(grib_context* c,grib_key_value_list* kvl)
@@ -1229,14 +1483,12 @@ int grib_get_values(grib_handle* h,grib_values* args,size_t count)
         case GRIB_TYPE_STRING:
             args[i].error = grib_get_string(h,args[i].name,buff,&len);
             args[i].string_value=strdup(buff);
-            Assert(args[i].string_value);
             if (args[i].error != GRIB_SUCCESS) ret=args[i].error;
             break;
 
         default:
             args[i].error = grib_get_string(h,args[i].name,buff,&len);
             args[i].string_value=strdup(buff);
-            Assert(args[i].string_value);
             if (args[i].error != GRIB_SUCCESS) ret=args[i].error;
             break;
         }
@@ -1406,4 +1658,116 @@ int grib_values_check(grib_handle* h, grib_values* values, int count)
     }
 
     return 0;
+}
+
+int grib_key_equal(grib_handle* h1,grib_handle* h2,const char* key,int type,int *err)
+{
+    double d1,d2;
+    long l1,l2;
+    char s1[500]={0,};
+    char s2[500]={0,};
+    size_t len1,len2;
+
+    if (  type != GRIB_TYPE_DOUBLE &&
+            type != GRIB_TYPE_LONG   &&
+            type != GRIB_TYPE_STRING    ) {
+        *err=grib_get_native_type(h1,key,&type);
+    }
+    switch (type) {
+    case GRIB_TYPE_DOUBLE:
+        *err=grib_get_double( h1,key,&d1);
+        *err=grib_get_double( h2,key,&d2);
+        if (d1 != d2) return 0;
+        break;
+    case GRIB_TYPE_LONG:
+        *err=grib_get_long( h1,key,&l1);
+        *err=grib_get_long( h2,key,&l2);
+        if (l1 != l2) return 0;
+        break;
+    default:
+        len1=sizeof(s1)/sizeof(*s1);
+        len2=sizeof(s2)/sizeof(*s2);
+        *err=grib_get_string( h1,key,s1,&len1);
+        *err=grib_get_string( h2,key,s2,&len2);
+        if (grib_inline_strcmp(s1,s2)) return 0;
+        break;
+    }
+    return 1;
+}
+
+int codes_copy_key(grib_handle* h1,grib_handle* h2,const char* key,int type)
+{
+    double d;
+    double* ad;
+    long l;
+    long* al;
+    char* s=0;
+    char** as=0;
+    size_t len1,len;
+    int err=0;
+
+    if (  type != GRIB_TYPE_DOUBLE &&
+            type != GRIB_TYPE_LONG   &&
+            type != GRIB_TYPE_STRING    ) {
+        err=grib_get_native_type(h1,key,&type);
+        if (err) return err;
+    }
+
+    err=grib_get_size(h1,key,&len1);
+    if (err) return err;
+
+    switch (type) {
+    case GRIB_TYPE_DOUBLE:
+        if (len1==1) {
+            err=grib_get_double(h1,key,&d);
+            if (err) return err;
+            grib_context_log(h1->context,GRIB_LOG_DEBUG,"codes_copy_key: %s=%g\n",key,d);
+            err=grib_set_double(h2,key,d);
+            return err;
+        } else {
+            ad=(double*)grib_context_malloc_clear(h1->context,len1*sizeof(double));
+            err=grib_get_double_array(h1,key,ad,&len1);
+            if (err) return err;
+            err=grib_set_double_array(h2,key,ad,len1);
+            grib_context_free(h1->context,ad);
+            return err;
+        }
+        break;
+    case GRIB_TYPE_LONG:
+        if (len1==1) {
+            err=grib_get_long(h1,key,&l);
+            if (err) return err;
+            grib_context_log(h1->context,GRIB_LOG_DEBUG,"codes_copy_key: %s=%ld\n",key,l);
+            err=grib_set_long(h2,key,l);
+            return err;
+        } else {
+            al=(long*)grib_context_malloc_clear(h1->context,len1*sizeof(long));
+            err=grib_get_long_array(h1,key,al,&len1);
+            if (err) return err;
+            err=grib_set_long_array(h2,key,al,len1);
+            grib_context_free(h1->context,al);
+            return err;
+        }
+        break;
+    case GRIB_TYPE_STRING:
+        err=grib_get_string_length(h1,key,&len);
+        if (len1==1) {
+            s=(char*)grib_context_malloc_clear(h1->context,len);
+            err=grib_get_string(h1,key,s,&len);
+            if (err) return err;
+            grib_context_log(h1->context,GRIB_LOG_DEBUG,"codes_copy_key: %s=%s\n",key,s);
+            err=grib_set_string(h2,key,s,&len);
+            grib_context_free(h1->context,s);
+            return err;
+        } else {
+            as=(char**)grib_context_malloc_clear(h1->context,len1*sizeof(char*));
+            err=grib_get_string_array(h1,key,as,&len1);
+            if (err) return err;
+            err=grib_set_string_array(h2,key,(const char **)as,len1);
+            return err;
+        }
+        break;
+    default:
+        return GRIB_INVALID_TYPE;
+    }
 }

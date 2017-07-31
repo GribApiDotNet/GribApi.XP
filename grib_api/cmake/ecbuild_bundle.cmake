@@ -1,4 +1,4 @@
-# (C) Copyright 1996-2016 ECMWF.
+# (C) Copyright 1996-2017 ECMWF.
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -130,9 +130,12 @@ macro( ecbuild_bundle )
 
   string(TOUPPER "${_PAR_PROJECT}" PNAME)
 
+  ecbuild_info( "---------------------------------------------------------" )
+
   if( BUNDLE_SKIP_${PNAME} )
-    ecbuild_info( "Skipping bundle project ${PNAME}" )
+    ecbuild_info( "Skipping bundle project ${_PAR_PROJECT}" )
   else()
+    ecbuild_info( "Adding bundle project ${_PAR_PROJECT}" )
 
     if( _PAR_STASH )
       ecmwf_stash( PROJECT ${_PAR_PROJECT} DIR ${PROJECT_SOURCE_DIR}/${_PAR_PROJECT} STASH ${_PAR_STASH} ${_PAR_UNPARSED_ARGUMENTS} )
@@ -149,7 +152,10 @@ macro( ecbuild_bundle )
       ecbuild_critical("Source directory '${CMAKE_CURRENT_SOURCE_DIR}/${_PAR_PROJECT}' for subproject '${_PAR_PROJECT}' does not exist or does not contain a CMakeLists.txt file.")
     endif()
 
-    ecbuild_use_package( PROJECT ${_PAR_PROJECT} )
+    # Do not descend into ecbuild if included in a bundle (ECBUILD-333)
+    if( NOT _PAR_PROJECT STREQUAL "ecbuild" )
+      ecbuild_use_package( PROJECT ${_PAR_PROJECT} )
+    endif()
   endif()
 
 endmacro()
@@ -165,13 +171,30 @@ endmacro()
 #
 #   ecbuild_bundle_finalize()
 #
+# Options
+# -------
+#
+# See documentation for ecbuild_install_project() since all arguments are
+# forwarded to an internal call to that macro.
+#
+# If no arguments are passed, then the default installation NAME is set to
+# the default project name ${CMAKE_PROJECT_NAME}
+#
 ##############################################################################
 
 macro( ecbuild_bundle_finalize )
 
   add_custom_target( update DEPENDS ${git_update_targets} )
 
-  ecbuild_install_project( NAME ${CMAKE_PROJECT_NAME} )
+  ecbuild_info("---------------------------------------------------------")
+  ecbuild_info("Bundle ${CMAKE_PROJECT_NAME}")
+  ecbuild_info("---------------------------------------------------------")
+
+  if("${ARGV1}")
+      ecbuild_install_project( ${ARGV} )
+  else()
+      ecbuild_install_project( NAME ${CMAKE_PROJECT_NAME} )
+  endif()
 
   ecbuild_print_summary()
 

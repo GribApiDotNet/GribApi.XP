@@ -1,4 +1,4 @@
-# (C) Copyright 1996-2016 ECMWF.
+# (C) Copyright 1996-2017 ECMWF.
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -11,6 +11,8 @@ set( CMAKE_Fortran_FLAGS_BIT            "-g -O2 -m64 -march=native -DNDEBUG -fno
 set( CMAKE_Fortran_FLAGS_DEBUG          "-O0 -g -fcheck=bounds -fbacktrace -finit-real=snan"                       CACHE STRING "Fortran compiler flags for Debug builds"            FORCE )
 set( CMAKE_Fortran_FLAGS_PRODUCTION     "-O2 -g"                                                                   CACHE STRING "Fortran compiler flags for Production builds."      FORCE )
 set( CMAKE_Fortran_FLAGS_RELWITHDEBINFO "-O2 -g"                                                                   CACHE STRING "Fortran compiler flags for RelWithDebInfo builds."  FORCE )
+
+set( Fortran_FLAG_STACK_ARRAYS "-fstack-arrays" )
 
 ####################################################################
 

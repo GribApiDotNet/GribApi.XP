@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2016 ECMWF.
+ * Copyright 2005-2017 ECMWF.
  *
  * This software is licensed under the terms of the Apache Licence Version 2.0
  * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -23,7 +23,6 @@
    IMPLEMENTS = dump;xref
    IMPLEMENTS = destroy
    IMPLEMENTS = notify_change
-   IMPLEMENTS = compile
    MEMBERS    = long            len
    MEMBERS    = grib_arguments* params
    END_CLASS_DEF
@@ -43,7 +42,6 @@ or edit "action.class" and rerun ./make_class.pl
 static void init_class      (grib_action_class*);
 static void dump            (grib_action* d, FILE*,int);
 static void xref            (grib_action* d, FILE* f,const char* path);
-static void compile         (grib_action* a, grib_compiler* compiler);
 static void destroy         (grib_context*,grib_action*);
 static int create_accessor(grib_section*,grib_action*,grib_loader*);
 static int notify_change(grib_action* a, grib_accessor* observer,grib_accessor* observed);
@@ -74,7 +72,6 @@ static grib_action_class _grib_action_class_gen = {
     &notify_change,                            /* notify_change */
     0,                            /* reparse */
     0,                            /* execute */
-    &compile,                            /* compile */
 };
 
 grib_action_class* grib_action_class_gen = &_grib_action_class_gen;
@@ -85,7 +82,8 @@ static void init_class(grib_action_class* c)
 /* END_CLASS_IMP */
 
 
-grib_action* grib_action_create_gen( grib_context* context, const char* name, const char* op, const long len,  grib_arguments* params,  grib_arguments* default_value,int flags,const char* name_space,const char* set)
+grib_action* grib_action_create_gen(grib_context* context, const char* name, const char* op, const long len,
+        grib_arguments* params,  grib_arguments* default_value,int flags,const char* name_space,const char* set)
 {
     grib_action_gen* a     =  NULL;
     grib_action_class* c   =  grib_action_class_gen;
@@ -106,7 +104,6 @@ grib_action* grib_action_create_gen( grib_context* context, const char* name, co
     if (set)
         act->set				=	grib_context_strdup_persistent(context, set);
     act->default_value       =  default_value;
-
 
     return act;
 }
@@ -130,11 +127,9 @@ static void xref( grib_action* act, FILE* f,const char *path)
 
     fprintf(f,"bless({path=>'%s',size => %ld, name=> '%s', position=> %d, ",path,  (long)a->len , act->name,position);
 
-
     fprintf(f," params=> [");
     grib_arguments_print(act->context,a->params,NULL);
     fprintf(f,"], flags=> {");
-
 
     F(GRIB_ACCESSOR_FLAG_READ_ONLY);
     F(GRIB_ACCESSOR_FLAG_DUMP);
@@ -142,7 +137,6 @@ static void xref( grib_action* act, FILE* f,const char *path)
     F(GRIB_ACCESSOR_FLAG_CAN_BE_MISSING);
     F(GRIB_ACCESSOR_FLAG_HIDDEN);
     F(GRIB_ACCESSOR_FLAG_CONSTRAINT);
-    F(GRIB_ACCESSOR_FLAG_OVERRIDE);
     F(GRIB_ACCESSOR_FLAG_NO_COPY);
     F(GRIB_ACCESSOR_FLAG_COPY_OK);
     F(GRIB_ACCESSOR_FLAG_FUNCTION);
@@ -153,14 +147,12 @@ static void xref( grib_action* act, FILE* f,const char *path)
     F(GRIB_ACCESSOR_FLAG_LONG_TYPE);
     F(GRIB_ACCESSOR_FLAG_DOUBLE_TYPE);
 
-
     /* make sure all flags are processed */
     if(flg) { printf("FLG = %ld\n",(long)flg); }
     Assert(flg == 0);
 
     fprintf(f,"}, defaults=> [");
     grib_arguments_print(act->context,act->default_value,NULL);
-
 
     fprintf(f,"]}, 'xref::%s'),\n",act->op);
 }
@@ -182,16 +174,14 @@ static int create_accessor( grib_section* p, grib_action* act, grib_loader *load
         return GRIB_SUCCESS;
     else
         return loader->init_accessor(loader,ga,act->default_value);
-
 }
 
 static int notify_change(grib_action* act, grib_accessor * notified, grib_accessor* changed)
 {
     if(act->default_value)
-        return grib_pack_expression(notified,grib_arguments_get_expression(notified->parent->h,act->default_value,0));
+        return grib_pack_expression(notified,grib_arguments_get_expression(grib_handle_of_accessor(notified),act->default_value,0));
     return GRIB_SUCCESS;
 }
-
 
 static void destroy(grib_context* context,grib_action* act)
 {
@@ -206,35 +196,4 @@ static void destroy(grib_context* context,grib_action* act)
     grib_context_free_persistent(context, act->name_space);
     if (act->set)
         grib_context_free_persistent(context, act->set);
-
-}
-
-static void compile(grib_action* act, grib_compiler* compiler)
-{
-    grib_action_gen* a  = (grib_action_gen*)act;
-    fprintf(compiler->out,"%s = grib_action_create_gen(ctx,",compiler->var);
-    fprintf(compiler->out,"\"%s\",",act->name);
-    fprintf(compiler->out,"\"%s\",",act->op);
-    fprintf(compiler->out,"%ld,",a->len);
-    grib_compile_arguments(a->params,        compiler);
-    fprintf(compiler->out,",");
-    grib_compile_arguments(act->default_value,        compiler);
-    fprintf(compiler->out,",");
-    grib_compile_flags(compiler,act->flags);
-    fprintf(compiler->out,",");
-    if(act->name_space) {
-        fprintf(compiler->out,"\"%s\",",act->name_space);
-    }
-    else
-    {
-        fprintf(compiler->out,"NULL,");
-    }    
-    if(act->set) {
-        fprintf(compiler->out,"\"%s\");",act->set);
-    }
-    else
-    {
-        fprintf(compiler->out,"NULL);");
-    }
-    fprintf(compiler->out,"\n");
 }

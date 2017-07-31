@@ -8,70 +8,90 @@ execute_process( COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_S
 # Build the executables used by test scripts
 ################################################
 list( APPEND tests
-      index
-      copy_message
-      get
-      get_data
+      grib_index
+      grib_copy_message
+      bufr_copy_message
+      grib_get_keys
+      grib_get_data
       get_pl
       get_pv
-      keys_iterator
-      multi_write
-      multi
-      nearest
-      precision
-      print_data
-      set
-      set_bitmap
-      set_missing
-      set_pv
-      samples
-      count_messages
+      grib_keys_iterator
+      grib_multi_write
+      grib_multi
+      grib_nearest
+      grib_precision
+      grib_print_data
+      grib_set_keys
+      grib_set_bitmap
+      grib_set_missing
+      grib_set_pv
+      grib_set_data
+      grib_samples
+      grib_count_messages
+      grib_count_messages_multi
+      grib_copy_namespace
       read_message
       read_from_file
       get_set_uuid
-      clone
+      grib_clone
+      bufr_attributes
+      bufr_copy_data
+      bufr_clone
+      bufr_expanded
+      bufr_get_keys
+      bufr_get_string_array
+      bufr_keys_iterator
+      bufr_read_header
+      bufr_read_scatterometer
+      bufr_read_synop
+      bufr_read_temp
+      bufr_read_tropical_cyclone
+      bufr_set_keys
+      bufr_copy_keys
+      bufr_subset
+      get_product_kind
 )
 
 foreach( tool ${tests} )
 
-    # Add the test which depends on the above executable
-    ecbuild_add_test( TARGET grib_api_f_${tool}
+    ecbuild_add_test( TARGET eccodes_f_${tool}
                       SOURCES   ${tool}.f90
                       LINKER_LANGUAGE Fortran
-                      LIBS   grib_api_f90 grib_api
+                      LIBS      eccodes_f90 eccodes
                       CONDITION HAVE_FORTRAN
+                      RESOURCES bufr_read_scatterometer_f.ref
                       COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/${tool}.sh
-                      TEST_DEPENDS grib_api_download_gribs
+                      TEST_DEPENDS eccodes_download_gribs eccodes_download_bufrs
     )
 endforeach()
 
 # Executables without a shell script
 # TODO
-ecbuild_add_executable( TARGET    f_new_from_file
+ecbuild_add_executable( TARGET    eccodes_f_new_from_file
                         NOINSTALL
                         SOURCES   new_from_file.f90
                         CONDITION HAVE_FORTRAN
                         LINKER_LANGUAGE Fortran
-                        LIBS      grib_api_f90 grib_api
+                        LIBS      eccodes_f90 eccodes
 )
-ecbuild_add_executable( TARGET    f_copy_namespace
+ecbuild_add_executable( TARGET    eccodes_f_grib_set_gvc
                         NOINSTALL
-                        SOURCES   copy_namespace.f90
+                        SOURCES   grib_set_gvc.f90
                         CONDITION HAVE_FORTRAN
                         LINKER_LANGUAGE Fortran
-                        LIBS      grib_api_f90 grib_api
+                        LIBS      eccodes_f90 eccodes
 )
-ecbuild_add_executable( TARGET    f_set_gvc
+ecbuild_add_executable( TARGET    eccodes_f_grib_print_data_static
                         NOINSTALL
-                        SOURCES   set_gvc.f90
+                        SOURCES   grib_print_data_static.f90
                         CONDITION HAVE_FORTRAN
                         LINKER_LANGUAGE Fortran
-                        LIBS      grib_api_f90 grib_api
+                        LIBS      eccodes_f90 eccodes
 )
 
 
 # # Note extra dependency
-# ecbuild_add_test( TARGET grib_api_f_set_test
+# ecbuild_add_test( TARGET eccodes_f_set_test
 #                   TYPE SCRIPT
 #                   DEPENDS set_gvc set
 #                   COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/set.sh

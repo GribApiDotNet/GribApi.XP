@@ -7,12 +7,14 @@ if CREATING_SHARED_LIBS
 pkgpyexec_LTLIBRARIES = _gribapi_swig.la
 
 _gribapi_swig_la_SOURCES = gribapi_swig_wrap.c grib_interface.c grib_interface.h
-_gribapi_swig_la_LIBADD = $(top_builddir)/src/libgrib_api.la $(PYTHON_LIBS)
+_gribapi_swig_la_LIBADD = $(top_builddir)/src/libeccodes.la $(PYTHON_LIBS)
 _gribapi_swig_la_LDFLAGS = -module -avoid-version $(PYTHON_LDFLAGS)
 
 INCLUDES = $(PYTHON_INCLUDES) -I$(NUMPY_INCLUDE)
 
 gribapi_swig_wrap.c: swig_wrap_$(PYTHON_DATA_HANDLER).c
+	ln -s gribapi/gribapi.py
+	ln -s eccodes/eccodes.py
 	cp -f swig_wrap_$(PYTHON_DATA_HANDLER).c gribapi_swig_wrap.c
 
 gribapi_swig.py: swig_wrap_$(PYTHON_DATA_HANDLER).py
@@ -23,7 +25,7 @@ EXTRA_DIST = grib_interface.h \
 			grib_interface.c \
 			gribapi_swig.i \
 			gribapi.py \
-			__init__.py \
+			eccodes.py \
 			numpy.i \
 			grib_errors.h \
 			extrules.am \
@@ -37,8 +39,8 @@ EXTRA_DIST = grib_interface.h \
 # What else I want installed
 pkgpyexec_DATA = \
 	gribapi.py \
-	gribapi_swig.py \
-	__init__.py
+	eccodes.py \
+	gribapi_swig.py
 
 CLEANFILES = \
 			gribapi_swig_wrap.c \
@@ -60,12 +62,12 @@ CLEANFILES = $(noinst_SCRIPTS) \
 			_gribapi_swig.so
 
 # Extra stuff to go into the distribution
-EXTRA_DIST = setup.py.in \
+EXTRA_DIST = setup.py.autotools.in \
 			grib_interface.h \
 			grib_interface.c \
 			gribapi_swig.i \
 			gribapi.py \
-			__init__.py \
+			eccodes.py \
 			numpy.i \
 			grib_errors.h \
 			extrules.am \
@@ -77,13 +79,12 @@ EXTRA_DIST = setup.py.in \
 			CMakeLists.txt
 
 # What I want installed
-pdir = $(libdir)/python$(PYTHON_VERSION)/site-packages/grib_api
+pdir = $(libdir)/python$(PYTHON_VERSION)/site-packages/eccodes
 p_DATA = \
 	_gribapi_swig.so \
 	gribapi.py \
-	gribapi_swig.py \
-	__init__.py
-
+	eccodes.py \
+	gribapi_swig.py
 
 do_subst = sed -e 's,[@]LIB_JASPER[@],$(LIB_JASPER),g' \
 			-e 's,[@]JASPER_DIR[@],$(JASPER_DIR),g' \
@@ -98,10 +99,12 @@ do_subst = sed -e 's,[@]LIB_JASPER[@],$(LIB_JASPER),g' \
 clean-local:
 	-rm -rf build
 
-setup.py: setup.py.in
-	$(do_subst) < setup.py.in > setup.py
+setup.py: setup.py.autotools.in
+	$(do_subst) < setup.py.autotools.in > setup.py
 
 gribapi_swig_wrap.c: swig_wrap_$(PYTHON_DATA_HANDLER).c
+	ln -s gribapi/gribapi.py
+	ln -s eccodes/eccodes.py
 	cp -f swig_wrap_$(PYTHON_DATA_HANDLER).c gribapi_swig_wrap.c
 
 gribapi_swig.py: swig_wrap_$(PYTHON_DATA_HANDLER).py

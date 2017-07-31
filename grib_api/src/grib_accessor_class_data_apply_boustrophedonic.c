@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2016 ECMWF.
+ * Copyright 2005-2017 ECMWF.
  *
  * This software is licensed under the terms of the Apache Licence Version 2.0
  * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -79,13 +79,15 @@ static grib_accessor_class _grib_accessor_class_data_apply_boustrophedonic = {
     &get_native_type,            /* get native type               */
     0,                /* get sub_section                */
     0,               /* grib_pack procedures long      */
-    0,               /* grib_pack procedures long      */
+    0,                 /* grib_pack procedures long      */
     0,                  /* grib_pack procedures long      */
     0,                /* grib_unpack procedures long    */
     &pack_double,                /* grib_pack procedures double    */
     &unpack_double,              /* grib_unpack procedures double  */
     0,                /* grib_pack procedures string    */
     0,              /* grib_unpack procedures string  */
+    0,          /* grib_pack array procedures string    */
+    0,        /* grib_unpack array procedures string  */
     0,                 /* grib_pack procedures bytes     */
     0,               /* grib_unpack procedures bytes   */
     0,            /* pack_expression */
@@ -98,7 +100,8 @@ static grib_accessor_class _grib_accessor_class_data_apply_boustrophedonic = {
     0,                    /* compare vs. another accessor   */
     &unpack_double_element,     /* unpack only ith value          */
     0,     /* unpack a subarray         */
-    0,             		/* clear          */
+    0,              		/* clear          */
+    0,               		/* clone accessor          */
 };
 
 
@@ -118,6 +121,8 @@ static void init_class(grib_accessor_class* c)
 	c->unpack_long	=	(*(c->super))->unpack_long;
 	c->pack_string	=	(*(c->super))->pack_string;
 	c->unpack_string	=	(*(c->super))->unpack_string;
+	c->pack_string_array	=	(*(c->super))->pack_string_array;
+	c->unpack_string_array	=	(*(c->super))->unpack_string_array;
 	c->pack_bytes	=	(*(c->super))->pack_bytes;
 	c->unpack_bytes	=	(*(c->super))->unpack_bytes;
 	c->pack_expression	=	(*(c->super))->pack_expression;
@@ -130,6 +135,7 @@ static void init_class(grib_accessor_class* c)
 	c->compare	=	(*(c->super))->compare;
 	c->unpack_double_subarray	=	(*(c->super))->unpack_double_subarray;
 	c->clear	=	(*(c->super))->clear;
+	c->make_clone	=	(*(c->super))->make_clone;
 }
 
 /* END_CLASS_IMP */
@@ -139,11 +145,11 @@ static void init(grib_accessor* a,const long v, grib_arguments* args)
     int n=0;
     grib_accessor_data_apply_boustrophedonic *self =(grib_accessor_data_apply_boustrophedonic*)a;
 
-    self->values  = grib_arguments_get_name(a->parent->h,args,n++);
-    self->numberOfRows = grib_arguments_get_name(a->parent->h,args,n++);
-    self->numberOfColumns = grib_arguments_get_name(a->parent->h,args,n++);
-    self->numberOfPoints = grib_arguments_get_name(a->parent->h,args,n++);
-    self->pl        = grib_arguments_get_name(a->parent->h,args,n++);
+    self->values  = grib_arguments_get_name(grib_handle_of_accessor(a),args,n++);
+    self->numberOfRows = grib_arguments_get_name(grib_handle_of_accessor(a),args,n++);
+    self->numberOfColumns = grib_arguments_get_name(grib_handle_of_accessor(a),args,n++);
+    self->numberOfPoints = grib_arguments_get_name(grib_handle_of_accessor(a),args,n++);
+    self->pl        = grib_arguments_get_name(grib_handle_of_accessor(a),args,n++);
 
     a->length = 0;
 }
@@ -158,7 +164,7 @@ static int value_count(grib_accessor* a, long* numberOfPoints)
     int ret=0;
 
     *numberOfPoints=0;
-    ret=grib_get_long_internal(a->parent->h,self->numberOfPoints,numberOfPoints);
+    ret=grib_get_long_internal(grib_handle_of_accessor(a),self->numberOfPoints,numberOfPoints);
 
     return ret;
 }
@@ -176,7 +182,7 @@ static int unpack_double(grib_accessor* a, double* val, size_t *len)
     int ret;
     long numberOfPoints,numberOfRows,numberOfColumns;
 
-    ret=grib_get_long_internal(a->parent->h,self->numberOfPoints,&numberOfPoints);
+    ret=grib_get_long_internal(grib_handle_of_accessor(a),self->numberOfPoints,&numberOfPoints);
     if (ret) return ret;
 
     if(*len < numberOfPoints) {
@@ -184,35 +190,35 @@ static int unpack_double(grib_accessor* a, double* val, size_t *len)
         return GRIB_ARRAY_TOO_SMALL;
     }
 
-    ret=grib_get_size(a->parent->h,self->values,&valuesSize);
+    ret=grib_get_size(grib_handle_of_accessor(a),self->values,&valuesSize);
     if (ret) return ret;
 
     /* constant field */
     if (valuesSize==0) return 0;
 
     if (valuesSize!=numberOfPoints) {
-        grib_context_log(a->parent->h->context,GRIB_LOG_ERROR,"boustrophedonic ordering error: ( %s=%ld ) != (sizeOf(%s)=%ld)",
+        grib_context_log(a->context,GRIB_LOG_ERROR,"boustrophedonic ordering error: ( %s=%ld ) != (sizeOf(%s)=%ld)",
                 self->numberOfPoints,numberOfPoints,self->values,(long)valuesSize);
         return GRIB_DECODING_ERROR;
     }
 
-    values=(double*)grib_context_malloc_clear(a->parent->h->context,sizeof(double)*numberOfPoints);
-    ret=grib_get_double_array_internal(a->parent->h,self->values,values,&valuesSize);
+    values=(double*)grib_context_malloc_clear(a->context,sizeof(double)*numberOfPoints);
+    ret=grib_get_double_array_internal(grib_handle_of_accessor(a),self->values,values,&valuesSize);
     if (ret) return ret;
 
     pvalues=values;
     pval=val;
 
-    ret=grib_get_long_internal(a->parent->h,self->numberOfRows,&numberOfRows);
+    ret=grib_get_long_internal(grib_handle_of_accessor(a),self->numberOfRows,&numberOfRows);
     if (ret) return ret;
 
-    ret=grib_get_long_internal(a->parent->h,self->numberOfColumns,&numberOfColumns);
+    ret=grib_get_long_internal(grib_handle_of_accessor(a),self->numberOfColumns,&numberOfColumns);
     if (ret) return ret;
 
-    if (grib_get_size(a->parent->h,self->pl,&plSize) == GRIB_SUCCESS) {
+    if (grib_get_size(grib_handle_of_accessor(a),self->pl,&plSize) == GRIB_SUCCESS) {
         Assert(plSize==numberOfRows);
-        pl=(long*)grib_context_malloc_clear(a->parent->h->context,sizeof(long)*plSize);
-        ret=grib_get_long_array_internal(a->parent->h,self->pl,pl,&plSize);
+        pl=(long*)grib_context_malloc_clear(a->context,sizeof(long)*plSize);
+        ret=grib_get_long_array_internal(grib_handle_of_accessor(a),self->pl,pl,&plSize);
         if (ret) return ret;
 
         for (j=0;j<numberOfRows;j++) {
@@ -225,7 +231,7 @@ static int unpack_double(grib_accessor* a, double* val, size_t *len)
             }
         }
 
-        grib_context_free(a->parent->h->context,pl);
+        grib_context_free(a->context,pl);
 
     } else {
 
@@ -241,7 +247,7 @@ static int unpack_double(grib_accessor* a, double* val, size_t *len)
 
     }
 
-    grib_context_free(a->parent->h->context,values);
+    grib_context_free(a->context,values);
 
     return GRIB_SUCCESS;
 }
@@ -279,7 +285,7 @@ static int pack_double(grib_accessor* a, const double* val, size_t *len)
     int ret;
     long numberOfPoints,numberOfRows,numberOfColumns;
 
-    ret=grib_get_long_internal(a->parent->h,self->numberOfPoints,&numberOfPoints);
+    ret=grib_get_long_internal(grib_handle_of_accessor(a),self->numberOfPoints,&numberOfPoints);
     if (ret) return ret;
 
     if(*len < numberOfPoints) {
@@ -289,21 +295,21 @@ static int pack_double(grib_accessor* a, const double* val, size_t *len)
 
     valuesSize=numberOfPoints;
 
-    values=(double*)grib_context_malloc_clear(a->parent->h->context,sizeof(double)*numberOfPoints);
+    values=(double*)grib_context_malloc_clear(a->context,sizeof(double)*numberOfPoints);
 
     pvalues=values;
     pval=(double*)val;
 
-    ret=grib_get_long_internal(a->parent->h,self->numberOfRows,&numberOfRows);
+    ret=grib_get_long_internal(grib_handle_of_accessor(a),self->numberOfRows,&numberOfRows);
     if (ret) return ret;
 
-    ret=grib_get_long_internal(a->parent->h,self->numberOfColumns,&numberOfColumns);
+    ret=grib_get_long_internal(grib_handle_of_accessor(a),self->numberOfColumns,&numberOfColumns);
     if (ret) return ret;
 
-    if (grib_get_size(a->parent->h,self->pl,&plSize) == GRIB_SUCCESS) {
+    if (grib_get_size(grib_handle_of_accessor(a),self->pl,&plSize) == GRIB_SUCCESS) {
         Assert(plSize==numberOfRows);
-        pl=(long*)grib_context_malloc_clear(a->parent->h->context,sizeof(long)*plSize);
-        ret=grib_get_long_array_internal(a->parent->h,self->pl,pl,&plSize);
+        pl=(long*)grib_context_malloc_clear(a->context,sizeof(long)*plSize);
+        ret=grib_get_long_array_internal(grib_handle_of_accessor(a),self->pl,pl,&plSize);
         if (ret) return ret;
 
         for (j=0;j<numberOfRows;j++) {
@@ -316,7 +322,7 @@ static int pack_double(grib_accessor* a, const double* val, size_t *len)
             }
         }
 
-        grib_context_free(a->parent->h->context,pl);
+        grib_context_free(a->context,pl);
 
     } else {
 
@@ -331,10 +337,10 @@ static int pack_double(grib_accessor* a, const double* val, size_t *len)
         }
 
     }
-    ret=grib_set_double_array_internal(a->parent->h,self->values,values,valuesSize);
+    ret=grib_set_double_array_internal(grib_handle_of_accessor(a),self->values,values,valuesSize);
     if (ret) return ret;
 
-    grib_context_free(a->parent->h->context,values);
+    grib_context_free(a->context,values);
 
     return ret;
 }

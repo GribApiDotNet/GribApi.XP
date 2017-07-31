@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2016 ECMWF.
+ * Copyright 2005-2017 ECMWF.
  *
  * This software is licensed under the terms of the Apache Licence Version 2.0
  * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -36,7 +36,8 @@ grib_option grib_options[]={
     {"V",0,0,0,1,0}
 };
 
-char* grib_tool_description="Print a latitude, longitude, data values list ";
+char* grib_tool_description="Print a latitude, longitude, data values list.\n"
+                            "\tNote: Rotated grids are first unrotated";
 char* grib_tool_name="grib_get_data";
 char* grib_tool_usage="[options] grib_file grib_file ...";
 
@@ -195,6 +196,7 @@ int grib_tool_new_handle_action(grib_runtime_options* options, grib_handle* h)
     }
 
     if (iter) grib_iterator_delete(iter);
+    if (bitmap) free(bitmap);
 
     free(data_values);
     if (iter) {
@@ -282,4 +284,10 @@ static grib_values* get_key_values(grib_runtime_options* options,grib_handle* h)
     }
     return options->print_keys;
 
+}
+
+int grib_no_handle_action(grib_runtime_options* options, int err)
+{
+    fprintf(dump_file,"\t\t\"ERROR: unreadable message\"\n");
+    return 0;
 }

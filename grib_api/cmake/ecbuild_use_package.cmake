@@ -1,4 +1,4 @@
-# (C) Copyright 1996-2016 ECMWF.
+# (C) Copyright 1996-2017 ECMWF.
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -16,6 +16,11 @@
 #
 #   ecbuild_use_package( PROJECT <name>
 #                        [ VERSION <version> [ EXACT ] ]
+#                        [ URL <url> ]
+#                        [ DESCRIPTION <description> ]
+#                        [ TYPE <type> ]
+#                        [ PURPOSE <purpose> ]
+#                        [ FAILURE_MSG <message> ]
 #                        [ REQUIRED ]
 #                        [ QUIET ] )
 #
@@ -30,6 +35,21 @@
 #
 # EXACT : optional, requires VERSION
 #   require the exact version rather than a minimum version
+#
+# URL : optional
+#   homepage of the package (shown in summary and stored in the cache)
+#
+# DESCRIPTION : optional
+#   string describing the package (shown in summary and stored in the cache)
+#
+# TYPE : optional, one of RUNTIME|OPTIONAL|RECOMMENDED|REQUIRED
+#   type of dependency of the project on this package (defaults to OPTIONAL)
+#
+# PURPOSE : optional
+#   string describing which functionality this package enables in the project
+#
+# FAILURE_MSG : optional
+#   string to be appended to the failure message if the package is not found
 #
 # REQUIRED : optional
 #   fail if package cannot be found
@@ -81,7 +101,7 @@
 macro( ecbuild_use_package )
 
   set( options            REQUIRED QUIET EXACT )
-  set( single_value_args  PROJECT VERSION )
+  set( single_value_args  PROJECT VERSION URL DESCRIPTION TYPE PURPOSE FAILURE_MSG )
   set( multi_value_args )
 
   cmake_parse_arguments( _p "${options}" "${single_value_args}" "${multi_value_args}"  ${_FIRST_ARG} ${ARGN} )
@@ -96,6 +116,12 @@ macro( ecbuild_use_package )
 
   if( _p_EXACT AND NOT _p_VERSION )
     ecbuild_critical("Call to ecbuild_use_package() requests EXACT but doesn't specify VERSION.")
+  endif()
+
+  # If the package is required, set TYPE to REQUIRED
+  # Due to shortcomings in CMake's argument parser, passing TYPE REQUIRED has no effect
+  if( _p_REQUIRED )
+    set( _p_TYPE REQUIRED )
   endif()
 
   # try to find the package as a subproject and build it
@@ -136,7 +162,6 @@ macro( ecbuild_use_package )
 
   # check if was already added as subproject ...
 
-  set( _just_added 0 )
   set( _do_version_check 0 )
   set( _source_description "" )
 
@@ -144,10 +169,8 @@ macro( ecbuild_use_package )
 
   if( NOT _ecbuild_project_${pkgUPPER} EQUAL "-1" )
     ecbuild_debug("ecbuild_use_package(${_p_PROJECT}): ${_p_PROJECT} was previously added as a subproject")
-    set( ${pkgUPPER}_previous_subproj_ 1 )
   else()
     ecbuild_debug("ecbuild_use_package(${_p_PROJECT}): ${_p_PROJECT} was not previously added as a subproject")
-    set( ${pkgUPPER}_previous_subproj_ 0 )
   endif()
 
   # solve capitalization issues
@@ -159,25 +182,30 @@ macro( ecbuild_use_package )
     set( ${_p_PROJECT}_FOUND 1 )
   endif()
 
-  # Case 1) project was NOT previously added as subproject and is NOT already FOUND
+  # Case 1) project exists as subproject
 
-  if( NOT ${pkgUPPER}_FOUND AND NOT ${pkgUPPER}_previous_subproj_ )
+  if( DEFINED ${pkgUPPER}_subproj_dir_ )
 
-    # check if SUBPROJDIR is set
+    # check version is acceptable
+    set( _do_version_check 1 )
 
-    if( DEFINED ${pkgUPPER}_subproj_dir_ )
+    # Case 1a) project was already found
 
-      ecbuild_debug("ecbuild_use_package(${_p_PROJECT}): 1) project was NOT previously added as subproject and is NOT already FOUND")
+    if( ${pkgUPPER}_FOUND )
 
-      # check version is acceptable
-      set( _just_added 1 )
-      set( _do_version_check 1 )
+      ecbuild_debug("ecbuild_use_package(${_p_PROJECT}): 1a) project was already added as subproject, check version is acceptable")
+
+      set( _source_description "already existing sub-project ${_p_PROJECT} (sources)" )
+
+    # Case 1b) project was not already found
+
+    else()
+
+      ecbuild_debug("ecbuild_use_package(${_p_PROJECT}): 1b) project is NOT already FOUND and exists as subproject")
+
       set( _source_description "sub-project ${_p_PROJECT} (sources)" )
 
       # add as a subproject
-
-      set( ${pkgUPPER}_subproj_dir_ ${${pkgUPPER}_subproj_dir_} CACHE PATH "Path to ${_p_PROJECT} source directory" )
-      mark_as_advanced( ${pkgUPPER}_subproj_dir_ )
 
       set( ECBUILD_PROJECTS ${ECBUILD_PROJECTS} ${_p_PROJECT} CACHE INTERNAL "" )
 
@@ -195,27 +223,12 @@ macro( ecbuild_use_package )
 
   endif()
 
-  # Case 2) project was already added as subproject, so is already FOUND -- BUT must check version acceptable
+  # Case 2) project does NOT exist as subproject, but is FOUND
+  #   it was previously found as a binary ( either build or install tree )
 
-  if( ${pkgUPPER}_previous_subproj_ )
+  if( ${pkgUPPER}_FOUND AND NOT ${pkgUPPER}_subproj_dir_ )
 
-    ecbuild_debug("ecbuild_use_package(${_p_PROJECT}): 2) project was already added as subproject, check version is acceptable")
-
-    if( NOT ${pkgUPPER}_FOUND )
-      ecbuild_critical( "${_p_PROJECT} was already included as sub-project but ${pkgUPPER}_FOUND isn't set -- this is likely a BUG in ecbuild" )
-    endif()
-
-    # check version is acceptable
-    set( _do_version_check 1 )
-    set( _source_description "already existing sub-project ${_p_PROJECT} (sources)" )
-
-  endif()
-
-  # Case 3) project was NOT added as subproject, but is FOUND -- so it was previously found as a binary ( either build or install tree )
-
-  if( ${pkgUPPER}_FOUND AND NOT ${pkgUPPER}_previous_subproj_ AND NOT _just_added )
-
-    ecbuild_debug("ecbuild_use_package(${_p_PROJECT}): 3) project was NOT previously added as subproject, but is FOUND")
+    ecbuild_debug("ecbuild_use_package(${_p_PROJECT}): 2) project does NOT exist as subproject, but is FOUND")
 
     # check version is acceptable
     set( _do_version_check 1 )
@@ -229,7 +242,6 @@ macro( ecbuild_use_package )
   # ecbuild_debug_var( _p_VERSION )
   # ecbuild_debug_var( ${pkgUPPER}_VERSION )
   # ecbuild_debug_var( ${_p_PROJECT}_VERSION )
-  # ecbuild_debug_var( _just_added )
   # ecbuild_debug_var( _do_version_check )
   # ecbuild_debug_var( _source_description )
   # ecbuild_debug_var( ${pkgUPPER}_FOUND )
@@ -249,12 +261,21 @@ macro( ecbuild_use_package )
     endif()
   endif()
 
-  # Case 4) is NOT FOUND so far, NOT as sub-project (now or before), and NOT as binary neither
+  # Case 3) is NOT FOUND so far, NOT as sub-project (now or before), and NOT as binary neither
   #         so try to find precompiled binaries or a build tree
 
-  if( NOT ${pkgUPPER}_FOUND )
+  if( ${pkgUPPER}_FOUND )
+    # Only set package properties if ecbuild_find_package, which itself calls
+    # set_package_properties, is not subsequently called since doing so would
+    # duplicate the purpose
+    set_package_properties( ${_p_PROJECT} PROPERTIES
+                            URL "${_p_URL}"
+                            DESCRIPTION "${_p_DESCRIPTION}"
+                            TYPE "${_p_TYPE}"
+                            PURPOSE "${_p_PURPOSE}" )
+  else()
 
-    ecbuild_debug("ecbuild_use_package(${_p_PROJECT}): 4) project has NOT been added as a subproject and is NOT already FOUND")
+    ecbuild_debug("ecbuild_use_package(${_p_PROJECT}): 3) project does NOT exist as subproject and is NOT already FOUND")
 
     set( _opts )
     if( _p_VERSION )
@@ -265,6 +286,22 @@ macro( ecbuild_use_package )
     endif()
     if( _p_REQUIRED )
       list( APPEND _opts REQUIRED )
+    endif()
+    if( _p_URL )
+      list( APPEND _opts URL ${_p_URL} )
+    endif()
+    if( _p_DESCRIPTION )
+      list( APPEND _opts DESCRIPTION "${_p_DESCRIPTION}" )
+    endif()
+    if( _p_TYPE )
+      list( APPEND _opts TYPE ${_p_TYPE} )
+    endif()
+    if( _p_PURPOSE )
+      list( APPEND _opts PURPOSE "${_p_PURPOSE}" )
+    endif()
+    if( _p_FAILURE_MSG )
+      ecbuild_debug_var( _p_FAILURE_MSG )
+      list( APPEND _opts FAILURE_MSG "${_p_FAILURE_MSG}" )
     endif()
 
     ecbuild_find_package( NAME ${_p_PROJECT} ${_opts} )

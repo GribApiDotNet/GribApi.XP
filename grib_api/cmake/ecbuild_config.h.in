@@ -1,5 +1,5 @@
 /*
- * (C) Copyright 1996-2016 ECMWF.
+ * (C) Copyright 1996-2017 ECMWF.
  *
  * This software is licensed under the terms of the Apache Licence Version 2.0
  * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -44,6 +44,7 @@
 #cmakedefine EC_HAVE_FUNOPEN
 #cmakedefine EC_HAVE_FLOCK
 #cmakedefine EC_HAVE_MMAP
+#cmakedefine EC_HAVE_FOPENCOOKIE
 
 #cmakedefine EC_HAVE_POSIX_MEMALIGN
 
@@ -121,6 +122,7 @@
 #cmakedefine EC_HAVE_GETPWUID_R
 #cmakedefine EC_HAVE_GETPWNAM_R
 #cmakedefine EC_HAVE_READDIR_R
+#cmakedefine EC_HAVE_DIRENT_D_TYPE
 #cmakedefine EC_HAVE_GETHOSTBYNAME_R
 
 /* --- compiler __attribute__ support --- */
@@ -145,6 +147,7 @@
 
 #cmakedefine EC_HAVE_CXXABI_H
 #cmakedefine EC_HAVE_CXX_BOOL
+#cmakedefine EC_HAVE_CXX_INT_128
 
 #cmakedefine EC_HAVE_CXX_SSTREAM
 

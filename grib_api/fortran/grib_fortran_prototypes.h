@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2016 ECMWF.
+ * Copyright 2005-2017 ECMWF.
  *
  * This software is licensed under the terms of the Apache Licence Version 2.0
  * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -49,6 +49,7 @@ int grib_f_iterator_next(int *iterid, double *lat, double *lon, double *value);
 int grib_f_iterator_delete_(int *iterid);
 int grib_f_iterator_delete__(int *iterid);
 int grib_f_iterator_delete(int *iterid);
+
 int grib_f_keys_iterator_new_(int *gid, int *iterid, char *name_space, int len);
 int grib_f_keys_iterator_new__(int *gid, int *iterid, char *name_space, int len);
 int grib_f_keys_iterator_new(int *gid, int *iterid, char *name_space, int len);
@@ -58,6 +59,24 @@ int grib_f_keys_iterator_next(int *iterid);
 int grib_f_keys_iterator_delete_(int *iterid);
 int grib_f_keys_iterator_delete__(int *iterid);
 int grib_f_keys_iterator_delete(int *iterid);
+
+/*BUFR keys iterator*/
+int codes_f_bufr_keys_iterator_new_(int *gid, int *iterid);
+int codes_f_bufr_keys_iterator_new__(int *gid, int *iterid);
+int codes_f_bufr_keys_iterator_new(int *gid, int *iterid);
+int codes_f_bufr_keys_iterator_next_(int *iterid);
+int codes_f_bufr_keys_iterator_next__(int *iterid);
+int codes_f_bufr_keys_iterator_next(int *iterid);
+int codes_f_bufr_keys_iterator_get_name_(int *iterid, char *name, int len);
+int codes_f_bufr_keys_iterator_get_name__(int *kiter, char *name, int len);
+int codes_f_bufr_keys_iterator_get_name(int *kiter, char *name, int len);
+int codes_f_bufr_keys_iterator_rewind_(int *kiter);
+int codes_f_bufr_keys_iterator_rewind__(int *kiter);
+int codes_f_bufr_keys_iterator_rewind(int *kiter);
+int codes_f_bufr_keys_iterator_delete_(int *iterid);
+int codes_f_bufr_keys_iterator_delete__(int *iterid);
+int codes_f_bufr_keys_iterator_delete(int *iterid);
+
 int grib_f_gribex_mode_on_(void);
 int grib_f_gribex_mode_on__(void);
 int grib_f_gribex_mode_on(void);
@@ -97,9 +116,9 @@ int grib_f_new_from_message_copy(int *gid, void *buffer, size_t *bufsize);
 int grib_f_new_from_samples_(int *gid, char *name, int lname);
 int grib_f_new_from_samples__(int *gid, char *name, int lname);
 int grib_f_new_from_samples(int *gid, char *name, int lname);
-int grib_f_new_from_template_(int *gid, char *name, int lname);
-int grib_f_new_from_template__(int *gid, char *name, int lname);
-int grib_f_new_from_template(int *gid, char *name, int lname);
+int codes_bufr_f_new_from_samples_(int *gid, char *name, int lname);
+int codes_bufr_f_new_from_samples__(int *gid, char *name, int lname);
+int codes_bufr_f_new_from_samples(int *gid, char *name, int lname);
 int grib_f_clone_(int *gidsrc, int *giddest);
 int grib_f_clone__(int *gidsrc, int *giddest);
 int grib_f_clone(int *gidsrc, int *giddest);
@@ -109,12 +128,27 @@ int grib_f_util_sections_copy(int *gidfrom, int *gidto, int *what, int *gidout);
 int grib_f_copy_namespace_(int *gidsrc, char *name, int *giddest, int len);
 int grib_f_copy_namespace__(int *gidsrc, char *name, int *giddest, int len);
 int grib_f_copy_namespace(int *gidsrc, char *name, int *giddest, int len);
+
+int grib_f_copy_key_ (int *gidsrc, char *name, int *giddest, int len);
+int grib_f_copy_key__(int *gidsrc, char *name, int *giddest, int len);
+int grib_f_copy_key  (int *gidsrc, char *name, int *giddest, int len);
+
 int grib_f_count_in_file(int *fid, int *n);
 int grib_f_count_in_file_(int *fid, int *n);
 int grib_f_count_in_file__(int *fid, int *n);
+
+int any_f_new_from_file_(int *fid, int *gid);
+int any_f_new_from_file__(int *fid, int *gid);
+int any_f_new_from_file(int *fid, int *gid);
+
 int grib_f_new_from_file_(int *fid, int *gid);
 int grib_f_new_from_file__(int *fid, int *gid);
 int grib_f_new_from_file(int *fid, int *gid);
+
+int bufr_f_new_from_file_(int *fid, int *gid);
+int bufr_f_new_from_file__(int *fid, int *gid);
+int bufr_f_new_from_file(int *fid, int *gid);
+
 int grib_f_headers_only_new_from_file_(int *fid, int *gid);
 int grib_f_headers_only_new_from_file__(int *fid, int *gid);
 int grib_f_headers_only_new_from_file(int *fid, int *gid);
@@ -275,6 +309,14 @@ int grib_f_set_real8_array(int *gid, char *key, double *val, int *size, int len)
 int grib_f_set_force_real8_array_(int *gid, char *key, double *val, int *size, int len);
 int grib_f_set_force_real8_array__(int *gid, char *key, double *val, int *size, int len);
 int grib_f_set_force_real8_array(int *gid, char *key, double *val, int *size, int len);
+
+int grib_f_get_string_array(int* gid, char* key, char* val,int* nvals,int* slen,int len);
+int grib_f_get_string_array_(int* gid, char* key, char* val,int* nvals,int* slen,int len);
+int grib_f_get_string_array__(int* gid, char* key, char* val,int* nvals,int* slen,int len);
+int grib_f_set_string_array(int* gid, char* key, char* val,int* nvals,int* slen, int len);
+int grib_f_set_string_array_(int* gid, char* key, char* val,int* nvals,int* slen, int len);
+int grib_f_set_string_array__(int* gid, char* key, char* val,int* nvals,int* slen, int len);
+
 int grib_f_get_string_(int *gid, char *key, char *val, int len, int len2);
 int grib_f_get_string__(int *gid, char *key, char *val, int len, int len2);
 int grib_f_get_string(int *gid, char *key, char *val, int len, int len2);
@@ -305,6 +347,25 @@ int grib_f_multi_write(int *gid, int *fid);
 int grib_f_multi_append_(int *ingid, int *sec, int *mgid);
 int grib_f_multi_append(int *ingid, int *sec, int *mgid);
 int grib_f_multi_append__(int *ingid, int *sec, int *mgid);
+
+int codes_f_bufr_copy_data(int* gid1,int* gid2);
+int codes_f_bufr_copy_data_(int* gid1,int* gid2);
+int codes_f_bufr_copy_data__(int* gid1,int* gid2);
+
+int grib_f_set_definitions_path_(char *path, int len);
+int grib_f_set_definitions_path__(char *path, int len);
+int grib_f_set_definitions_path(char *path, int len);
+int grib_f_set_samples_path_(char *path, int len);
+int grib_f_set_samples_path__(char *path, int len);
+int grib_f_set_samples_path(char *path, int len);
+
+int grib_f_julian_to_datetime(double* jd,long* year,long* month,long* day,long *hour,long *minute,long *second);
+int grib_f_julian_to_datetime_(double* jd,long* year,long* month,long* day,long *hour,long *minute,long *second);
+int grib_f_julian_to_datetime__(double* jd,long* year,long* month,long* day,long *hour,long *minute,long *second);
+
+int grib_f_datetime_to_julian(long* year,long* month,long* day, long* hour,long* minute,long* second,double* jd);
+int grib_f_datetime_to_julian_(long* year,long* month,long* day, long* hour,long* minute,long* second,double* jd);
+int grib_f_datetime_to_julian__(long* year,long* month,long* day, long* hour,long* minute,long* second,double* jd);
 
 #ifdef __cplusplus
 }
