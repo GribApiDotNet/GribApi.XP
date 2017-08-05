@@ -110,6 +110,6 @@ void grib_check(const char* call,const char*  file,int line,int e,const char* ms
 		} else {
 			grib_context_log(c,GRIB_LOG_ERROR,"%s",grib_get_error_message(e));
 		}
-        grib_exit(e);
+        exit(e);
     }
 }
