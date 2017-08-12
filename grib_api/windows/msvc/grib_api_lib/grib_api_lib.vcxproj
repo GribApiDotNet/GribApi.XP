@@ -570,6 +570,8 @@
     <ClCompile Include="..\..\..\tools\wingetopt.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\src\eccodes.h" />
+    <ClInclude Include="..\..\..\src\eccodes_version.h" />
     <ClInclude Include="..\..\..\src\eccodes_windef.h" />
     <ClInclude Include="..\..\..\src\grib_accessor_class.h" />
     <ClInclude Include="..\..\..\src\grib_accessor_factory.h" />
