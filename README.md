@@ -31,22 +31,15 @@ Not scripted yet, sorry :(
 2. Download the latest version from https://software.ecmwf.int/wiki/display/GRIB/Download
 3. **As administrator** (ensures symbolic links are created), extract the files files to `root/grib_api` directory.
 4. Commit the vanilla changes to the local repo.
-5. Open a VS Developer Command Prompt.
+5. Now you need to update the `vcproj` files. This is the tricky bit. There are 2 ways to do this. The second is hacky, but much easier.
+
+##### Method 1 (Hard)
+Open a VS Developer Command Prompt.
 ```shell
 > powershell
 PS > cd root/grib_api/windows
 PS > dir -Recurse *.vcproj | ForEach-Object { devenv /upgrade /q $_.FullName}
 ```
-6. From a Bash prompt (e.g., `Git Bash` or `Bash on Windows`)
-```shell
-$ cd grib_api/src
-$ perl -p -i.bak -e 's/\sexit(?=\(\w)/ grib_exit/g' *.c
-$ rm *.bak && git checkout grib_dumper_class_c_code.c grib_lex.c md5.c
-$ git am --ignore-whitespace --interactive ../../build/grib_errors_c.patch
-$ git am --ignore-whitespace --interactive ../../build/grib_api_h.patch
-$ cd ../windows
-$ git am --ignore-whitespace --interactive ../../build/vsproj.patch
-$ git add -A :/
-$ git commit -m "Some commit msg"
-```
-
+Copy the preproccors, output directories, etc from the previous GribApi.XP project files to the new ones.
+##### Method 2 (Easy)
+Do not open the VS Developer Command Prompt. Instead, open the `vcproj` in `grib_api/windows` in a text editor. Copy/paste the list of files from the vcproj files into GribApi.XP's `vcprojx` files.
