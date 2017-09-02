@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2016 ECMWF.
+ * Copyright 2005-2017 ECMWF.
  *
  * This software is licensed under the terms of the Apache Licence Version 2.0
  * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -19,7 +19,8 @@
    IMPLEMENTS = get_native_type;init
    IMPLEMENTS = compare;unpack_string;value_count
    MEMBERS = const char* offset
-   MEMBERS = const char* length
+   MEMBERS = grib_expression* length
+   MEMBERS = grib_string_list* blacklist
    END_CLASS_DEF
 
  */
@@ -46,7 +47,8 @@ typedef struct grib_accessor_md5 {
 /* Members defined in gen */
 /* Members defined in md5 */
 	const char* offset;
-	const char* length;
+	grib_expression* length;
+	grib_string_list* blacklist;
 } grib_accessor_md5;
 
 extern grib_accessor_class* grib_accessor_class_gen;
@@ -69,13 +71,15 @@ static grib_accessor_class _grib_accessor_class_md5 = {
     &get_native_type,            /* get native type               */
     0,                /* get sub_section                */
     0,               /* grib_pack procedures long      */
-    0,               /* grib_pack procedures long      */
+    0,                 /* grib_pack procedures long      */
     0,                  /* grib_pack procedures long      */
     0,                /* grib_unpack procedures long    */
     0,                /* grib_pack procedures double    */
     0,              /* grib_unpack procedures double  */
     0,                /* grib_pack procedures string    */
     &unpack_string,              /* grib_unpack procedures string  */
+    0,          /* grib_pack array procedures string    */
+    0,        /* grib_unpack array procedures string  */
     0,                 /* grib_pack procedures bytes     */
     0,               /* grib_unpack procedures bytes   */
     0,            /* pack_expression */
@@ -88,7 +92,8 @@ static grib_accessor_class _grib_accessor_class_md5 = {
     &compare,                    /* compare vs. another accessor   */
     0,     /* unpack only ith value          */
     0,     /* unpack a subarray         */
-    0,             		/* clear          */
+    0,              		/* clear          */
+    0,               		/* clone accessor          */
 };
 
 
@@ -110,6 +115,8 @@ static void init_class(grib_accessor_class* c)
 	c->pack_double	=	(*(c->super))->pack_double;
 	c->unpack_double	=	(*(c->super))->unpack_double;
 	c->pack_string	=	(*(c->super))->pack_string;
+	c->pack_string_array	=	(*(c->super))->pack_string_array;
+	c->unpack_string_array	=	(*(c->super))->unpack_string_array;
 	c->pack_bytes	=	(*(c->super))->pack_bytes;
 	c->unpack_bytes	=	(*(c->super))->unpack_bytes;
 	c->pack_expression	=	(*(c->super))->pack_expression;
@@ -122,6 +129,7 @@ static void init_class(grib_accessor_class* c)
 	c->unpack_double_element	=	(*(c->super))->unpack_double_element;
 	c->unpack_double_subarray	=	(*(c->super))->unpack_double_subarray;
 	c->clear	=	(*(c->super))->clear;
+	c->make_clone	=	(*(c->super))->make_clone;
 }
 
 /* END_CLASS_IMP */
@@ -129,10 +137,25 @@ static void init_class(grib_accessor_class* c)
 static void init(grib_accessor* a, const long len , grib_arguments* arg )
 {
     grib_accessor_md5* self = (grib_accessor_md5*)a;
+  char* b=0;
     int n=0;
+  grib_string_list* current=0;
+  grib_context* context=a->context;
 
-    self->offset = grib_arguments_get_name(a->parent->h,arg,n++);
-    self->length = grib_arguments_get_name(a->parent->h,arg,n++);
+    self->offset = grib_arguments_get_name(grib_handle_of_accessor(a),arg,n++);
+  self->length = grib_arguments_get_expression(grib_handle_of_accessor(a),arg,n++);
+  self->blacklist=0;
+  while ( (b=(char*)grib_arguments_get_name(grib_handle_of_accessor(a),arg,n++)) !=NULL) {
+    if (! self->blacklist) {
+      self->blacklist=(grib_string_list*)grib_context_malloc_clear(context,sizeof(grib_string_list));
+      self->blacklist->value=grib_context_strdup(context,b);
+      current=self->blacklist;
+    } else {
+      current->next=(grib_string_list*)grib_context_malloc_clear(context,sizeof(grib_string_list));
+      current->next->value=grib_context_strdup(context,b);
+      current=current->next;
+    }
+  }
     a->length = 0;
     a->flags |= GRIB_ACCESSOR_FLAG_READ_ONLY;
     a->flags |= GRIB_ACCESSOR_FLAG_EDITION_SPECIFIC;
@@ -140,7 +163,7 @@ static void init(grib_accessor* a, const long len , grib_arguments* arg )
 }
 
 static int  get_native_type(grib_accessor* a){
-    return GRIB_TYPE_BYTES;
+  return GRIB_TYPE_STRING;
 }
 
 
@@ -178,28 +201,30 @@ static int unpack_string(grib_accessor*a , char*  v, size_t *len){
     struct grib_md5_state md5c;
 
     if (*len <32 ) {
-        grib_context_log(a->parent->h->context,GRIB_LOG_ERROR,"md5: array too small");
+        grib_context_log(a->context,GRIB_LOG_ERROR,"md5: array too small");
         return GRIB_ARRAY_TOO_SMALL;
     }
 
-    if((ret = grib_get_long_internal(a->parent->h,self->offset,&offset))
+    if((ret = grib_get_long_internal(grib_handle_of_accessor(a),self->offset,&offset))
             != GRIB_SUCCESS)
         return ret;
-    if((ret = grib_get_long_internal(a->parent->h,self->length,&length))
+  if((ret = grib_expression_evaluate_long(grib_handle_of_accessor(a),self->length,&length))
             != GRIB_SUCCESS)
         return ret;
 
-
-    mess=(unsigned char*)grib_context_malloc(a->parent->h->context,length);
-    memcpy(mess,a->parent->h->buffer->data+offset,length);
+    mess=(unsigned char*)grib_context_malloc(a->context,length);
+    memcpy(mess,grib_handle_of_accessor(a)->buffer->data+offset,length);
     mess_len=length;
 
-    blacklist=a->parent->h->context->blacklist;
+    blacklist=a->context->blacklist;
+  /* passed blacklist overrides context blacklist. 
+     Consider to modify following line to extend context blacklist.
+  */
+  if (self->blacklist) blacklist=self->blacklist;
     while (blacklist && blacklist->value) {
-
-        b=grib_find_accessor(a->parent->h,blacklist->value);
+        b=grib_find_accessor(grib_handle_of_accessor(a),blacklist->value);
         if (!b) {
-            grib_context_free(a->parent->h->context,mess);
+            grib_context_free(a->context,mess);
             return GRIB_NOT_FOUND;
         }
 
@@ -212,7 +237,7 @@ static int unpack_string(grib_accessor*a , char*  v, size_t *len){
     grib_md5_init(&md5c);
     grib_md5_add(&md5c,mess,mess_len);
     grib_md5_end(&md5c,v);
-    grib_context_free(a->parent->h->context,mess);
+    grib_context_free(a->context,mess);
 
     return ret;
 }

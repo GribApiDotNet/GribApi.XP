@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2016 ECMWF.
+ * Copyright 2005-2017 ECMWF.
  *
  * This software is licensed under the terms of the Apache Licence Version 2.0
  * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -70,6 +70,7 @@ typedef struct grib_accessor_data_jpeg2000_packing {
 	const char*  reference_value;
 	const char*  binary_scale_factor;
 	const char*  decimal_scale_factor;
+	const char*  optimize_scaling_factor;
 /* Members defined in data_jpeg2000_packing */
 	const char*   type_of_compression_used;
 	const char*   target_compression_ratio;
@@ -102,13 +103,15 @@ static grib_accessor_class _grib_accessor_class_data_jpeg2000_packing = {
     0,            /* get native type               */
     0,                /* get sub_section                */
     0,               /* grib_pack procedures long      */
-    0,               /* grib_pack procedures long      */
+    0,                 /* grib_pack procedures long      */
     0,                  /* grib_pack procedures long      */
     0,                /* grib_unpack procedures long    */
     &pack_double,                /* grib_pack procedures double    */
     &unpack_double,              /* grib_unpack procedures double  */
     0,                /* grib_pack procedures string    */
     0,              /* grib_unpack procedures string  */
+    0,          /* grib_pack array procedures string    */
+    0,        /* grib_unpack array procedures string  */
     0,                 /* grib_pack procedures bytes     */
     0,               /* grib_unpack procedures bytes   */
     0,            /* pack_expression */
@@ -121,7 +124,8 @@ static grib_accessor_class _grib_accessor_class_data_jpeg2000_packing = {
     0,                    /* compare vs. another accessor   */
     &unpack_double_element,     /* unpack only ith value          */
     0,     /* unpack a subarray         */
-    0,             		/* clear          */
+    0,              		/* clear          */
+    0,               		/* clone accessor          */
 };
 
 
@@ -143,6 +147,8 @@ static void init_class(grib_accessor_class* c)
 	c->unpack_long	=	(*(c->super))->unpack_long;
 	c->pack_string	=	(*(c->super))->pack_string;
 	c->unpack_string	=	(*(c->super))->unpack_string;
+	c->pack_string_array	=	(*(c->super))->pack_string_array;
+	c->unpack_string_array	=	(*(c->super))->unpack_string_array;
 	c->pack_bytes	=	(*(c->super))->pack_bytes;
 	c->unpack_bytes	=	(*(c->super))->unpack_bytes;
 	c->pack_expression	=	(*(c->super))->pack_expression;
@@ -155,13 +161,14 @@ static void init_class(grib_accessor_class* c)
 	c->compare	=	(*(c->super))->compare;
 	c->unpack_double_subarray	=	(*(c->super))->unpack_double_subarray;
 	c->clear	=	(*(c->super))->clear;
+	c->make_clone	=	(*(c->super))->make_clone;
 }
 
 /* END_CLASS_IMP */
 
 static int first = 1;
 
-#define JASPER_LIB   1
+#define JASPER_LIB 1
 #define OPENJPEG_LIB 2
 
 static void init(grib_accessor* a,const long v, grib_arguments* args)
@@ -170,13 +177,13 @@ static void init(grib_accessor* a,const long v, grib_arguments* args)
     grib_accessor_data_jpeg2000_packing *self =(grib_accessor_data_jpeg2000_packing*)a;
 
     self->jpeg_lib = 0;
-    self->type_of_compression_used  = grib_arguments_get_name(a->parent->h,args,self->carg++);
-    self->target_compression_ratio = grib_arguments_get_name(a->parent->h,args,self->carg++);
-    self->ni                     = grib_arguments_get_name(a->parent->h,args,self->carg++);
-    self->nj                     = grib_arguments_get_name(a->parent->h,args,self->carg++);
-    self->list_defining_points   = grib_arguments_get_name(a->parent->h,args,self->carg++);
-    self->number_of_data_points  = grib_arguments_get_name(a->parent->h,args,self->carg++);
-    self->scanning_mode      = grib_arguments_get_name(a->parent->h,args,self->carg++);
+    self->type_of_compression_used  = grib_arguments_get_name(grib_handle_of_accessor(a),args,self->carg++);
+    self->target_compression_ratio = grib_arguments_get_name(grib_handle_of_accessor(a),args,self->carg++);
+    self->ni                     = grib_arguments_get_name(grib_handle_of_accessor(a),args,self->carg++);
+    self->nj                     = grib_arguments_get_name(grib_handle_of_accessor(a),args,self->carg++);
+    self->list_defining_points   = grib_arguments_get_name(grib_handle_of_accessor(a),args,self->carg++);
+    self->number_of_data_points  = grib_arguments_get_name(grib_handle_of_accessor(a),args,self->carg++);
+    self->scanning_mode      = grib_arguments_get_name(grib_handle_of_accessor(a),args,self->carg++);
     self->edition=2;
     a->flags |= GRIB_ACCESSOR_FLAG_DATA;
 
@@ -186,7 +193,7 @@ static void init(grib_accessor* a,const long v, grib_arguments* args)
     self->jpeg_lib=OPENJPEG_LIB;
 #endif
 
-    if ((user_lib=getenv("GRIB_JPEG"))!=NULL ) {
+    if ((user_lib=codes_getenv("ECCODES_GRIB_JPEG"))!=NULL ) {
         if (!strcmp(user_lib,"jasper")) {
             self->jpeg_lib=JASPER_LIB;
         } else if (!strcmp(user_lib,"openjpeg")) {
@@ -194,7 +201,7 @@ static void init(grib_accessor* a,const long v, grib_arguments* args)
         }
     }
 
-    self->dump_jpg  = getenv("GRIB_DUMP_JPG_FILE");
+    self->dump_jpg = codes_getenv("ECCODES_GRIB_DUMP_JPG_FILE");
 
     if(first) {
         if(self->dump_jpg)
@@ -208,7 +215,7 @@ static int value_count(grib_accessor* a,long* n_vals)
     grib_accessor_data_jpeg2000_packing *self =(grib_accessor_data_jpeg2000_packing*)a;
     *n_vals= 0;
 
-    return grib_get_long_internal(a->parent->h,self->number_of_values,n_vals);
+    return grib_get_long_internal(grib_handle_of_accessor(a),self->number_of_values,n_vals);
 }
 
 #define EXTRA_BUFFER_SIZE 10240
@@ -241,19 +248,19 @@ static int  unpack_double(grib_accessor* a, double* val, size_t *len)
     if (err) return err;
 
     if(self->units_factor)
-        grib_get_double_internal(a->parent->h,self->units_factor,&units_factor);
+        grib_get_double_internal(grib_handle_of_accessor(a),self->units_factor,&units_factor);
 
     if(self->units_bias)
-        grib_get_double_internal(a->parent->h,self->units_bias,&units_bias);
+        grib_get_double_internal(grib_handle_of_accessor(a),self->units_bias,&units_bias);
 
 
-    if((err = grib_get_long_internal(a->parent->h,self->bits_per_value,&bits_per_value)) != GRIB_SUCCESS)
+    if((err = grib_get_long_internal(grib_handle_of_accessor(a),self->bits_per_value,&bits_per_value)) != GRIB_SUCCESS)
         return err;
-    if((err = grib_get_double_internal(a->parent->h,self->reference_value, &reference_value)) != GRIB_SUCCESS)
+    if((err = grib_get_double_internal(grib_handle_of_accessor(a),self->reference_value, &reference_value)) != GRIB_SUCCESS)
         return err;
-    if((err = grib_get_long_internal(a->parent->h,self->binary_scale_factor, &binary_scale_factor)) != GRIB_SUCCESS)
+    if((err = grib_get_long_internal(grib_handle_of_accessor(a),self->binary_scale_factor, &binary_scale_factor)) != GRIB_SUCCESS)
         return err;
-    if((err = grib_get_long_internal(a->parent->h,self->decimal_scale_factor, &decimal_scale_factor)) != GRIB_SUCCESS)
+    if((err = grib_get_long_internal(grib_handle_of_accessor(a),self->decimal_scale_factor, &decimal_scale_factor)) != GRIB_SUCCESS)
         return err;
 
     self->dirty=0;
@@ -275,20 +282,20 @@ static int  unpack_double(grib_accessor* a, double* val, size_t *len)
         return GRIB_SUCCESS;
     }
 
-    buf = (unsigned char*)a->parent->h->buffer->data;
+    buf = (unsigned char*)grib_handle_of_accessor(a)->buffer->data;
     buf += grib_byte_offset(a);
 
     switch (self->jpeg_lib) {
     case OPENJPEG_LIB:
-        if ((err = grib_openjpeg_decode(a->parent->h->context,buf,&buflen,val,&n_vals)) != GRIB_SUCCESS)
+        if ((err = grib_openjpeg_decode(a->context,buf,&buflen,val,&n_vals)) != GRIB_SUCCESS)
             return err;
         break;
     case JASPER_LIB:
-        if ((err = grib_jasper_decode(a->parent->h->context,buf,&buflen,val,&n_vals)) != GRIB_SUCCESS)
+        if ((err = grib_jasper_decode(a->context,buf,&buflen,val,&n_vals)) != GRIB_SUCCESS)
             return err;
         break;
     default:
-        grib_context_log(a->parent->h->context,GRIB_LOG_ERROR,"Unable to unpack. Invalid JPEG library.\n");
+        grib_context_log(a->context,GRIB_LOG_ERROR,"Unable to unpack. Invalid JPEG library.\n");
         return GRIB_DECODING_ERROR;
     }
 
@@ -346,13 +353,13 @@ static int pack_double(grib_accessor* a, const double* cval, size_t *len)
     }
 
     if(self->units_factor &&
-            (grib_get_double_internal(a->parent->h,self->units_factor,&units_factor)== GRIB_SUCCESS)) {
-        grib_set_double_internal(a->parent->h,self->units_factor,1.0);
+            (grib_get_double_internal(grib_handle_of_accessor(a),self->units_factor,&units_factor)== GRIB_SUCCESS)) {
+        grib_set_double_internal(grib_handle_of_accessor(a),self->units_factor,1.0);
     }
 
     if(self->units_bias &&
-            (grib_get_double_internal(a->parent->h,self->units_bias,&units_bias)== GRIB_SUCCESS)) {
-        grib_set_double_internal(a->parent->h,self->units_bias,0.0);
+            (grib_get_double_internal(grib_handle_of_accessor(a),self->units_bias,&units_bias)== GRIB_SUCCESS)) {
+        grib_set_double_internal(grib_handle_of_accessor(a),self->units_bias,0.0);
     }
 
     if (units_factor != 1.0) {
@@ -367,28 +374,30 @@ static int pack_double(grib_accessor* a, const double* cval, size_t *len)
     switch (ret) {
     case GRIB_CONSTANT_FIELD:
         grib_buffer_replace(a, NULL, 0,1,1);
-        return GRIB_SUCCESS;
+        err = grib_set_long_internal(grib_handle_of_accessor(a), self->number_of_values, *len);
+        return err;
         break;
     case GRIB_SUCCESS:
         break;
     default:
-        grib_context_log(a->parent->h->context,GRIB_LOG_ERROR,"unable to compute packing parameters\n");
+        grib_context_log(a->context, GRIB_LOG_ERROR,
+                "grib_accessor_class_data_jpeg2000_packing pack_double: unable to compute packing parameters");
         return ret;
     }
 
-    if((ret = grib_get_double_internal(a->parent->h,self->reference_value, &reference_value))
+    if((ret = grib_get_double_internal(grib_handle_of_accessor(a),self->reference_value, &reference_value))
             != GRIB_SUCCESS)
         return ret;
 
-    if((ret = grib_get_long_internal(a->parent->h,self->binary_scale_factor, &binary_scale_factor))
+    if((ret = grib_get_long_internal(grib_handle_of_accessor(a),self->binary_scale_factor, &binary_scale_factor))
             != GRIB_SUCCESS)
         return ret;
 
-    if((ret = grib_get_long_internal(a->parent->h,self->bits_per_value,&bits_per_value)) !=
+    if((ret = grib_get_long_internal(grib_handle_of_accessor(a),self->bits_per_value,&bits_per_value)) !=
             GRIB_SUCCESS)
         return ret;
 
-    if((ret = grib_get_long_internal(a->parent->h,self->decimal_scale_factor, &decimal_scale_factor))
+    if((ret = grib_get_long_internal(grib_handle_of_accessor(a),self->decimal_scale_factor, &decimal_scale_factor))
             != GRIB_SUCCESS)
         return ret;
 
@@ -396,25 +405,25 @@ static int pack_double(grib_accessor* a, const double* cval, size_t *len)
     divisor = grib_power(-binary_scale_factor,2);
 
     simple_packing_size = (((bits_per_value*n_vals)+7)/8)*sizeof(unsigned char);
-    buf  = (unsigned char*)grib_context_malloc_clear(a->parent->h->context,simple_packing_size+EXTRA_BUFFER_SIZE);
+    buf  = (unsigned char*)grib_context_malloc_clear(a->context,simple_packing_size+EXTRA_BUFFER_SIZE);
     if(!buf) {
         err = GRIB_OUT_OF_MEMORY;
         goto cleanup;
     }
 
-    if((err = grib_get_long_internal(a->parent->h,self->ni,&ni)) != GRIB_SUCCESS)
+    if((err = grib_get_long_internal(grib_handle_of_accessor(a),self->ni,&ni)) != GRIB_SUCCESS)
         return err;
-    if((err = grib_get_long_internal(a->parent->h,self->nj,&nj)) != GRIB_SUCCESS)
+    if((err = grib_get_long_internal(grib_handle_of_accessor(a),self->nj,&nj)) != GRIB_SUCCESS)
         return err;
-    if((err = grib_get_long_internal(a->parent->h,self->type_of_compression_used,&type_of_compression_used)) != GRIB_SUCCESS)
+    if((err = grib_get_long_internal(grib_handle_of_accessor(a),self->type_of_compression_used,&type_of_compression_used)) != GRIB_SUCCESS)
         return err;
-    if((err = grib_get_long_internal(a->parent->h,self->target_compression_ratio,&target_compression_ratio)) != GRIB_SUCCESS)
+    if((err = grib_get_long_internal(grib_handle_of_accessor(a),self->target_compression_ratio,&target_compression_ratio)) != GRIB_SUCCESS)
         return err;
-    if((err = grib_get_long_internal(a->parent->h,self->scanning_mode,&scanning_mode)) != GRIB_SUCCESS)
+    if((err = grib_get_long_internal(grib_handle_of_accessor(a),self->scanning_mode,&scanning_mode)) != GRIB_SUCCESS)
         return err;
-    if((err = grib_get_long_internal(a->parent->h,self->list_defining_points,&list_defining_points)) != GRIB_SUCCESS)
+    if((err = grib_get_long_internal(grib_handle_of_accessor(a),self->list_defining_points,&list_defining_points)) != GRIB_SUCCESS)
         return err;
-    if((err = grib_get_long_internal(a->parent->h,self->number_of_data_points,&number_of_data_points)) != GRIB_SUCCESS)
+    if((err = grib_get_long_internal(grib_handle_of_accessor(a),self->number_of_data_points,&number_of_data_points)) != GRIB_SUCCESS)
         return err;
 
     width  = ni;
@@ -443,8 +452,11 @@ static int pack_double(grib_accessor* a, const double* cval, size_t *len)
 
     if(width*height != *len)
     {
-        /* fprintf(stderr,"width=%ld height=%ld len=%d\n",(long)width,(long)height,(long)*len); */
-        Assert(width*height == *len);
+        grib_context_log(a->context, GRIB_LOG_ERROR,
+                "grib_accessor_class_data_jpeg2000_packing pack_double: width=%ld height=%ld len=%d."
+                " width*height should equal len!",
+                (long)width, (long)height, (long)*len);
+        return GRIB_INTERNAL_ERROR;
     }
 
     switch( type_of_compression_used)
@@ -472,7 +484,7 @@ static int pack_double(grib_accessor* a, const double* cval, size_t *len)
     /* See GRIB-438 */
     if (bits_per_value == 0) {
         const long bits_per_value_adjusted = 1;
-        grib_context_log(a->parent->h->context, GRIB_LOG_DEBUG,
+        grib_context_log(a->context, GRIB_LOG_DEBUG,
                 "grib_accessor_class_data_jpeg2000_packing(%s) : bits per value was zero, changed to %d",
                 self->jpeg_lib==OPENJPEG_LIB ? "openjpeg" : "jasper", bits_per_value_adjusted);
         bits_per_value = bits_per_value_adjusted;
@@ -489,15 +501,15 @@ static int pack_double(grib_accessor* a, const double* cval, size_t *len)
 
     switch (self->jpeg_lib) {
     case OPENJPEG_LIB:
-        if ( (err = grib_openjpeg_encode(a->parent->h->context,&helper)) != GRIB_SUCCESS ) goto cleanup;
+        if ( (err = grib_openjpeg_encode(a->context,&helper)) != GRIB_SUCCESS ) goto cleanup;
         break;
     case JASPER_LIB:
-        if ( (err = grib_jasper_encode(a->parent->h->context,&helper)) != GRIB_SUCCESS ) goto cleanup;
+        if ( (err = grib_jasper_encode(a->context,&helper)) != GRIB_SUCCESS ) goto cleanup;
         break;
     }
 
     if(helper.jpeg_length > simple_packing_size)
-        grib_context_log(a->parent->h->context, GRIB_LOG_WARNING,
+        grib_context_log(a->context, GRIB_LOG_WARNING,
                 "grib_accessor_data_jpeg2000_packing(%s) : jpeg data (%ld) larger than input data (%ld)",
                 self->jpeg_lib==OPENJPEG_LIB ? "openjpeg" : "jasper",
                         helper.jpeg_length, simple_packing_size);
@@ -517,12 +529,12 @@ static int pack_double(grib_accessor* a, const double* cval, size_t *len)
 
     grib_buffer_replace(a, helper.jpeg_buffer, helper.jpeg_length, 1, 1);
 
-    cleanup:
+cleanup:
 
-    grib_context_free(a->parent->h->context,buf);
+    grib_context_free(a->context,buf);
 
     if(err == GRIB_SUCCESS)
-        err = grib_set_long_internal(a->parent->h,self->number_of_values, *len);
+        err = grib_set_long_internal(grib_handle_of_accessor(a),self->number_of_values, *len);
     return err;
 
 }
@@ -530,15 +542,13 @@ static int pack_double(grib_accessor* a, const double* cval, size_t *len)
 
 static int  unpack_double(grib_accessor* a, double* val, size_t *len)
 {
-    grib_context_log(a->parent->h->context, GRIB_LOG_ERROR,
-            "JPEG support not enabled.");
+    grib_context_log(a->context, GRIB_LOG_ERROR, "JPEG support not enabled.");
     return GRIB_NOT_IMPLEMENTED;
 }
 
 static int pack_double(grib_accessor* a, const double* val, size_t *len)
 {
-    grib_context_log(a->parent->h->context, GRIB_LOG_ERROR,
-            "JPEG support not enabled.");
+    grib_context_log(a->context, GRIB_LOG_ERROR, "JPEG support not enabled.");
     return GRIB_NOT_IMPLEMENTED;
 }
 
@@ -548,18 +558,18 @@ static int unpack_double_element(grib_accessor* a, size_t idx, double* val)
 {
     size_t size;
     double* values;
-    int err = 0;
-    
+    int err=0;
+
     /* GRIB-564: The index idx relates to codedValues NOT values! */
 
-    err=grib_get_size(a->parent->h,"codedValues",&size);
+    err=grib_get_size(grib_handle_of_accessor(a),"codedValues",&size);
     if (err) return err;
     if (idx > size) return GRIB_INVALID_NEAREST;
 
-    values=(double*)grib_context_malloc_clear(a->parent->h->context,size*sizeof(double));
-    err=grib_get_double_array(a->parent->h,"codedValues",values,&size);
+    values=(double*)grib_context_malloc_clear(a->context,size*sizeof(double));
+    err=grib_get_double_array(grib_handle_of_accessor(a),"codedValues",values,&size);
     if (err) return err;
     *val=values[idx];
-    grib_context_free(a->parent->h->context,values);
+    grib_context_free(a->context,values);
     return err;
 }

@@ -1,4 +1,4 @@
-# (C) Copyright 1996-2016 ECMWF.
+# (C) Copyright 1996-2017 ECMWF.
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -32,6 +32,12 @@ option( CHECK_UNUSED_FILES       "check for unused project files (slow)"  OFF )
 
 mark_as_advanced( DEVELOPER_MODE  )
 mark_as_advanced( CHECK_UNUSED_FILES  )
+
+option( ECBUILD_INSTALL_LIBRARY_HEADERS "Will install library headers" ON )
+mark_as_advanced( ECBUILD_INSTALL_LIBRARY_HEADERS )
+
+option( ECBUILD_INSTALL_FORTRAN_MODULES "Will install Fortran modules" ON )
+mark_as_advanced( ECBUILD_INSTALL_FORTRAN_MODULES )
 
 include( CMakeDependentOption ) # make options depend on one another
 

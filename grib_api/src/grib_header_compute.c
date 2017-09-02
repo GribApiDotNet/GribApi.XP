@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2016 ECMWF.
+ * Copyright 2005-2017 ECMWF.
  *
  * This software is licensed under the terms of the Apache Licence Version 2.0
  * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -29,7 +29,6 @@ GRIB_INLINE static int strcmp(const char* a,const char* b) {
 }
 #endif
 
-#define SIZE  ((int)4097)
 #ifndef NUMBER
 #define NUMBER(a)    (sizeof(a)/sizeof(a[0])) /* number of elem. of an array */
 #endif

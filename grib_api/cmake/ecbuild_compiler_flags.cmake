@@ -1,4 +1,4 @@
-# (C) Copyright 1996-2016 ECMWF.
+# (C) Copyright 1996-2017 ECMWF.
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -18,18 +18,18 @@
 #
 # The procedure is as follows:
 #
-# 1.  ecBuild does *not* set ``CMAKE_<lang>_FLAGS`` i.e. the user can set these
-#     via -D or the CMake cache and these will be the "base" flags.
+# 1.  ecBuild does **not** set ``CMAKE_<lang>_FLAGS`` i.e. the user can set
+#     these via ``-D`` or the CMake cache and these will be the "base" flags.
 #
-# 2.  ecBuild *overwrites* ``CMAKE_<lang>_FLAGS_<btype>`` in the CMake cache
+# 2.  ecBuild **overwrites** ``CMAKE_<lang>_FLAGS_<btype>`` in the CMake cache
 #     for all build types with compiler specific defaults for the currently
-#     loaded compiler i.e. any value set by the user via -D or the CMake cache
-#     *has no effect*.
+#     loaded compiler i.e. any value set by the user via ``-D`` or the CMake
+#     cache **has no effect**.
 #
 # 3.  Any value the user provides via ``ECBUILD_<lang>_FLAGS`` or
-#     ``ECBUILD_<lang>_FLAGS_<btype>`` *overrides* the corresponding
-#     ``CMAKE_<lang>_FLAGS`` or ``CMAKE_<lang>_FLAGS_<btype>`` *without being
-#     written to the CMake cache*.
+#     ``ECBUILD_<lang>_FLAGS_<btype>`` **overrides** the corresponding
+#     ``CMAKE_<lang>_FLAGS`` or ``CMAKE_<lang>_FLAGS_<btype>`` **without being
+#     written to the CMake cache**.
 #
 ##############################################################################
 
@@ -200,6 +200,12 @@ foreach( _lang C CXX Fortran )
 endforeach()
 
 # Apply user or toolchain specified linker flag overrides per object type (NOT written to cache)
+foreach( _obj EXE SHARED MODULE )
+  if( ECBUILD_${_obj}_LINKER_FLAGS )
+    set( CMAKE_${_obj}_LINKER_FLAGS ${ECBUILD_${_obj}_LINKER_FLAGS} )
+  endif()
+endforeach()
+
 foreach( _btype NONE DEBUG BIT PRODUCTION RELEASE RELWITHDEBINFO )
 
   foreach( _obj EXE SHARED MODULE )

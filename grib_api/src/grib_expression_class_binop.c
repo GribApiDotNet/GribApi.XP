@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2016 ECMWF.
+ * Copyright 2005-2017 ECMWF.
  *
  * This software is licensed under the terms of the Apache Licence Version 2.0
  * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -15,13 +15,11 @@
 
    START_CLASS_DEF
    CLASS      = expression
-   IMPLEMENTS = init_class
    IMPLEMENTS = destroy
    IMPLEMENTS = native_type
    IMPLEMENTS = evaluate_long
    IMPLEMENTS = evaluate_double
    IMPLEMENTS = print
-   IMPLEMENTS = compile
    IMPLEMENTS = add_dependency
    MEMBERS    = grib_expression *left
    MEMBERS = grib_expression *right
@@ -49,7 +47,6 @@ static void init_class              (grib_expression_class*);
 static void        destroy(grib_context*,grib_expression* e);
 
 static void        print(grib_context*,grib_expression*,grib_handle*);
-static void        compile(grib_expression*,grib_compiler*);
 static void        add_dependency(grib_expression* e, grib_accessor* observer);
 
 static int        native_type(grib_expression*,grib_handle*);
@@ -77,7 +74,6 @@ static grib_expression_class _grib_expression_class_binop = {
     0,                     /* constructor               */
     &destroy,                  /* destructor                */
     &print,                 
-    &compile,                 
     &add_dependency,       
 
 	&native_type,
@@ -200,24 +196,12 @@ grib_expression* new_binop_expression(grib_context* c,
     return (grib_expression*)e;
 }
 
-static void compile(grib_expression* g,grib_compiler* c)
-{
-    grib_expression_binop* e = (grib_expression_binop*)g;
-    fprintf(c->out,"new_binop_expression(ctx,");
-    fprintf(c->out,"%s,",grib_binop_long_proc_name(e->long_func));
-    fprintf(c->out,"%s,",grib_binop_double_proc_name(e->double_func));
-    grib_expression_compile(e->left,c);
-    fprintf(c->out,",");
-    grib_expression_compile(e->right,c);
-    fprintf(c->out,")");
-}
-
 static int native_type(grib_expression* g,grib_handle *h)
 {
     grib_expression_binop* e = (grib_expression_binop*)g;
     /* See GRIB-394 : The type of this binary expression will be double if any of its operands are double */
     if (grib_expression_native_type(h, e->left)  == GRIB_TYPE_DOUBLE ||
-            grib_expression_native_type(h, e->right) == GRIB_TYPE_DOUBLE)
+        grib_expression_native_type(h, e->right) == GRIB_TYPE_DOUBLE)
     {
         return GRIB_TYPE_DOUBLE;
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2016 ECMWF.
+ * Copyright 2005-2017 ECMWF.
  *
  * This software is licensed under the terms of the Apache Licence Version 2.0
  * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -22,6 +22,8 @@
 #define GRIB_ORDER_BY_ASC    1
 #define GRIB_ORDER_BY_DESC   -1
 
+/* Note: A fast cut-down version of strcmp which does NOT return -1 */
+/* 0 means input strings are equal and 1 means not equal */
 GRIB_INLINE static int grib_inline_strcmp(const char* a,const char* b) {
   if (*a != *b) return 1;
   while((*a!=0 && *b!=0) &&  *(a) == *(b) ) {a++;b++;}
@@ -643,7 +645,7 @@ int grib_db_load(grib_db* db,char* filename) {
    }
    if (h) grib_handle_delete(h);
 
-   grib_file_close(file->name,&err);
+   grib_file_close(file->name, 0, &err);
 
    return ret;
 }
@@ -695,7 +697,7 @@ grib_handle* grib_db_retrieve(grib_fieldset* set,int i,int* err) {
    h=grib_handle_new_from_file(set->context,field->file->handle,err);
    if (*err!=GRIB_SUCCESS) return NULL;
 
-   grib_file_close(field->file->name,err);
+   grib_file_close(field->file->name, 0, err);
 
    return h;
 }

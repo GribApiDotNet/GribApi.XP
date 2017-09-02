@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2016 ECMWF.
+ * Copyright 2005-2017 ECMWF.
  *
  * This software is licensed under the terms of the Apache Licence Version 2.0
  * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -78,6 +78,7 @@ int grib_init_accessor_from_handle(grib_loader* loader,grib_accessor* ga,grib_ar
     const char* name = NULL;
     int k = 0;
     grib_handle *g;
+    grib_accessor* ao=NULL;
     int e, pack_missing = 0;
     grib_context_log(h->context,GRIB_LOG_DEBUG, "XXXXX Copying  %s",   ga->name);
 
@@ -123,7 +124,6 @@ int grib_init_accessor_from_handle(grib_loader* loader,grib_accessor* ga,grib_ar
             grib_context_log(h->context,GRIB_LOG_DEBUG, "Copying: setting %s to multi-set-value",   ga->name);
             return GRIB_SUCCESS;
         }
-
         g = g->main;
     }
 #endif
@@ -140,7 +140,7 @@ int grib_init_accessor_from_handle(grib_loader* loader,grib_accessor* ga,grib_ar
 
         if(first)
         {
-            missing = getenv("GRIB_PRINT_MISSING");
+            missing = codes_getenv("ECCODES_PRINT_MISSING");
             first = 0;
         }
 
@@ -175,7 +175,7 @@ int grib_init_accessor_from_handle(grib_loader* loader,grib_accessor* ga,grib_ar
     case GRIB_TYPE_STRING:
 
         /* len = len > 1024 ? len : 1024; */
-        grib_get_string_length(h,name,&len);
+        _grib_get_string_length(ga,&len);
         sval = (char*)grib_context_malloc(h->context,len);
         ret = grib_get_string_internal(h,name,sval,&len);
         if(ret == GRIB_SUCCESS)
@@ -195,7 +195,7 @@ int grib_init_accessor_from_handle(grib_loader* loader,grib_accessor* ga,grib_ar
             grib_context_log(h->context,GRIB_LOG_DEBUG, "Copying %d long(s) %d to %s",  len, lval[0], name);
             if(ga->same)
             {
-                ret = grib_set_long_array(ga->parent->h,ga->name,lval,len);
+                ret = grib_set_long_array(grib_handle_of_accessor(ga),ga->name,lval,len);
 
                 /* Allow for lists to be resized */
                 if((ret == GRIB_WRONG_ARRAY_SIZE || ret == GRIB_ARRAY_TOO_SMALL) && loader->list_is_resized)
@@ -233,7 +233,7 @@ int grib_init_accessor_from_handle(grib_loader* loader,grib_accessor* ga,grib_ar
             grib_context_log(h->context,GRIB_LOG_DEBUG, "Copying %d double(s) %g to %s",  len, dval[0], name);
             if(ga->same)
             {
-                ret = grib_set_double_array(ga->parent->h,ga->name,dval,len);
+                ret = grib_set_double_array(grib_handle_of_accessor(ga),ga->name,dval,len);
 
                 /* Allow for lists to be resized */
                 if((ret == GRIB_WRONG_ARRAY_SIZE || ret == GRIB_ARRAY_TOO_SMALL) && loader->list_is_resized)
@@ -247,8 +247,11 @@ int grib_init_accessor_from_handle(grib_loader* loader,grib_accessor* ga,grib_ar
 
     case GRIB_TYPE_BYTES:
 
+        ao=grib_find_accessor(h,name);
+        len=grib_byte_count(ao);
         uval = (unsigned char*)grib_context_malloc(h->context,len*sizeof(char));
-        ret = grib_get_bytes_internal(h,name,uval,&len);
+        ret=grib_unpack_bytes(ao,uval,&len);
+        /* ret = grib_get_bytes_internal(h,name,uval,&len); */
         if(ret == GRIB_SUCCESS)
         {
             grib_context_log(h->context,GRIB_LOG_DEBUG, "Copying %d byte(s) to %s",  len, name);

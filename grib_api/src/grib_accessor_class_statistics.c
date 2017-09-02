@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2016 ECMWF.
+ * Copyright 2005-2017 ECMWF.
  *
  * This software is licensed under the terms of the Apache Licence Version 2.0
  * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -80,13 +80,15 @@ static grib_accessor_class _grib_accessor_class_statistics = {
     0,            /* get native type               */
     0,                /* get sub_section                */
     0,               /* grib_pack procedures long      */
-    0,               /* grib_pack procedures long      */
+    0,                 /* grib_pack procedures long      */
     0,                  /* grib_pack procedures long      */
     0,                /* grib_unpack procedures long    */
     0,                /* grib_pack procedures double    */
     &unpack_double,              /* grib_unpack procedures double  */
     0,                /* grib_pack procedures string    */
     &unpack_string,              /* grib_unpack procedures string  */
+    0,          /* grib_pack array procedures string    */
+    0,        /* grib_unpack array procedures string  */
     0,                 /* grib_pack procedures bytes     */
     0,               /* grib_unpack procedures bytes   */
     0,            /* pack_expression */
@@ -99,7 +101,8 @@ static grib_accessor_class _grib_accessor_class_statistics = {
     &compare,                    /* compare vs. another accessor   */
     0,     /* unpack only ith value          */
     0,     /* unpack a subarray         */
-    0,             		/* clear          */
+    0,              		/* clear          */
+    0,               		/* clone accessor          */
 };
 
 
@@ -121,6 +124,8 @@ static void init_class(grib_accessor_class* c)
 	c->unpack_long	=	(*(c->super))->unpack_long;
 	c->pack_double	=	(*(c->super))->pack_double;
 	c->pack_string	=	(*(c->super))->pack_string;
+	c->pack_string_array	=	(*(c->super))->pack_string_array;
+	c->unpack_string_array	=	(*(c->super))->unpack_string_array;
 	c->pack_bytes	=	(*(c->super))->pack_bytes;
 	c->unpack_bytes	=	(*(c->super))->unpack_bytes;
 	c->pack_expression	=	(*(c->super))->pack_expression;
@@ -133,6 +138,7 @@ static void init_class(grib_accessor_class* c)
 	c->unpack_double_element	=	(*(c->super))->unpack_double_element;
 	c->unpack_double_subarray	=	(*(c->super))->unpack_double_subarray;
 	c->clear	=	(*(c->super))->clear;
+	c->make_clone	=	(*(c->super))->make_clone;
 }
 
 /* END_CLASS_IMP */
@@ -142,14 +148,14 @@ static void init(grib_accessor* a,const long l, grib_arguments* c)
     grib_accessor_statistics* self = (grib_accessor_statistics*)a;
     int n = 0;
 
-    self->missing_value = grib_arguments_get_name(a->parent->h,c,n++);
-    self->values = grib_arguments_get_name(a->parent->h,c,n++);
+    self->missing_value = grib_arguments_get_name(grib_handle_of_accessor(a),c,n++);
+    self->values = grib_arguments_get_name(grib_handle_of_accessor(a),c,n++);
     a->flags  |= GRIB_ACCESSOR_FLAG_READ_ONLY;
     a->flags |= GRIB_ACCESSOR_FLAG_FUNCTION;
     a->flags |= GRIB_ACCESSOR_FLAG_HIDDEN;
 
     self->number_of_elements=8;
-    self->v=(double*)grib_context_malloc(a->parent->h->context,
+    self->v=(double*)grib_context_malloc(a->context,
             sizeof(double)*self->number_of_elements);
 
     a->length=0;
@@ -164,43 +170,55 @@ static int unpack_double(grib_accessor* a, double* val, size_t *len)
     size_t size=0, real_size=0;
     double max,min,avg,sd,value,skew,kurt, m2=0,m3=0,m4=0;
     double missing=0;
+    long missingValuesPresent = 0;
     size_t number_of_missing=0;
-    grib_context* c=a->parent->h->context;
-    grib_handle* h=a->parent->h;
+    grib_context* c=a->context;
+    grib_handle* h=grib_handle_of_accessor(a);
 
     if (!a->dirty) return GRIB_SUCCESS;
 
     if ( (ret=grib_get_size(h,self->values,&size)) != GRIB_SUCCESS) return ret;
 
-    grib_context_log(a->parent->h->context,GRIB_LOG_DEBUG,
+    grib_context_log(a->context,GRIB_LOG_DEBUG,
             "grib_accessor_statistics: computing statistics for %d values",size);
 
-    if((ret=grib_get_double(a->parent->h,self->missing_value,&missing))
-            != GRIB_SUCCESS) return ret;
+    if((ret=grib_get_double(h,self->missing_value,&missing)) != GRIB_SUCCESS) return ret;
+    if((ret=grib_get_long_internal(h,"missingValuesPresent",&missingValuesPresent)) != GRIB_SUCCESS) return ret;
 
     values=(double*)grib_context_malloc_clear(c,size*sizeof(double));
     if (!values) return GRIB_OUT_OF_MEMORY;
 
-    if((ret = grib_get_double_array_internal(h,self->values,values,&size))
-            != GRIB_SUCCESS) {
+    if((ret = grib_get_double_array_internal(h,self->values,values,&size)) != GRIB_SUCCESS) {
         grib_context_free(c,values);
         return ret;
     }
 
     number_of_missing=0;
-    i=0;
-    while (i<size && values[i] == missing ) {i++;number_of_missing++;}
-    max=values[i];
-    min=values[i];
-    avg=values[i];
-    for (i=number_of_missing+1;i<size;i++) {
-        value=values[i];
-        if (value > max && value != missing) max=value;
-        if (value < min && value != missing) min=value;
-        if (value != missing) avg+=value;
-        else number_of_missing++;
+    if (missingValuesPresent) {
+        i=0;
+        while (i<size && values[i] == missing) {i++;number_of_missing++;}
+        max=values[i];
+        min=values[i];
+        avg=values[i];
+        for (i=number_of_missing+1;i<size;i++) {
+            value=values[i];
+            if (value > max && value != missing) max=value;
+            if (value < min && value != missing) min=value;
+            if (value != missing) avg+=value;
+            else number_of_missing++;
+        }
+    } else {
+        max=values[0];
+        min=values[0];
+        avg=values[0];
+        for (i=1; i<size; i++) {
+            value = values[i];
+            if (value > max) max=value;
+            if (value < min) min=value;
+            avg += value;
+        }
     }
-
+    /*printf("stats.......... number_of_missing=%ld\n", number_of_missing);*/
     /* Don't divide by zero if all values are missing! */
     if (size != number_of_missing) {
         avg/=(size-number_of_missing);
@@ -208,7 +226,11 @@ static int unpack_double(grib_accessor* a, double* val, size_t *len)
 
     sd=0; skew=0; kurt=0;
     for (i=0;i<size;i++) {
-        if (values[i] != missing) {
+        int valueNotMissing = 1;
+        if (missingValuesPresent) {
+            valueNotMissing = (values[i] != missing);
+        }
+        if (valueNotMissing) {
             double v = values[i] - avg;
             double tmp = v*v;
             m2 += tmp;
@@ -280,8 +302,8 @@ static int compare(grib_accessor* a, grib_accessor* b)
 
     if (alen != blen) return GRIB_COUNT_MISMATCH;
 
-    aval=(double*)grib_context_malloc(a->parent->h->context,alen*sizeof(double));
-    bval=(double*)grib_context_malloc(b->parent->h->context,blen*sizeof(double));
+    aval=(double*)grib_context_malloc(a->context,alen*sizeof(double));
+    bval=(double*)grib_context_malloc(b->context,blen*sizeof(double));
 
     b->dirty=1;
     a->dirty=1;
@@ -294,8 +316,8 @@ static int compare(grib_accessor* a, grib_accessor* b)
         alen--;
     }
 
-    grib_context_free(a->parent->h->context,aval);
-    grib_context_free(b->parent->h->context,bval);
+    grib_context_free(a->context,aval);
+    grib_context_free(b->context,bval);
 
     return retval;
 }

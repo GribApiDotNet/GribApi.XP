@@ -1,0 +1,3 @@
+# Override for sub-hourly steps
+# See ECC-438
+alias defaultStepUnits=indicatorOfUnitOfTimeRange;

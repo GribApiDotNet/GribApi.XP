@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2016 ECMWF.
+ * Copyright 2005-2017 ECMWF.
  *
  * This software is licensed under the terms of the Apache Licence Version 2.0
  * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -89,18 +89,17 @@ static void init_class(grib_iterator_class* c)
 
 static int next(grib_iterator* i, double *lat, double *lon, double *val)
 {
+    grib_iterator_gaussian_reduced* self = (grib_iterator_gaussian_reduced*)i;
 
-  grib_iterator_gaussian_reduced* self = (grib_iterator_gaussian_reduced*)i;
+    if((long)i->e >= (long)(i->nv-1))
+        return 0;
+    i->e++;
 
-  if((long)i->e >= (long)(i->nv-1))
-    return 0;
-  i->e++;
+    *lat = self->las[i->e];
+    *lon = self->los[i->e];
+    *val = i->data[i->e];
 
-  *lat = self->las[i->e];
-  *lon = self->los[i->e];
-  *val = i->data[i->e];
-
-  return 1;
+    return 1;
 }
 
 static int init(grib_iterator* iter,grib_handle* h,grib_arguments* args)
@@ -187,7 +186,6 @@ static int init(grib_iterator* iter,grib_handle* h,grib_arguments* args)
             if (ilon_first>ilon_last) ilon_first-=pl[j];
             for (i=ilon_first;i<=ilon_last;i++) {
 #ifdef DEBUG
-                Assert(0);
                 Assert(iter->e < iter->nv);
 #endif
                 self->los[iter->e]=((i)*360.0)/pl[j];

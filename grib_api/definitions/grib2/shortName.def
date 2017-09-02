@@ -220,6 +220,37 @@
 	 parameterCategory = 6 ;
 	 parameterNumber = 37 ;
 	}
+#maximum CAPE in the last 6 hours
+'mxcape6' = {
+	 discipline = 0 ;
+	 parameterCategory = 7 ;
+	 parameterNumber = 6 ;
+	 typeOfStatisticalProcessing = 2 ;
+	 typeOfSecondFixedSurface = 8 ;
+	 lengthOfTimeRange = 6 ;
+	 indicatorOfUnitForTimeRange = 1 ;
+	 typeOfFirstFixedSurface = 1 ;
+	}
+#maximum CAPES in the last 6 hours
+'mxcapes6' = {
+	 discipline = 0 ;
+	 parameterCategory = 7 ;
+	 parameterNumber = 19 ;
+	 indicatorOfUnitForTimeRange = 1 ;
+	 typeOfFirstFixedSurface = 1 ;
+	 typeOfStatisticalProcessing = 2 ;
+	 typeOfSecondFixedSurface = 8 ;
+	 lengthOfTimeRange = 6 ;
+	}
+#2 metre relative humidity with respect to water
+'2rhw' = {
+	 discipline = 0 ;
+	 parameterCategory = 1 ;
+	 parameterNumber = 93 ;
+	 typeOfFirstFixedSurface = 103 ;
+	 scaleFactorOfFirstFixedSurface = 0 ;
+	 scaledValueOfFirstFixedSurface = 2 ;
+	}
 #Height of convective cloud top
 'hcct' = {
 	 discipline = 0 ;
@@ -488,7 +519,7 @@
 	 parameterCategory = 0 ;
 	 parameterNumber = 9 ;
 	}
-#Surface air relative humidity
+#2 metre relative humidity
 '2r' = {
 	 discipline = 0 ;
 	 parameterCategory = 1 ;
@@ -557,6 +588,28 @@
 	 parameterNumber = 13 ;
 	 typeOfStatisticalProcessing = 1 ;
 	 typeOfFirstFixedSurface = 1 ;
+	}
+#Evaporation in the last 6 hours
+'eva06' = {
+	 discipline = 0 ;
+	 parameterCategory = 1 ;
+	 parameterNumber = 79 ;
+	 typeOfFirstFixedSurface = 1 ;
+	 typeOfStatisticalProcessing = 1 ;
+	 lengthOfTimeRange = 6 ;
+	 indicatorOfUnitForTimeRange = 1 ;
+	 is_uerra = 0 ;
+	}
+#Evaporation in the last 24 hours
+'eva24' = {
+	 discipline = 0 ;
+	 parameterCategory = 1 ;
+	 parameterNumber = 79 ;
+	 indicatorOfUnitForTimeRange = 1 ;
+	 typeOfFirstFixedSurface = 1 ;
+	 typeOfStatisticalProcessing = 1 ;
+	 lengthOfTimeRange = 24 ;
+	 is_uerra = 0 ;
 	}
 #Soil temperature
 'sot' = {

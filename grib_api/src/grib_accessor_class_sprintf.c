@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2016 ECMWF.
+ * Copyright 2005-2017 ECMWF.
  *
  * This software is licensed under the terms of the Apache Licence Version 2.0
  * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -67,13 +67,15 @@ static grib_accessor_class _grib_accessor_class_sprintf = {
     0,            /* get native type               */
     0,                /* get sub_section                */
     0,               /* grib_pack procedures long      */
-    0,               /* grib_pack procedures long      */
+    0,                 /* grib_pack procedures long      */
     0,                  /* grib_pack procedures long      */
     0,                /* grib_unpack procedures long    */
     0,                /* grib_pack procedures double    */
     0,              /* grib_unpack procedures double  */
     &pack_string,                /* grib_pack procedures string    */
     &unpack_string,              /* grib_unpack procedures string  */
+    0,          /* grib_pack array procedures string    */
+    0,        /* grib_unpack array procedures string  */
     0,                 /* grib_pack procedures bytes     */
     0,               /* grib_unpack procedures bytes   */
     0,            /* pack_expression */
@@ -86,7 +88,8 @@ static grib_accessor_class _grib_accessor_class_sprintf = {
     0,                    /* compare vs. another accessor   */
     0,     /* unpack only ith value          */
     0,     /* unpack a subarray         */
-    0,             		/* clear          */
+    0,              		/* clear          */
+    0,               		/* clone accessor          */
 };
 
 
@@ -107,6 +110,8 @@ static void init_class(grib_accessor_class* c)
 	c->unpack_long	=	(*(c->super))->unpack_long;
 	c->pack_double	=	(*(c->super))->pack_double;
 	c->unpack_double	=	(*(c->super))->unpack_double;
+	c->pack_string_array	=	(*(c->super))->pack_string_array;
+	c->unpack_string_array	=	(*(c->super))->unpack_string_array;
 	c->pack_bytes	=	(*(c->super))->pack_bytes;
 	c->unpack_bytes	=	(*(c->super))->unpack_bytes;
 	c->pack_expression	=	(*(c->super))->pack_expression;
@@ -120,6 +125,7 @@ static void init_class(grib_accessor_class* c)
 	c->unpack_double_element	=	(*(c->super))->unpack_double_element;
 	c->unpack_double_subarray	=	(*(c->super))->unpack_double_subarray;
 	c->clear	=	(*(c->super))->clear;
+	c->make_clone	=	(*(c->super))->make_clone;
 }
 
 /* END_CLASS_IMP */
@@ -138,9 +144,9 @@ static int pack_string(grib_accessor* a, const char* val, size_t *len)
 static int unpack_string(grib_accessor* a, char* val, size_t *len)
 {
     grib_accessor_sprintf* self = (grib_accessor_sprintf*)a;
-    char result[1024];
+    char result[1024]  ;
     char tempBuffer[1024];
-    char sres[1024];
+    char sres[1024]  ;
     long ires = 0;
     double dres= 0;
     int  i = 0;
@@ -150,11 +156,13 @@ static int unpack_string(grib_accessor* a, char* val, size_t *len)
     int is_missing = 0;
     const char* uname = NULL;
     const char* tempname = NULL;
+    size_t uname_len = 0;
 
-    uname = grib_arguments_get_string(a->parent->h,self->args,carg++);
+    uname = grib_arguments_get_string(grib_handle_of_accessor(a),self->args,carg++);
     sprintf(result,"%s","");
+    uname_len = strlen(uname);
 
-    for(i=0;i<strlen(uname);i++)
+    for(i=0; i<uname_len; i++)
     {
         if(uname[i]=='%'){
             int precision=999;
@@ -168,12 +176,12 @@ static int unpack_string(grib_accessor* a, char* val, size_t *len)
             }
             switch(uname[i]){
             case 'd':
-                tempname = grib_arguments_get_name(a->parent->h,self->args,carg++);
+                tempname = grib_arguments_get_name(grib_handle_of_accessor(a),self->args,carg++);
 
-                if((ret = grib_get_long_internal(a->parent->h,tempname,&ires)) != GRIB_SUCCESS)
+                if((ret = grib_get_long_internal(grib_handle_of_accessor(a),tempname,&ires)) != GRIB_SUCCESS)
                     return ret;
                 /* Bug GRIB-56: Check to see if the key is missing */
-                is_missing = grib_is_missing(a->parent->h,tempname,&ret);
+                is_missing = grib_is_missing(grib_handle_of_accessor(a),tempname,&ret);
                 if (ret != GRIB_SUCCESS)
                     return ret;
                 if (is_missing) {
@@ -193,8 +201,8 @@ static int unpack_string(grib_accessor* a, char* val, size_t *len)
                 break;
 
             case 'g':
-                tempname = grib_arguments_get_name(a->parent->h,self->args,carg++);
-                if((ret = grib_get_double_internal(a->parent->h,tempname,&dres)) != GRIB_SUCCESS)
+                tempname = grib_arguments_get_name(grib_handle_of_accessor(a),self->args,carg++);
+                if((ret = grib_get_double_internal(grib_handle_of_accessor(a),tempname,&dres)) != GRIB_SUCCESS)
                     return ret;
                 sprintf(tempBuffer,"%s%g",result, dres);
                 strcpy(result, tempBuffer);
@@ -202,8 +210,8 @@ static int unpack_string(grib_accessor* a, char* val, size_t *len)
                 break;
 
             case 's':
-                tempname = grib_arguments_get_name(a->parent->h,self->args,carg++);
-                if((ret = grib_get_string_internal(a->parent->h,tempname,sres, &replen )) != GRIB_SUCCESS)
+                tempname = grib_arguments_get_name(grib_handle_of_accessor(a),self->args,carg++);
+                if((ret = grib_get_string_internal(grib_handle_of_accessor(a),tempname,sres, &replen )) != GRIB_SUCCESS)
                     return ret;
                 sprintf(tempBuffer, "%s%s",result, sres);
                 strcpy(result, tempBuffer);

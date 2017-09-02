@@ -1,4 +1,4 @@
-# Copyright 2005-2016 ECMWF.
+# Copyright 2005-2017 ECMWF.
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -60,6 +60,19 @@ concept marsType {
    }
    "2" = {
      typeOfProcessedData = 0;
+   }
+
+   # See ECC-456. Special rule for Swedish data
+   # oi is Optimal Interpolation
+   oi = {
+     centre = 82;
+     typeOfGeneratingProcess = 0;
+     generatingProcessIdentifier = 50;
+   }
+   "4" = {
+     centre = 82;
+     typeOfGeneratingProcess = 0;
+     generatingProcessIdentifier = 50;
    }
 
    "default" = {

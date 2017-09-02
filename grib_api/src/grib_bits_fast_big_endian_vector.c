@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2016 ECMWF.
+ * Copyright 2005-2017 ECMWF.
  *
  * This software is licensed under the terms of the Apache Licence Version 2.0
  * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -32,7 +32,7 @@ int grib_decode_long_array(const unsigned char* p, long *bitp, long nbits,size_t
 
   x=malloc(sizel*sizeof(unsigned long));
   Assert(x);
-  memcpy(x,p+bitpv/8,sizel*sizeof(x));
+  memcpy(x,p+bitpv/8,sizel*sizeof(*x));
 /* (void) ftrace_region_end  ("gdda-1"); */
 
   if ( (max_nbits%nbits == 0) && (bitpv%nbits == 0) ) {
@@ -131,7 +131,7 @@ int grib_decode_double_array(const unsigned char* p, long *bitp, long nbits,doub
 
   x=malloc(sizel*sizeof(unsigned long));
   Assert(x);
-  memcpy(x,p+bitpv/8,sizel*sizeof(x));
+  memcpy(x,p+bitpv/8,sizel*sizeof(*x));
 /* (void) ftrace_region_end  ("gdda-1"); */
 
   if ( (max_nbits%nbits == 0) && (bitpv%nbits == 0) ) {
@@ -223,7 +223,7 @@ int grib_decode_double_array_complex(const unsigned char* p, long *bitp, long nb
 
   x=malloc(sizel*sizeof(unsigned long));
   Assert(x);
-  memcpy(x,p+bitpv/8,sizel*sizeof(x));
+  memcpy(x,p+bitpv/8,sizel*sizeof(*x));
 
   if ( (max_nbits%nbits == 0) && (bitpv%nbits == 0) ) {
 

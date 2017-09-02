@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2016 ECMWF.
+ * Copyright 2005-2017 ECMWF.
  *
  * This software is licensed under the terms of the Apache Licence Version 2.0
  * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -66,7 +66,6 @@ static grib_action_class _grib_action_class_section = {
     &notify_change,                            /* notify_change */
     &reparse,                            /* reparse */
     0,                            /* execute */
-    0,                            /* compile */
 };
 
 grib_action_class* grib_action_class_section = &_grib_action_class_section;
@@ -84,7 +83,7 @@ static void check_sections(grib_section *s,grib_handle* h)
   if(s) Assert(s->h == h);
   while(a)
   {
-    Assert(a->parent->h == h);
+    Assert(grib_handle_of_accessor(a) == h);
     check_sections(a->sub_section,h);
     a = a->next;
   }
@@ -97,19 +96,23 @@ static int notify_change(grib_action* act, grib_accessor * notified,
     grib_loader loader = { 0,0,0,0,0 };
 
     grib_section *old_section = NULL;
-    grib_handle *h = notified->parent->h;
+    grib_handle *h = grib_handle_of_accessor(notified);
     size_t len = 0;
     size_t size = 0;
     int err=0;
     grib_handle* tmp_handle;
     int doit = 0;
 
-    grib_action* la        = NULL;
+    grib_action* la = NULL;
 
     if (h->context->debug > 0) {
+        char debug_str[1024] = {0,};
+        if (act->debug_info) {
+            sprintf(debug_str, " (%s)", act->debug_info);
+        }
         grib_context_log(h->context,
-                GRIB_LOG_DEBUG,"------------- SECTION action %s (%s) is triggered by [%s]",
-                act->name, notified->name, changed->name);
+                GRIB_LOG_DEBUG,"------------- SECTION action %s (%s) is triggered by [%s]%s",
+                act->name, notified->name, changed->name, debug_str);
     }
 
     la = grib_action_reparse(act,notified,&doit);
@@ -154,6 +157,9 @@ static int notify_change(grib_action* act, grib_accessor * notified,
     loader.lookup_long   = grib_lookup_long_from_handle;
     loader.init_accessor = grib_init_accessor_from_handle;
 
+    if (h->kid != NULL) {
+        return GRIB_INTERNAL_ERROR;
+    }
 
     Assert(h->kid == NULL);
     tmp_handle->loader = &loader;
@@ -161,15 +167,15 @@ static int notify_change(grib_action* act, grib_accessor * notified,
     h->kid = tmp_handle;
     /* printf("tmp_handle- main %p %p\n",(void*)tmp_handle,(void*)h); */
 
-    grib_context_log(h->context,GRIB_LOG_DEBUG,"------------- CREATE TMP BLOCK ", act->name, notified->name);
+    grib_context_log(h->context,GRIB_LOG_DEBUG,"------------- CREATE TMP BLOCK act=%s notified=%s", act->name, notified->name);
     tmp_handle->root  = grib_section_create(tmp_handle,NULL);
 
     tmp_handle->use_trie=1;
 
     err=grib_create_accessor(tmp_handle->root, act, &loader);
     if (err) {
-        if (err == GRIB_NOT_FOUND) {
-            /* FIXME: Allow this error. Needed when changing some packingTypes */
+        if (err == GRIB_NOT_FOUND && strcmp(act->name, "dataValues")==0) {
+            /* FIXME: Allow this error. Needed when changing some packingTypes e.g. CCSDS to Simple */
             err = GRIB_SUCCESS;
         } else {
             return err;

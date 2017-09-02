@@ -313,11 +313,19 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\src\action_class_close.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\src\action_class_concept.c"
 				>
 			</File>
 			<File
 				RelativePath="..\..\..\src\action_class_gen.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\action_class_hash_array.c"
 				>
 			</File>
 			<File
@@ -353,6 +361,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\src\action_class_rename.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\src\action_class_section.c"
 				>
 			</File>
@@ -373,11 +385,19 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\src\action_class_set_sarray.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\src\action_class_switch.c"
 				>
 			</File>
 			<File
 				RelativePath="..\..\..\src\action_class_template.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\action_class_transient_darray.c"
 				>
 			</File>
 			<File
@@ -401,7 +421,19 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\src\compile.c"
+				RelativePath="..\..\..\src\bufr_keys_iterator.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\bufr_util.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\codes_memfs.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\eccodes.c"
 				>
 			</File>
 			<File
@@ -426,6 +458,10 @@
 			</File>
 			<File
 				RelativePath="..\..\..\src\grib_accessor_class_abstract_vector.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\grib_accessor_class_apply_operators.c"
 				>
 			</File>
 			<File
@@ -466,6 +502,58 @@
 			</File>
 			<File
 				RelativePath="..\..\..\src\grib_accessor_class_budgdate.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\grib_accessor_class_bufr_clear_tables.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\grib_accessor_class_bufr_data.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\grib_accessor_class_bufr_data_array.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\grib_accessor_class_bufr_data_element.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\grib_accessor_class_bufr_elements_table.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\grib_accessor_class_bufr_extract_area_subsets.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\grib_accessor_class_bufr_extract_datetime_subsets.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\grib_accessor_class_bufr_extract_subsets.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\grib_accessor_class_bufr_group.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\grib_accessor_class_bufr_has_delayed_replication.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\grib_accessor_class_bufr_simple_thinning.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\grib_accessor_class_bufr_string_values.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\grib_accessor_class_bufrdc_expanded_descriptors.c"
 				>
 			</File>
 			<File
@@ -649,6 +737,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\src\grib_accessor_class_dictionary.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\src\grib_accessor_class_dirty.c"
 				>
 			</File>
@@ -666,6 +758,10 @@
 			</File>
 			<File
 				RelativePath="..\..\..\src\grib_accessor_class_evaluate.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\grib_accessor_class_expanded_descriptors.c"
 				>
 			</File>
 			<File
@@ -825,7 +921,15 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\src\grib_accessor_class_group.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\src\grib_accessor_class_gts_header.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\grib_accessor_class_hash_array.c"
 				>
 			</File>
 			<File
@@ -874,6 +978,10 @@
 			</File>
 			<File
 				RelativePath="..\..\..\src\grib_accessor_class_iterator.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\grib_accessor_class_julian_date.c"
 				>
 			</File>
 			<File
@@ -945,11 +1053,19 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\src\grib_accessor_class_message_copy.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\src\grib_accessor_class_missing.c"
 				>
 			</File>
 			<File
 				RelativePath="..\..\..\src\grib_accessor_class_nearest.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\grib_accessor_class_non_alpha.c"
 				>
 			</File>
 			<File
@@ -989,6 +1105,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\src\grib_accessor_class_pack_bufr_values.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\src\grib_accessor_class_pad.c"
 				>
 			</File>
@@ -1010,6 +1130,14 @@
 			</File>
 			<File
 				RelativePath="..\..\..\src\grib_accessor_class_position.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\grib_accessor_class_raw.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\grib_accessor_class_rdbtime_guess_date.c"
 				>
 			</File>
 			<File
@@ -1053,6 +1181,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\src\grib_accessor_class_sexagesimal2decimal.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\src\grib_accessor_class_signed.c"
 				>
 			</File>
@@ -1066,6 +1198,14 @@
 			</File>
 			<File
 				RelativePath="..\..\..\src\grib_accessor_class_size.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\grib_accessor_class_smart_table.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\grib_accessor_class_smart_table_column.c"
 				>
 			</File>
 			<File
@@ -1109,7 +1249,23 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\src\grib_accessor_class_to_double.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\grib_accessor_class_to_integer.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\grib_accessor_class_to_string.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\src\grib_accessor_class_transient.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\grib_accessor_class_transient_darray.c"
 				>
 			</File>
 			<File
@@ -1138,6 +1294,14 @@
 			</File>
 			<File
 				RelativePath="..\..\..\src\grib_accessor_class_uint8.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\grib_accessor_class_unexpanded_descriptors.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\grib_accessor_class_unpack_bufr_values.c"
 				>
 			</File>
 			<File
@@ -1173,6 +1337,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\src\grib_accessor_classes_hash.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\src\grib_api_version.c"
 				>
 			</File>
@@ -1205,6 +1373,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\src\grib_bufr_descriptor.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\grib_bufr_descriptors_array.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\src\grib_concept.c"
 				>
 			</File>
@@ -1233,7 +1409,35 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\src\grib_dumper_class_c_code.c"
+				RelativePath="..\..\..\src\grib_dumper_class_bufr_decode_C.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\grib_dumper_class_bufr_decode_filter.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\grib_dumper_class_bufr_decode_fortran.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\grib_dumper_class_bufr_decode_python.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\grib_dumper_class_bufr_encode_C.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\grib_dumper_class_bufr_encode_filter.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\grib_dumper_class_bufr_encode_fortran.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\grib_dumper_class_bufr_encode_python.c"
 				>
 			</File>
 			<File
@@ -1242,6 +1446,10 @@
 			</File>
 			<File
 				RelativePath="..\..\..\src\grib_dumper_class_default.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\grib_dumper_class_grib_encode_C.c"
 				>
 			</File>
 			<File
@@ -1285,6 +1493,30 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\src\grib_expression_class_is_in_dict.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\grib_expression_class_is_in_list.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\grib_expression_class_is_integer.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\grib_expression_class_length.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\grib_expression_class_logical_and.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\grib_expression_class_logical_or.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\src\grib_expression_class_long.c"
 				>
 			</File>
@@ -1294,6 +1526,10 @@
 			</File>
 			<File
 				RelativePath="..\..\..\src\grib_expression_class_string_compare.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\grib_expression_class_sub_string.c"
 				>
 			</File>
 			<File
@@ -1322,6 +1558,10 @@
 			</File>
 			<File
 				RelativePath="..\..\..\src\grib_handle.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\grib_hash_array.c"
 				>
 			</File>
 			<File
@@ -1397,6 +1637,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\src\grib_iterator_class_space_view.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\src\grib_itrie.c"
 				>
 			</File>
@@ -1453,7 +1697,15 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\src\grib_oarray.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\src\grib_openjpeg_encoding.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\grib_optimize_decimal_factor.c"
 				>
 			</File>
 			<File
@@ -1470,6 +1722,10 @@
 			</File>
 			<File
 				RelativePath="..\..\..\src\grib_rules.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\grib_sarray.c"
 				>
 			</File>
 			<File
@@ -1493,6 +1749,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\src\grib_trie_with_rank.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\src\grib_util.c"
 				>
 			</File>
@@ -1501,11 +1761,27 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\src\grib_vdarray.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\grib_viarray.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\grib_vsarray.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\src\grib_yacc.c"
 				>
 			</File>
 			<File
 				RelativePath="..\..\..\src\md5.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\src\string_util.c"
 				>
 			</File>
 			<File
@@ -1583,7 +1859,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\src\grib_api_windef.h"
+				RelativePath="..\..\..\src\eccodes_windef.h"
 				>
 			</File>
 			<File

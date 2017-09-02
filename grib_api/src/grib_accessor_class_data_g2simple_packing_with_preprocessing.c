@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2016 ECMWF.
+ * Copyright 2005-2017 ECMWF.
  *
  * This software is licensed under the terms of the Apache Licence Version 2.0
  * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -71,6 +71,7 @@ typedef struct grib_accessor_data_g2simple_packing_with_preprocessing {
 	const char*  reference_value;
 	const char*  binary_scale_factor;
 	const char*  decimal_scale_factor;
+	const char*  optimize_scaling_factor;
 /* Members defined in data_g2simple_packing */
 /* Members defined in data_g2simple_packing_with_preprocessing */
 	const char*  pre_processing;
@@ -97,13 +98,15 @@ static grib_accessor_class _grib_accessor_class_data_g2simple_packing_with_prepr
     0,            /* get native type               */
     0,                /* get sub_section                */
     0,               /* grib_pack procedures long      */
-    0,               /* grib_pack procedures long      */
+    0,                 /* grib_pack procedures long      */
     0,                  /* grib_pack procedures long      */
     0,                /* grib_unpack procedures long    */
     &pack_double,                /* grib_pack procedures double    */
     &unpack_double,              /* grib_unpack procedures double  */
     0,                /* grib_pack procedures string    */
     0,              /* grib_unpack procedures string  */
+    0,          /* grib_pack array procedures string    */
+    0,        /* grib_unpack array procedures string  */
     0,                 /* grib_pack procedures bytes     */
     0,               /* grib_unpack procedures bytes   */
     0,            /* pack_expression */
@@ -116,7 +119,8 @@ static grib_accessor_class _grib_accessor_class_data_g2simple_packing_with_prepr
     0,                    /* compare vs. another accessor   */
     0,     /* unpack only ith value          */
     0,     /* unpack a subarray         */
-    0,             		/* clear          */
+    0,              		/* clear          */
+    0,               		/* clone accessor          */
 };
 
 
@@ -138,6 +142,8 @@ static void init_class(grib_accessor_class* c)
 	c->unpack_long	=	(*(c->super))->unpack_long;
 	c->pack_string	=	(*(c->super))->pack_string;
 	c->unpack_string	=	(*(c->super))->unpack_string;
+	c->pack_string_array	=	(*(c->super))->pack_string_array;
+	c->unpack_string_array	=	(*(c->super))->unpack_string_array;
 	c->pack_bytes	=	(*(c->super))->pack_bytes;
 	c->unpack_bytes	=	(*(c->super))->unpack_bytes;
 	c->pack_expression	=	(*(c->super))->pack_expression;
@@ -151,6 +157,7 @@ static void init_class(grib_accessor_class* c)
 	c->unpack_double_element	=	(*(c->super))->unpack_double_element;
 	c->unpack_double_subarray	=	(*(c->super))->unpack_double_subarray;
 	c->clear	=	(*(c->super))->clear;
+	c->make_clone	=	(*(c->super))->make_clone;
 }
 
 /* END_CLASS_IMP */
@@ -158,8 +165,8 @@ static void init_class(grib_accessor_class* c)
 static void init(grib_accessor* a,const long v, grib_arguments* args)
 {
   grib_accessor_data_g2simple_packing_with_preprocessing *self =(grib_accessor_data_g2simple_packing_with_preprocessing*)a;
-  self->pre_processing = grib_arguments_get_name(a->parent->h,args,self->carg++);
-  self->pre_processing_parameter = grib_arguments_get_name(a->parent->h,args,self->carg++);
+  self->pre_processing = grib_arguments_get_name(grib_handle_of_accessor(a),args,self->carg++);
+  self->pre_processing_parameter = grib_arguments_get_name(grib_handle_of_accessor(a),args,self->carg++);
   a->flags |= GRIB_ACCESSOR_FLAG_DATA;
 }
 
@@ -168,7 +175,7 @@ static int value_count(grib_accessor* a,long* n_vals)
   grib_accessor_data_g2simple_packing_with_preprocessing *self =(grib_accessor_data_g2simple_packing_with_preprocessing*)a;
   *n_vals= 0;
 
-  return grib_get_long_internal(a->parent->h,self->number_of_values,n_vals);
+  return grib_get_long_internal(grib_handle_of_accessor(a),self->number_of_values,n_vals);
 }
 
 static int  unpack_double(grib_accessor* a, double* val, size_t *len)
@@ -195,13 +202,13 @@ static int  unpack_double(grib_accessor* a, double* val, size_t *len)
   self->dirty=0;
 
 
-  if((err = grib_get_long_internal(a->parent->h,self->pre_processing, &pre_processing)) != GRIB_SUCCESS){
-    grib_context_log(a->parent->h->context, GRIB_LOG_ERROR, "Accessor %s cannont gather value for %s error %d \n", a->name, self->pre_processing, err);
+  if((err = grib_get_long_internal(grib_handle_of_accessor(a),self->pre_processing, &pre_processing)) != GRIB_SUCCESS){
+    grib_context_log(a->context, GRIB_LOG_ERROR, "Accessor %s cannont gather value for %s error %d \n", a->name, self->pre_processing, err);
     return err;
   }
 
-  if((err = grib_get_double_internal(a->parent->h,self->pre_processing_parameter, &pre_processing_parameter)) != GRIB_SUCCESS){
-    grib_context_log(a->parent->h->context, GRIB_LOG_ERROR, "Accessor %s cannont gather value for %s error %d \n", a->name, self->pre_processing_parameter, err);
+  if((err = grib_get_double_internal(grib_handle_of_accessor(a),self->pre_processing_parameter, &pre_processing_parameter)) != GRIB_SUCCESS){
+    grib_context_log(a->context, GRIB_LOG_ERROR, "Accessor %s cannont gather value for %s error %d \n", a->name, self->pre_processing_parameter, err);
     return err;
   }
 
@@ -229,7 +236,7 @@ static int pack_double(grib_accessor* a, const double* val, size_t *len)
 
   self->dirty=1;
 
-  if((err = grib_get_long_internal(a->parent->h,self->pre_processing, &pre_processing)) != GRIB_SUCCESS)
+  if((err = grib_get_long_internal(grib_handle_of_accessor(a),self->pre_processing, &pre_processing)) != GRIB_SUCCESS)
     return err;
 
   err=pre_processing_func((double*)val,n_vals,pre_processing,&pre_processing_parameter,DIRECT);
@@ -238,11 +245,11 @@ static int pack_double(grib_accessor* a, const double* val, size_t *len)
   err =   super->pack_double(a,val,len);
   if (err!=GRIB_SUCCESS) return err;
 
-  if((err = grib_set_double_internal(a->parent->h,self->pre_processing_parameter, pre_processing_parameter)) != GRIB_SUCCESS)
+  if((err = grib_set_double_internal(grib_handle_of_accessor(a),self->pre_processing_parameter, pre_processing_parameter)) != GRIB_SUCCESS)
     return err;
 
 
-  if((err = grib_set_long_internal(a->parent->h,self->number_of_values, n_vals)) != GRIB_SUCCESS)
+  if((err = grib_set_long_internal(grib_handle_of_accessor(a),self->number_of_values, n_vals)) != GRIB_SUCCESS)
     return err;
 
 

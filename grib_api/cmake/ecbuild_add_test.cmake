@@ -1,4 +1,4 @@
-# (C) Copyright 1996-2016 ECMWF.
+# (C) Copyright 1996-2017 ECMWF.
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -19,6 +19,7 @@
 #                     [ OBJECTS <obj1> [<obj2> ...] ]
 #                     [ COMMAND <executable> ]
 #                     [ TYPE EXE|SCRIPT|PYTHON ]
+#                     [ LABELS <label1> [<label2> ...] ]
 #                     [ ARGS <argument1> [<argument2> ...] ]
 #                     [ RESOURCES <file1> [<file2> ...] ]
 #                     [ TEST_DATA <file1> [<file2> ...] ]
@@ -34,6 +35,7 @@
 #                     [ DEPENDS <target1> [<target2> ...] ]
 #                     [ TEST_DEPENDS <target1> [<target2> ...] ]
 #                     [ CONDITION <condition> ]
+#                     [ PROPERTIES <prop1> <val1> [<prop2> <val2> ...] ]
 #                     [ ENVIRONMENT <variable1> [<variable2> ...] ]
 #                     [ WORKING_DIRECTORY <path> ]
 #                     [ CFLAGS <flag1> [<flag2> ...] ]
@@ -63,6 +65,22 @@
 #   :SCRIPT: run command or script, default if COMMAND is provided
 #   :PYTHON: run a Python script (requires the Python interpreter to be found)
 #
+# LABELS : optional
+#   list of labels to assign to the test
+#
+#   The project name in lower case is always added as a label. Additional
+#   labels are assigned depending on the type of test:
+#
+#   :executable: for type ``EXE``
+#   :script:     for type ``SCRIPT``
+#   :python:     for type ``PYTHON``
+#   :boost:      uses Boost unit test
+#   :mpi:        if ``MPI`` is set
+#   :openmp:     if ``OMP`` is set
+#
+#   This allows selecting tests to run via ``ctest -L <regex>`` or tests
+#   to exclude via ``ctest -LE <regex>``.
+#
 # ARGS : optional
 #   list of arguments to pass to TARGET or COMMAND when running the test
 #
@@ -76,9 +94,9 @@
 #   use the Boost Unit Test Framework
 #
 # MPI : optional
-#   number of MPI tasks to use.
+#   Run with MPI using the given number of MPI tasks.
 #
-#   If greater than 1, and MPI is not available, the test is disabled.
+#   If greater than 1, and ``MPIEXEC`` is not available, the test is disabled.
 #
 # OMP : optional
 #   number of OpenMP threads per MPI task to use.
@@ -114,6 +132,9 @@
 #   conditional expression which must evaluate to true for this target to be
 #   built (must be valid in a CMake ``if`` statement)
 #
+# PROPERTIES : optional
+#   custom properties to set on the target
+#
 # ENVIRONMENT : optional
 #   list of environment variables to set in the test environment
 #
@@ -138,9 +159,9 @@ macro( ecbuild_add_test )
 
   set( options           BOOST )
   set( single_value_args TARGET ENABLED COMMAND TYPE LINKER_LANGUAGE MPI OMP WORKING_DIRECTORY )
-  set( multi_value_args  SOURCES OBJECTS LIBS INCLUDES TEST_DEPENDS DEPENDS ARGS
+  set( multi_value_args  SOURCES OBJECTS LIBS INCLUDES TEST_DEPENDS DEPENDS LABELS ARGS
                          PERSISTENT DEFINITIONS RESOURCES TEST_DATA CFLAGS
-                         CXXFLAGS FFLAGS GENERATED CONDITION ENVIRONMENT )
+                         CXXFLAGS FFLAGS GENERATED CONDITION PROPERTIES ENVIRONMENT )
 
   cmake_parse_arguments( _PAR "${options}" "${single_value_args}" "${multi_value_args}"  ${_FIRST_ARG} ${ARGN} )
 
@@ -150,21 +171,31 @@ macro( ecbuild_add_test )
 
   set( _TEST_DIR ${CMAKE_CURRENT_BINARY_DIR} )
 
-  # Check for MPI
-  if(_PAR_MPI)
-    if( (_PAR_MPI GREATER 1) AND ( (NOT MPI_FOUND) OR (NOT MPIEXEC) ) )
-      ecbuild_debug("ecbuild_add_test(${_PAR_TARGET}): ${_PAR_MPI} MPI ranks requested but MPI not available - disabling test")
+  # Undocumented flag for disabling all MPI tests for test environment without suitable MPI(EXEC)
+  if( _PAR_MPI AND ECBUILD_DISABLE_MPI_TESTS )
+    ecbuild_debug("ecbuild_add_test(${_PAR_TARGET}): ECBUILD_DISABLE_MPI_TESTS set - disabling test")
+    set( _PAR_ENABLED 0 )
+  elseif( _PAR_MPI )
+    # Check for MPIEXEC if it not set
+    find_program( MPIEXEC NAMES mpiexec mpirun lamexec srun
+                  DOC "Executable for running MPI programs." )
+    if( MPIEXEC )
+      set(MPIEXEC_NUMPROC_FLAG "-np" CACHE STRING "Flag used by MPI to specify the number of processes for MPIEXEC")
+      ecbuild_debug("ecbuild_add_test(${_PAR_TARGET}): Running using ${MPIEXEC} on ${_PAR_MPI} MPI rank(s)")
+      set( _PAR_LABELS mpi ${_PAR_LABELS} )
+    elseif( _PAR_MPI GREATER 1 )
+      ecbuild_debug("ecbuild_add_test(${_PAR_TARGET}): ${_PAR_MPI} MPI ranks requested but MPIEXEC not available - disabling test")
       set( _PAR_ENABLED 0 )
-    elseif( (_PAR_MPI EQUAL 1) AND (NOT MPI_FOUND) )
-      ecbuild_debug("ecbuild_add_test(${_PAR_TARGET}): 1 MPI rank requested but MPI not available - disabling MPI")
-      set( _PAR_MPI 0 )
     else()
-      ecbuild_debug("ecbuild_add_test(${_PAR_TARGET}): Running using ${_PAR_MPI} MPI rank(s)")
+      ecbuild_debug("ecbuild_add_test(${_PAR_TARGET}): 1 MPI rank requested but MPIEXEC not available - running sequentially")
+      set( _PAR_MPI 0 )
     endif()
   endif()
 
   # Check for OMP
-  if( NOT DEFINED _PAR_OMP )
+  if( DEFINED _PAR_OMP )
+    set( _PAR_LABELS openmp ${_PAR_LABELS} )
+  else()
     set( _PAR_OMP 1 )
   endif()
   list( APPEND _PAR_ENVIRONMENT "OMP_NUM_THREADS=${_PAR_OMP}" )
@@ -181,37 +212,16 @@ macro( ecbuild_add_test )
   # command implies script
   if( DEFINED _PAR_COMMAND )
     set( _PAR_TYPE "SCRIPT" )
+    set( _PAR_LABELS script ${_PAR_LABELS} )
   endif()
 
   # default of TYPE
   if( NOT _PAR_TYPE AND DEFINED _PAR_TARGET )
     set( _PAR_TYPE "EXE" )
+    set( _PAR_LABELS executable ${_PAR_LABELS} )
     if( NOT _PAR_SOURCES )
       ecbuild_critical("The call to ecbuild_add_test() defines a TARGET without SOURCES.")
     endif()
-  endif()
-
-  if( _PAR_TYPE MATCHES "PYTHON" )
-    if( PYTHONINTERP_FOUND )
-      set( _PAR_COMMAND ${PYTHON_EXECUTABLE} )
-    else()
-      ecbuild_warn( "Requested a python test but python interpreter not found - disabling test\nPYTHON_EXECUTABLE: [${PYTHON_EXECUTABLE}]" )
-      set( _PAR_ENABLED 0 )
-    endif()
-  endif()
-
-  ### further checks
-
-  if( _PAR_ENABLED AND NOT _PAR_TARGET AND NOT _PAR_COMMAND )
-    ecbuild_critical("The call to ecbuild_add_test() defines neither a TARGET nor a COMMAND.")
-  endif()
-
-  if( _PAR_ENABLED AND NOT _PAR_COMMAND AND NOT _PAR_SOURCES )
-    ecbuild_critical("The call to ecbuild_add_test() defines neither a COMMAND nor SOURCES, so no test can be defined or built.")
-  endif()
-
-  if( _PAR_TYPE MATCHES "SCRIPT" AND NOT _PAR_COMMAND )
-    ecbuild_critical("The call to ecbuild_add_test() defines a 'script' but doesn't specify the COMMAND.")
   endif()
 
   ### conditional build
@@ -233,6 +243,7 @@ macro( ecbuild_add_test )
   if( _PAR_BOOST AND ENABLE_TESTS AND _${_PAR_TARGET}_condition )
 
     if( HAVE_BOOST_UNIT_TEST )
+      set( _PAR_LABELS boost ${_PAR_LABELS} )
       if( BOOST_UNIT_TEST_FRAMEWORK_HEADER_ONLY )
         include_directories( ${ECBUILD_BOOST_HEADER_DIRS} )
         include_directories( ${Boost_INCLUDE_DIRS}  ) # temporary until we ship Boost Unit Test with ecBuild
@@ -249,6 +260,30 @@ macro( ecbuild_add_test )
   ### enable the tests
 
   if( ENABLE_TESTS AND _${_PAR_TARGET}_condition )
+
+    if( _PAR_TYPE MATCHES "PYTHON" )
+      if( PYTHONINTERP_FOUND )
+        set( _PAR_COMMAND ${PYTHON_EXECUTABLE} )
+        set( _PAR_LABELS python ${_PAR_LABELS} )
+      else()
+        ecbuild_warn( "Requested a python test but python interpreter not found - disabling test\nPYTHON_EXECUTABLE: [${PYTHON_EXECUTABLE}]" )
+        set( _PAR_ENABLED 0 )
+      endif()
+    endif()
+
+    ### further checks
+
+    if( _PAR_ENABLED AND NOT _PAR_TARGET AND NOT _PAR_COMMAND )
+      ecbuild_critical("The call to ecbuild_add_test() defines neither a TARGET nor a COMMAND.")
+    endif()
+
+    if( _PAR_ENABLED AND NOT _PAR_COMMAND AND NOT _PAR_SOURCES )
+      ecbuild_critical("The call to ecbuild_add_test() defines neither a COMMAND nor SOURCES, so no test can be defined or built.")
+    endif()
+
+    if( _PAR_TYPE MATCHES "SCRIPT" AND NOT _PAR_COMMAND )
+      ecbuild_critical("The call to ecbuild_add_test() defines a 'script' but doesn't specify the COMMAND.")
+    endif()
 
     # add resources
 
@@ -343,21 +378,21 @@ macro( ecbuild_add_test )
 
       if( _target_defs )
         ecbuild_debug("ecbuild_add_test(${_PAR_TARGET}): using definitions ${_target_defs}")
-        set_property( TARGET ${_PAR_TARGET} PROPERTY COMPILE_DEFINITIONS ${_target_defs} )
+        set_target_properties( ${_PAR_TARGET} PROPERTIES COMPILE_DEFINITIONS "${_target_defs}" )
       endif()
 
       # set build location to local build dir
       # not the project base as defined for libs and execs
-      set_property( TARGET ${_PAR_TARGET} PROPERTY RUNTIME_OUTPUT_DIRECTORY ${_TEST_DIR} )
+      set_target_properties( ${_PAR_TARGET} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${_TEST_DIR} )
 
       # whatever project settings are, we always build tests with the build_rpath, not the install_rpath
-      set_property( TARGET ${_PAR_TARGET} PROPERTY BUILD_WITH_INSTALL_RPATH FALSE )
-      set_property( TARGET ${_PAR_TARGET} PROPERTY SKIP_BUILD_RPATH         FALSE )
+      set_target_properties( ${_PAR_TARGET} PROPERTIES BUILD_WITH_INSTALL_RPATH FALSE )
+      set_target_properties( ${_PAR_TARGET} PROPERTIES SKIP_BUILD_RPATH         FALSE )
 
       # set linker language
       if( DEFINED _PAR_LINKER_LANGUAGE )
         ecbuild_debug("ecbuild_add_test(${_PAR_TARGET}): using linker language ${_PAR_LINKER_LANGUAGE}")
-        set_property( TARGET ${_PAR_TARGET} PROPERTY LINKER_LANGUAGE ${_PAR_LINKER_LANGUAGE} )
+        set_target_properties( ${_PAR_TARGET} PROPERTIES LINKER_LANGUAGE ${_PAR_LINKER_LANGUAGE} )
       endif()
 
       # make sure target is removed before - some problems with AIX
@@ -421,6 +456,11 @@ macro( ecbuild_add_test )
         add_test( NAME ${_PAR_TARGET} COMMAND ${_PAR_TARGET}  ${TEST_ARGS} ${_working_dir} ) # run the test that was generated
       endif()
 
+      # Set custom properties
+      if( ${_PAR_PROPERTIES} )
+        set_target_properties( ${_PAR_TARGET} PROPERTIES ${_PAR_PROPERTIES} )
+      endif()
+
       # get test data
 
       if( _PAR_TEST_DATA )
@@ -430,6 +470,12 @@ macro( ecbuild_add_test )
         list( APPEND _PAR_TEST_DEPENDS ${_PAR_TARGET}_data )
 
       endif()
+
+      # Add lower case project name to custom test labels
+      set( _PAR_LABELS ${PROJECT_NAME_LOWCASE} ${_PAR_LABELS} )
+      list( REMOVE_DUPLICATES _PAR_LABELS )
+      ecbuild_debug("ecbuild_add_test(${_PAR_TARGET}): assign labels ${_PAR_LABELS}")
+      set_property( TEST ${_PAR_TARGET} APPEND PROPERTY LABELS "${_PAR_LABELS}" )
 
       if( DEFINED _PAR_ENVIRONMENT )
         set_property( TEST ${_PAR_TARGET} APPEND PROPERTY ENVIRONMENT "${_PAR_ENVIRONMENT}" )

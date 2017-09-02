@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2016 ECMWF.
+ * Copyright 2005-2017 ECMWF.
  *
  * This software is licensed under the terms of the Apache Licence Version 2.0
  * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -24,7 +24,6 @@
    IMPLEMENTS = dump
    IMPLEMENTS = destroy
    IMPLEMENTS = xref   
-   IMPLEMENTS = compile
    IMPLEMENTS = reparse;execute
    MEMBERS    = grib_expression *expression
    MEMBERS    = grib_action     *block_true
@@ -47,7 +46,6 @@ or edit "action.class" and rerun ./make_class.pl
 static void init_class      (grib_action_class*);
 static void dump            (grib_action* d, FILE*,int);
 static void xref            (grib_action* d, FILE* f,const char* path);
-static void compile         (grib_action* a, grib_compiler* compiler);
 static void destroy         (grib_context*,grib_action*);
 static int create_accessor(grib_section*,grib_action*,grib_loader*);
 static grib_action* reparse(grib_action* a,grib_accessor* acc,int *doit);
@@ -83,7 +81,6 @@ static grib_action_class _grib_action_class_if = {
     0,                            /* notify_change */
     &reparse,                            /* reparse */
     &execute,                            /* execute */
-    &compile,                            /* compile */
 };
 
 grib_action_class* grib_action_class_if = &_grib_action_class_if;
@@ -96,12 +93,13 @@ static void init_class(grib_action_class* c)
 
 grib_action* grib_action_create_if( grib_context* context,
         grib_expression* expression,
-        grib_action* block_true,grib_action* block_false,int transient)
+        grib_action* block_true,grib_action* block_false,int transient,
+        int lineno, char* file_being_parsed)
 {
     char name[1024];
     grib_action_if* a ;
-    grib_action_class* c   = grib_action_class_if;
-    grib_action* act       = (grib_action*)grib_context_malloc_clear_persistent(context,c->size);
+    grib_action_class* c = grib_action_class_if;
+    grib_action* act     = (grib_action*)grib_context_malloc_clear_persistent(context,c->size);
     act->op              = grib_context_strdup_persistent(context,"section");
 
     act->cclass       = c;
@@ -119,29 +117,16 @@ grib_action* grib_action_create_if( grib_context* context,
         sprintf(name,"_if%p",(void*)a);
 
     act->name      = grib_context_strdup_persistent(context,name);
+    act->debug_info= NULL;
+    if (context->debug > 0 && file_being_parsed) {
+        /* Construct debug information showing definition file and line */
+        /* number of IF statement */
+        char debug_info[1024];
+        sprintf(debug_info, "File=%s line=%d", file_being_parsed, lineno);
+        act->debug_info= grib_context_strdup_persistent(context,debug_info);
+    }
 
     return act;
-}
-
-static void compile(grib_action* act, grib_compiler *compiler)
-{
-    grib_action_if* a  = (grib_action_if*)act;
-    char t[80];
-    char f[80];
-
-    if(a->block_true)
-        grib_compile_action_branch(a->block_true, compiler,t); 
-    else
-        strcpy(t,"NULL");
-
-    if(a->block_false)
-        grib_compile_action_branch(a->block_false, compiler,f);
-    else
-        strcpy(f,"NULL");
-
-    fprintf(compiler->out,"%s = grib_action_create_if(ctx,",compiler->var);
-    grib_compile_expression(a->expression, compiler);
-    fprintf(compiler->out,",%s,%s,%d);\n", t,f,a->transient);
 }
 
 static int create_accessor( grib_section* p, grib_action* act, grib_loader *h)
@@ -264,8 +249,8 @@ static grib_action* reparse(grib_action* a,grib_accessor* acc,int* doit)
 
     /* printf("reparse %s %s\n",a->name,acc->name); */
 
-    if((ret=grib_expression_evaluate_long(acc->parent->h,self->expression,&lres)) != GRIB_SUCCESS)
-        grib_context_log(acc->parent->h->context,
+    if((ret=grib_expression_evaluate_long(grib_handle_of_accessor(acc),self->expression,&lres)) != GRIB_SUCCESS)
+        grib_context_log(acc->context,
                 GRIB_LOG_ERROR,"if reparse  grib_expression_evaluate_long %s",
                 grib_get_error_message(ret));
 
@@ -296,10 +281,10 @@ static void destroy(grib_context* context,grib_action* act)
         f = nf;
     }
 
-
     grib_expression_free(context,a->expression);
 
     grib_context_free_persistent(context, act->name);
+    grib_context_free_persistent(context, act->debug_info);
     grib_context_free_persistent(context, act->op);
 }
 

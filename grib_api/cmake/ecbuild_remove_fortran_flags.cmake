@@ -1,4 +1,4 @@
-# (C) Copyright 1996-2016 ECMWF.
+# (C) Copyright 1996-2017 ECMWF.
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -36,7 +36,10 @@ macro( ecbuild_remove_fortran_flags m_flags )
     cmake_parse_arguments( _PAR "" "${single_value_args}" "${multi_value_args}" ${_FIRST_ARG} ${ARGN} )
 
     string( TOUPPER ${CMAKE_BUILD_TYPE} CMAKE_BUILD_TYPE_CAPS )
-    string( TOUPPER ${_PAR_BUILD} _PAR_BUILD_CAPS )
+
+    if( _PAR_BUILD )
+      string( TOUPPER ${_PAR_BUILD} _PAR_BUILD_CAPS )
+    endif()
 
     if( _PAR_BUILD AND (CMAKE_BUILD_TYPE_CAPS MATCHES "${_PAR_BUILD_CAPS}") )
 
@@ -48,6 +51,7 @@ macro( ecbuild_remove_fortran_flags m_flags )
     elseif( NOT _PAR_BUILD )
 
       foreach( _flag ${_flags} )
+        string(REGEX REPLACE " *${_flag} *" " " CMAKE_Fortran_FLAGS_${CMAKE_BUILD_TYPE_CAPS} ${CMAKE_Fortran_FLAGS_${CMAKE_BUILD_TYPE_CAPS}} )
         string(REGEX REPLACE " *${_flag} *" " " CMAKE_Fortran_FLAGS ${CMAKE_Fortran_FLAGS} )
         ecbuild_debug( "Fortran FLAG [${_flag}] removed" )
       endforeach()

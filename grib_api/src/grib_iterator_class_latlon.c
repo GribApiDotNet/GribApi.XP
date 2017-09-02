@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2016 ECMWF.
+ * Copyright 2005-2017 ECMWF.
  *
  * This software is licensed under the terms of the Apache Licence Version 2.0
  * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -126,7 +126,7 @@ void unrotate(grib_handle* h,
 
     /* Still get a very small rounding error, round to 6 decimal places */
     /* TODO: roundf implementation missing on MSVC! */
-#ifndef GRIB_ON_WINDOWS
+#ifndef ECCODES_ON_WINDOWS
     ret_lat = roundf( ret_lat * 1000000.0 )/1000000.0;
     ret_lon = roundf( ret_lon * 1000000.0 )/1000000.0;
 #endif
@@ -197,21 +197,6 @@ static int init(grib_iterator* i,grib_handle* h,grib_arguments* args)
         if ((ret = grib_get_double_internal(h,"longitudeOfSouthernPoleInDegrees", &self->southPoleLon))) return ret;
     }
 
-#if 0
-    ret = grib_get_double(h,"angleOfRotation", &self->angleOfRotation);
-    if (ret != GRIB_SUCCESS) {
-        if (ret == GRIB_NOT_FOUND) {
-            ret = GRIB_SUCCESS;
-        } else {
-            return ret;
-        }
-    }
-    else {
-        self->isRotated = 1;
-        if ((ret = grib_get_double_internal(h,"latitudeOfSouthernPoleInDegrees", &self->southPoleLat))) return ret;
-        if ((ret = grib_get_double_internal(h,"longitudeOfSouthernPoleInDegrees", &self->southPoleLon))) return ret;
-    }
-#endif
     if((ret = grib_get_double_internal(h,latofirst,     &laf))) return ret;
     if((ret = grib_get_double_internal(h,jdirec,        &jdir))) return ret;
     if((ret = grib_get_long_internal(h,s_jScansPositively,&jScansPositively)))

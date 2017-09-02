@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2016 ECMWF.
+ * Copyright 2005-2017 ECMWF.
  *
  * This software is licensed under the terms of the Apache Licence Version 2.0
  * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -16,25 +16,25 @@
 #include "grib_tools.h"
 
 grib_option grib_options[]={
-/*  {id, args, help}, on, command_line, value*/
-    {"S",0,0,1,0,0},
-    {"O",0,"Octet mode. WMO documentation style dump.\n",0,1,0},
-    {"D",0,0,0,1,0},
-    {"d",0,"Print all data values.\n",0,1,0},
-    {"j",0,0,0,1,0},
-    {"C",0,0,0,1,0},
-    {"t",0,0,0,1,0},
-    {"H",0,0,0,1,0},
-    {"a",0,0,0,1,0},
-    {"w:",0,0,0,1,0},
-    {"s:",0,0,0,1,0},
-    {"M",0,0,0,1,0},
-    {"T:",0,0,0,1,0},
-    {"7",0,0,0,1,0},
-    {"V",0,0,0,1,0},
-    {"q",0,0,1,0,0},
-    {"X:",0,0,0,1,0},
-    {"x",0,0,0,1,0}
+        /*  {id, args, help}, on, command_line, value*/
+        {"S",0,0,1,0,0},
+        {"O",0,"Octet mode. WMO documentation style dump.\n",0,1,0},
+        {"D",0,0,0,1,0},
+        {"d",0,"Print all data values.\n",0,1,0},
+        {"j",0,0,0,1,0},
+        /*  {"C",0,0,0,1,0}, */   /* See ECC-234 */
+        {"t",0,0,0,1,0},
+        {"H",0,0,0,1,0},
+        {"a",0,0,0,1,0},
+        {"w:",0,0,0,1,0},
+        {"s:",0,0,0,1,0},
+        {"M",0,0,0,1,0},
+        {"T:",0,0,0,1,0},
+        {"7",0,0,0,1,0},
+        {"V",0,0,0,1,0},
+        {"q",0,0,1,0,0},
+        {"X:",0,0,0,1,0},
+        {"x",0,0,0,1,0}
 };
 
 char* grib_tool_description="Dump the content of a grib file in different formats.";
@@ -46,8 +46,7 @@ int grib_options_count=sizeof(grib_options)/sizeof(grib_option);
 
 /**
  * grib_dump
- * Dump the content of a GRIB file
- *
+ * Dump the contents of a GRIB file
  */
 int main(int argc, char *argv[])
 {
@@ -61,13 +60,12 @@ int grib_tool_before_getopt(grib_runtime_options* options)
 
 int grib_tool_init(grib_runtime_options* options)
 {
-
     int opt=grib_options_on("C")+grib_options_on("O")+grib_options_on("D")+grib_options_on("j");
 
     options->dump_mode = "default";
 
     if (opt > 1) {
-        printf("%s: simultaneous j/C/O/D options not allowed\n",grib_tool_name);
+        printf("%s: simultaneous j/O/D options not allowed\n",grib_tool_name);
         exit(1);
     }
 
@@ -76,13 +74,15 @@ int grib_tool_init(grib_runtime_options* options)
         json=1;
     }
 
+    /* See ECC-234
     if (grib_options_on("C")) {
-        options->dump_mode = "c_code";
+        options->dump_mode = "grib_encode_C";
         if (grib_options_on("d"))
             options->dump_flags = 0;
         else
             options->dump_flags = GRIB_DUMP_FLAG_NO_DATA;
     }
+     */
 
     if  (grib_options_on("O")) {
         options->dump_mode = "wmo";
@@ -124,6 +124,7 @@ int grib_tool_new_file_action(grib_runtime_options* options,grib_tools_file* fil
     char tmp[1024];
     if (!options->current_infile->name) return 0;
     if (json) return 0;
+
     sprintf(tmp,"FILE: %s ",options->current_infile->name);
     if (!grib_options_on("C"))
         fprintf(stdout,"***** %s\n",tmp);
@@ -138,7 +139,7 @@ int grib_tool_new_file_action(grib_runtime_options* options,grib_tools_file* fil
             int err = 0;
             grib_context* c = grib_context_get_default();
             const char* filename = options->current_infile->name;
-            
+
             err = grib_index_dump_file(stdout, filename);
             if (err) {
                 grib_context_log(c, GRIB_LOG_ERROR, "%s: Could not dump index file \"%s\".\n%s\n",
@@ -149,7 +150,7 @@ int grib_tool_new_file_action(grib_runtime_options* options,grib_tools_file* fil
             }
             /* Since there are no GRIB messages, we have to stop tool exiting in case there
              * are more index files
-            */
+             */
             options->fail = 0;
         }
     }
@@ -159,9 +160,6 @@ int grib_tool_new_file_action(grib_runtime_options* options,grib_tools_file* fil
 int grib_tool_new_handle_action(grib_runtime_options* options, grib_handle* h)
 {
     long length=0;
-    char tmp[1024];
-    char identifier[100];
-    size_t idlen=100;
     int i,err=0;
     if (grib_get_long(h,"totalLength",&length) != GRIB_SUCCESS)
         length=-9999;
@@ -178,6 +176,9 @@ int grib_tool_new_handle_action(grib_runtime_options* options, grib_handle* h)
     if(json) {
     }
     else {
+        char tmp[1024];
+        char identifier[100];
+        size_t idlen=100;
         sprintf(tmp,"MESSAGE %d ( length=%ld )",options->handle_count,length);
         if (!grib_options_on("C"))
             fprintf(stdout,"#==============   %-38s   ==============\n",tmp);
@@ -207,5 +208,11 @@ void grib_tool_print_key_values(grib_runtime_options* options,grib_handle* h)
 
 int grib_tool_finalise_action(grib_runtime_options* options)
 {
+    return 0;
+}
+
+int grib_no_handle_action(grib_runtime_options* options, int err)
+{
+    fprintf(dump_file,"\t\t\"ERROR: unreadable message\"\n");
     return 0;
 }

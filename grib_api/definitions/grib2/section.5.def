@@ -1,4 +1,4 @@
-# Copyright 2005-2016 ECMWF.
+# Copyright 2005-2017 ECMWF.
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -7,7 +7,6 @@
 # virtue of its status as an intergovernmental organisation nor does it submit to any jurisdiction.
 #
 
-label "grib 2 Section 5 DATA REPRESENTATION SECTION";
 position offsetBSection5;
 
 # START grib2::section
@@ -16,7 +15,7 @@ position offsetBSection5;
 
 # (nn)
 position offsetSection5;
-length[4] section5Length ;
+section_length[4] section5Length ;
 
 meta section5 section_pointer(offsetSection5,section5Length,5);
 

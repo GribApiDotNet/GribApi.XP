@@ -1,4 +1,4 @@
-! Copyright 2005-2016 ECMWF.
+! Copyright 2005-2017 ECMWF.
 !
 ! This software is licensed under the terms of the Apache Licence Version 2.0
 ! which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -18,6 +18,10 @@ module grib_api
   include "grib_api_externals.h"
   include "grib_api_visibility.h"
 
+  real(8),    parameter,public :: GRIB_MISSING_DOUBLE = -1.D+100
+  integer(4), parameter,public :: GRIB_MISSING_LONG   = 2147483647
+
+
   !> Create a new message in memory from an integer or character array containting the coded message.
   !>
   !> The message can be accessed through its gribid and it will be available\n
@@ -29,7 +33,7 @@ module grib_api
   !> gathered with @ref grib_get_error_string.
   !>
   !>
-  !> \b Examples: \ref copy_message.f90 "copy_message.f90"
+  !> \b Examples: \ref grib_copy_message.f90 "grib_copy_message.f90"
   !>
   !> @param gribid      id of the grib loaded in memory
   !> @param message     array containing the coded message
@@ -52,7 +56,7 @@ module grib_api
   !> exit with an error message.\n Otherwise the error message can be
   !> gathered with @ref grib_get_error_string.
   !>
-  !> \b Examples: \ref nearest.f90 "nearest.f90"
+  !> \b Examples: \ref grib_nearest.f90 "grib_nearest.f90"
   !>
   !> @see grib_new_from_file, grib_release, grib_get
   !>
@@ -92,7 +96,7 @@ module grib_api
   !> exit with an error message.\n Otherwise the error message can be
   !> gathered with @ref grib_get_error_string.
   !>
-  !> \b Examples: \ref nearest.f90 "nearest.f90"
+  !> \b Examples: \ref grib_nearest.f90 "grib_nearest.f90"
   !>
   !> @param[in] gribid     id of the grib loaded in memory
   !> @param[in] is_lsm      .true. if the nearest land point is required otherwise .false.
@@ -121,7 +125,7 @@ module grib_api
   !> exit with an error message.\n Otherwise the error message can be
   !> gathered with @ref grib_get_error_string.
   !>
-  !> \b Examples: \ref get_data.f90 "get_data.f90"
+  !> \b Examples: \ref grib_get_data.f90 "grib_get_data.f90"
   !>
   !> @param[in] gribid       id of the grib loaded in memory
   !> @param[out] lats        latitudes array with dimension "size"
@@ -132,3 +136,4 @@ module grib_api
     module procedure grib_get_data_real4, &
                      grib_get_data_real8
   end interface grib_get_data
+

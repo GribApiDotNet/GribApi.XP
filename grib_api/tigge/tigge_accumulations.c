@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2016 ECMWF.
+ * Copyright 2005-2017 ECMWF.
  *
  * This software is licensed under the terms of the Apache Licence Version 2.0
  * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -9,8 +9,8 @@
  */
 
 /* cmake config header */
-#ifdef HAVE_GRIB_API_CONFIG_H
-#include "grib_api_config.h"
+#ifdef HAVE_ECCODES_CONFIG_H
+#include "eccodes_config.h"
 #endif
 
 /* autoconf config header */

@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2016 ECMWF.
+ * Copyright 2005-2017 ECMWF.
  *
  * This software is licensed under the terms of the Apache Licence Version 2.0
  * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -21,7 +21,6 @@
 #undef PACKAGE_STRING
 #undef PACKAGE_TARNAME
 #undef PACKAGE_VERSION
-#include "jasper/jasper.h"
 #endif
 
 #ifdef ENABLE_FLOATING_POINT_EXCEPTIONS
@@ -48,61 +47,61 @@ static int scan(grib_context* c,grib_runtime_options* options,const char* dir);
 FILE* dump_file;
 
 grib_runtime_options global_options={
-		0,         /* verbose       */
-		0,         /* fail          */
-		0,         /* skip          */
-		12,        /* default_print_width */
-		0,         /* print_header */
-		0,         /* name_space */
-		0,         /* print_number */
-		1,         /* print_statistics */
+        0,         /* verbose       */
+        0,         /* fail          */
+        0,         /* skip          */
+        12,        /* default_print_width */
+        0,         /* print_header */
+        0,         /* name_space */
+        0,         /* print_number */
+        1,         /* print_statistics */
         {{0,},},   /* grib_values requested_print_keys[MAX_KEYS] */
-		0,         /* requested_print_keys_count */
-		{{0,},},   /* grib_values print_keys[MAX_KEYS] */
-		0,         /* print_keys_count  */
-		0,         /* strict            */
-		0,         /* multi_support     */
-		0,         /* set_values_count  */
-		{{0,},},   /* grib_values set_values[MAX_KEYS] */
-		{{0,},},   /* grib_values constraints[MAX_KEYS] */
-		0,         /* constraints_count */
-		{{0,},},   /* grib_values compare[MAX_KEYS] */
-		0,         /* compare_count */
-		0,         /* handle_count      */
-		0,         /* filter_handle_count */
-		0,         /* file_count     */
-		0,         /* grib_tools_file infile_extra */
-		0,         /* grib_tools_file current_infile */
-		0,         /* grib_tools_file infile */
-		0,         /*grib_tools_file outfile */
-		0,         /* grib_action action */
-		0,         /* grib_rule rules */
-		0,         /* int dump_flags; */
-		0,         /* char* dump_mode; */
-		0,         /* repack    */
-		0,         /* error    */
-		0,          /* gts    */
-		0,          /* orderby    */
-		0,          /* latlon    */
-		{0,},
-		{0,},
-		{0,},
-		{0,},
-		{0,},
-		4,
-		0,
-		-1,
-		{0,},
-		0,       /* index */
-		0,       /* index_on */
-		0,        /* constant */
-		0,         /* dump_filename*/
-		0,         /* index */
-		0,         /* random */
+        0,         /* requested_print_keys_count */
+        {{0,},},   /* grib_values print_keys[MAX_KEYS] */
+        0,         /* print_keys_count  */
+        0,         /* strict            */
+        0,         /* multi_support     */
+        0,         /* set_values_count  */
+        {{0,},},   /* grib_values set_values[MAX_KEYS] */
+        {{0,},},   /* grib_values constraints[MAX_KEYS] */
+        0,         /* constraints_count */
+        {{0,},},   /* grib_values compare[MAX_KEYS] */
+        0,         /* compare_count */
+        0,         /* handle_count      */
+        0,         /* filter_handle_count */
+        0,         /* file_count     */
+        0,         /* grib_tools_file* infile_extra */
+        0,         /* grib_tools_file* current_infile */
+        0,         /* grib_tools_file* infile */
+        0,         /* grib_tools_file* outfile */
+        0,         /* grib_action* action */
+        0,         /* grib_rule* rules */
+        0,         /* int dump_flags; */
+        0,         /* char* dump_mode; */
+        0,         /* repack    */
+        0,         /* error    */
+        0,         /* gts    */
+        0,         /* orderby    */
+        0,         /* latlon    */
+        {0,},      /* double lats[4] */
+        {0,},      /* double lons[4] */
+        {0,},      /* double values[4] */
+        {0,},      /* double distances[4] */
+        {0,},      /* int indexes[4] */
+        4,         /* int latlon_mode */
+        0,         /* char* latlon_mask */
+        -1,        /* int latlon_idx */
+        {0,},      /* double mask_values[4] */
+        0,         /* index */
+        0,         /* index_on */
+        0,         /* constant */
+        0,         /* dump_filename*/
+        0,         /* grib_fieldset* idx */
+        0,         /* random */
         0,         /* format */
         0,         /* onlyfiles */
         0,         /* tolerance_count  */
-		0,			/* through_index */
+        0,         /* through_index */
         0,         /* index1  */
         0,         /* index2  */
         0,         /* context  */
@@ -113,20 +112,30 @@ grib_runtime_options global_options={
         {{0,},},   /* grib_values tolerance[MAX_KEYS] */
         0          /* infile_offset */
 
-	};
+};
 
 static grib_handle* grib_handle_new_from_file_x(grib_context* c,FILE* f,int mode,int headers_only,int *err)
 {
-    if (mode==MODE_ANY)
-        return eccode_any_new_from_file(c,f,headers_only,err);
-
-    if (mode==MODE_GTS)
-        return eccode_gts_new_from_file(c,f,headers_only,err);
+    if (mode==MODE_GRIB)
+        return grib_new_from_file(c,f,headers_only,err);
 
     if (mode==MODE_BUFR)
-        return eccode_bufr_new_from_file(c,f,headers_only,err);
+        return bufr_new_from_file(c,f,err);
 
-    return eccode_grib_new_from_file(c,f,headers_only,err);
+    if (mode==MODE_ANY)
+        return any_new_from_file(c,f,err);
+
+    if (mode==MODE_GTS)
+        return gts_new_from_file(c,f,err);
+
+    if (mode==MODE_METAR)
+        return metar_new_from_file(c,f,err);
+
+    if (mode==MODE_TAF)
+        return taf_new_from_file(c,f,err);
+
+    Assert(!"grib_handle_new_from_file_x: unknown mode");
+    return NULL;
 }
 
 int grib_tool(int argc, char **argv)
@@ -141,7 +150,7 @@ int grib_tool(int argc, char **argv)
 
     if (getenv("DOXYGEN_USAGE") && argc==1 ) usage_doxygen();
 
-    grib_get_runtime_options(argc,argv, &global_options);
+    grib_get_runtime_options(argc,argv,&global_options);
 
     grib_tool_before_getopt(&global_options);
 
@@ -218,8 +227,7 @@ static int grib_tool_with_orderby(grib_runtime_options* options)
         options->error=err;
 
         if (!h) {
-            fprintf(dump_file,"\t\t*** unable to read message ***\n");
-            if (options->fail || err==GRIB_WRONG_LENGTH) GRIB_CHECK_NOLINE(err,0);
+            grib_no_handle_action(options, err);
 
             failed=(grib_failed*)grib_context_malloc_clear(c,sizeof(grib_failed));
             failed->count=infile->handle_count;
@@ -263,6 +271,7 @@ char iobuf[1024*1024];
 static int grib_tool_without_orderby(grib_runtime_options* options)
 {
     int err=0;
+    /*int nofail=0;*/
     grib_failed *failed=NULL,*p=NULL;
     grib_handle* h=NULL;
     grib_context* c=NULL;
@@ -287,7 +296,7 @@ static int grib_tool_without_orderby(grib_runtime_options* options)
             exit(1);
         }
         if (options->infile_offset) {
-#ifndef GRIB_ON_WINDOWS
+#ifndef ECCODES_ON_WINDOWS
             /* Check at compile time to ensure our file offset is at least 64 bits */
             COMPILE_TIME_ASSERT( sizeof(options->infile_offset) >= 8 );
 #endif
@@ -306,6 +315,7 @@ static int grib_tool_without_orderby(grib_runtime_options* options)
         infile->filter_handle_count=0;
 
         grib_tool_new_file_action(options,infile);
+        /*nofail=grib_options_on("f");*/
 
         while(!options->skip_all && ((h = grib_handle_new_from_file_x(c,infile->file,options->mode,
                 options->headers_only,&err))
@@ -315,8 +325,8 @@ static int grib_tool_without_orderby(grib_runtime_options* options)
             options->error=err;
 
             if (!h) {
-                fprintf(dump_file,"\t\t*** unreadable message ***\n");
-                if (options->fail ) GRIB_CHECK_NOLINE(err,0);
+                /* fprintf(dump_file,"\t\t\"ERROR: unreadable message\"\n"); */
+                grib_no_handle_action(options, err);
 
                 failed=(grib_failed*)grib_context_malloc_clear(c,sizeof(grib_failed));
                 failed->count=infile->handle_count;
@@ -355,7 +365,7 @@ static int grib_tool_without_orderby(grib_runtime_options* options)
         if (infile->file) fclose(infile->file);
 
         if (infile->handle_count==0) {
-            fprintf(dump_file,"no grib messages found in %s\n", infile->name);
+            fprintf(dump_file,"no messages found in %s\n", infile->name);
             if (options->fail) exit(1);
         }
 
@@ -367,16 +377,29 @@ static int grib_tool_without_orderby(grib_runtime_options* options)
 
     grib_tool_finalise_action(options);
 
-    return 0;
+    return options->error;
 }
 
 static int navigate(grib_field_tree* fields,grib_runtime_options* options)
 {
     int err=0;
+    int message_type=0;
+
     if (!fields || options->stop) return 0;
 
+    switch (options->mode) {
+    case MODE_GRIB:
+        message_type=CODES_GRIB;
+        break;
+    case MODE_BUFR:
+        message_type=CODES_BUFR;
+        break;
+    default :
+        Assert(0);
+    }
+
     if (fields->field) {
-        grib_handle* h=grib_index_get_handle(fields->field,&err);
+        grib_handle* h=codes_index_get_handle(fields->field,message_type,&err);
         if (!options->index2->current)
             options->index2->current=(grib_field_list*)grib_context_malloc_clear(options->context,sizeof(grib_field_list));
         options->index2->current->field=fields->field;
@@ -491,7 +514,7 @@ static int grib_tool_index(grib_runtime_options* options)
     return 0;
 }
 
-#ifndef GRIB_ON_WINDOWS
+#ifndef ECCODES_ON_WINDOWS
 static int scan(grib_context* c,grib_runtime_options* options,const char* dir)
 {
     struct dirent *s;
@@ -552,7 +575,7 @@ static int process(grib_context* c,grib_runtime_options* options,const char* pat
     struct stat s;
     int stat_val=0;
 
-#ifndef GRIB_ON_WINDOWS
+#ifndef ECCODES_ON_WINDOWS
     stat_val = lstat(path,&s);
 #else
     stat_val = stat(path,&s);
@@ -601,7 +624,7 @@ static void grib_print_header(grib_runtime_options* options,grib_handle* h)
 
     grib_tools_set_print_keys(options,h,options->name_space);
 
-    if ( options->verbose && options->print_header) {
+    if (options->verbose && options->print_header) {
         int j=0;
         for (j=0;j<options->print_keys_count;j++) {
             strlenkey=strlen(options->print_keys[j].name);
@@ -650,7 +673,7 @@ static void grib_tools_set_print_keys(grib_runtime_options* options, grib_handle
     }
 
     if (ns) {
-        kiter=grib_keys_iterator_new(h,0,(char*)ns);
+        kiter=grib_keys_iterator_new(h,0,ns);
         if (!kiter) {
             fprintf(dump_file,"ERROR: Unable to create keys iterator\n");
             exit(1);
@@ -762,7 +785,7 @@ void grib_skip_check(grib_runtime_options* options,grib_handle* h)
     }
 }
 
-void grib_print_key_values(grib_runtime_options* options,grib_handle* h)
+void grib_print_key_values(grib_runtime_options* options, grib_handle* h)
 {
     int i=0;
     int ret=0,width=0;
@@ -772,6 +795,7 @@ void grib_print_key_values(grib_runtime_options* options,grib_handle* h)
     char value[MAX_STRING_LEN];
     char* notfound="not_found";
     int written_to_dump = 0; /* boolean */
+    grib_accessor* acc = NULL;
 
     if (!options->verbose) return;
 
@@ -779,31 +803,67 @@ void grib_print_key_values(grib_runtime_options* options,grib_handle* h)
         size_t len=MAX_STRING_LEN;
         ret=GRIB_SUCCESS;
 
-        if (grib_is_missing(h,options->print_keys[i].name,&ret) && ret==GRIB_SUCCESS)
-            sprintf(value,"MISSING");
-        else if ( ret == GRIB_SUCCESS ) {
-            if (options->print_keys[i].type == GRIB_TYPE_UNDEFINED)
-                grib_get_native_type(h,options->print_keys[i].name,&(options->print_keys[i].type));
-            switch (options->print_keys[i].type) {
-            case GRIB_TYPE_STRING:
-                ret=grib_get_string( h,options->print_keys[i].name,value,&len);
-                break;
-            case GRIB_TYPE_DOUBLE:
-                ret=grib_get_double( h,options->print_keys[i].name,&dvalue);
-                sprintf(value,options->format,dvalue);
-                break;
-            case GRIB_TYPE_LONG:
-                ret=grib_get_long( h,options->print_keys[i].name,&lvalue);
-                sprintf(value,"%ld", lvalue);
-                break;
-            case GRIB_TYPE_BYTES:
-                ret=grib_get_string( h,options->print_keys[i].name,value,&len);
-                break;
-            default:
-                fprintf(dump_file,"invalid format option for %s\n",options->print_keys[i].name);
-                exit(1);
+        if (h->product_kind == PRODUCT_BUFR) {
+            /* ECC-236: Do not use grib_is_missing for BUFR */
+            if (!grib_is_defined(h, options->print_keys[i].name)) ret = GRIB_NOT_FOUND;
+            if (ret == GRIB_SUCCESS) {
+                if (options->print_keys[i].type == GRIB_TYPE_UNDEFINED)
+                    grib_get_native_type(h, options->print_keys[i].name, &(options->print_keys[i].type));
+                switch (options->print_keys[i].type) {
+                case GRIB_TYPE_STRING:
+                    acc = grib_find_accessor(h, options->print_keys[i].name);
+                    ret=grib_get_string(h, options->print_keys[i].name, value, &len);
+                    if (grib_is_missing_string(acc, (unsigned char *)value, len))
+                        sprintf(value,"MISSING");
+                    break;
+                case GRIB_TYPE_DOUBLE:
+                    ret=grib_get_double(h, options->print_keys[i].name, &dvalue);
+                    if (dvalue == GRIB_MISSING_DOUBLE) sprintf(value,"MISSING");
+                    else                               sprintf(value,options->format,dvalue);
+                    break;
+                case GRIB_TYPE_LONG:
+                    ret=grib_get_long(h, options->print_keys[i].name, &lvalue);
+                    if (lvalue == GRIB_MISSING_LONG) sprintf(value,"MISSING");
+                    else                             sprintf(value,"%ld", lvalue);
+                    break;
+                case GRIB_TYPE_BYTES:
+                    ret=grib_get_string(h, options->print_keys[i].name, value, &len);
+                    break;
+                default:
+                    fprintf(dump_file,"Could not determine type for %s\n", options->print_keys[i].name);
+                    exit(1);
+                }
+            }
+        } else {
+            /* Other products e.g. GRIB */
+            if (grib_is_missing(h,options->print_keys[i].name,&ret) && ret==GRIB_SUCCESS) {
+                sprintf(value,"MISSING");
+            }
+            else if ( ret == GRIB_SUCCESS ) {
+                if (options->print_keys[i].type == GRIB_TYPE_UNDEFINED)
+                    grib_get_native_type(h,options->print_keys[i].name,&(options->print_keys[i].type));
+                switch (options->print_keys[i].type) {
+                case GRIB_TYPE_STRING:
+                    ret=grib_get_string( h,options->print_keys[i].name,value,&len);
+                    break;
+                case GRIB_TYPE_DOUBLE:
+                    ret=grib_get_double( h,options->print_keys[i].name,&dvalue);
+                    sprintf(value,options->format,dvalue);
+                    break;
+                case GRIB_TYPE_LONG:
+                    ret=grib_get_long( h,options->print_keys[i].name,&lvalue);
+                    sprintf(value,"%ld", lvalue);
+                    break;
+                case GRIB_TYPE_BYTES:
+                    ret=grib_get_string( h,options->print_keys[i].name,value,&len);
+                    break;
+                default:
+                    fprintf(dump_file,"invalid format option for %s\n",options->print_keys[i].name);
+                    exit(1);
+                }
             }
         }
+
         if (ret != GRIB_SUCCESS) {
             if (options->fail) GRIB_CHECK_NOLINE(ret,options->print_keys[i].name);
             if (ret == GRIB_NOT_FOUND) strcpy(value,notfound);
@@ -865,7 +925,8 @@ void grib_print_key_values(grib_runtime_options* options,grib_handle* h)
             the_index = options->index;
             if (the_index >= size) {
                 fprintf(dump_file,"\n");
-                fprintf(stderr, "invalid index value %d (should be between 0 and %ld)\n", options->index, size-1);
+                fprintf(stderr, "invalid index value %d (should be between 0 and %d)\n",
+                        options->index, (int)(size-1));
                 exit(1);
             }
             v=values[options->index];
@@ -895,29 +956,29 @@ void grib_print_file_statistics(grib_runtime_options* options,grib_tools_file* f
 
     if (!options->print_statistics || !options->verbose) return;
 
-    fprintf(dump_file,"%d of %d grib messages in %s\n\n",
+    fprintf(dump_file,"%d of %d messages in %s\n\n",
             file->filter_handle_count,
             file->handle_count,
             file->name);
     if (!failed) return;
     /*
-      fprintf(dump_file,"Following bad grib messages found in %s\n",
-      file->name);
-      fprintf(dump_file,"N      Error\n");
-      while (failed){
-       fprintf(dump_file,"%-*d    %s\n",
-       7,failed->count,
-       grib_get_error_message(failed->error));
-       failed=failed->next;
-      }
-      fprintf(dump_file,"\n");
+	   fprintf(dump_file,"Following bad messages found in %s\n",
+	   file->name);
+	   fprintf(dump_file,"N      Error\n");
+	   while (failed){
+	   fprintf(dump_file,"%-*d    %s\n",
+	   7,failed->count,
+	   grib_get_error_message(failed->error));
+	   failed=failed->next;
+	   }
+	   fprintf(dump_file,"\n");
      */
 }
 
 void grib_print_full_statistics(grib_runtime_options* options)
 {
     if (options->print_statistics && options->verbose)
-        fprintf(dump_file,"%d of %d total grib messages in %d files\n",
+        fprintf(dump_file,"%d of %d total messages in %d files\n",
                 options->filter_handle_count,options->handle_count,options->file_count);
 }
 
@@ -971,7 +1032,7 @@ void grib_tools_write_message(grib_runtime_options* options, grib_handle* h)
         }
     }
 
-    grib_file_close(filename, &err);
+    grib_file_close(filename, 0, &err);
 
     if (err != GRIB_SUCCESS) {
         grib_context_log(h->context, GRIB_LOG_ERROR,"unable to write message\n");

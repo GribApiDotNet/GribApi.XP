@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2016 ECMWF.
+ * Copyright 2005-2017 ECMWF.
  *
  * This software is licensed under the terms of the Apache Licence Version 2.0
  * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -12,10 +12,113 @@
  *   Enrico Fucile  - 19.06.2007                                           *
  *                                                                         *
  ***************************************************************************/
+
+typedef struct bits_all_one_t {
+    int inited;
+    int size;
+    long v[128];
+} bits_all_one_t;
+
+static bits_all_one_t bits_all_one={0,0,{0,}};
+
+static void init_bits_all_one()
+{
+    int size=sizeof(long)*8;
+    long* v=0;
+    unsigned long cmask=-1;
+    bits_all_one.size=size;
+    bits_all_one.inited=1;
+    v=bits_all_one.v+size;
+    /*
+     * The result of a shift operation is undefined if the RHS is negative or
+     * greater than or equal to the number of bits in the (promoted) shift-expression
+     */
+    /* *v= cmask << size; */
+    *v = -1;
+    while (size>0)  *(--v)= ~(cmask << --size);
+}
+
+int grib_is_all_bits_one(long val, long nbits)
+{
+    if (!bits_all_one.inited) init_bits_all_one();
+    return bits_all_one.v[nbits]==val;
+}
+
+int grib_encode_string(unsigned char *bitStream, long *bitOffset, size_t numberOfCharacters, const char *string)
+{
+    size_t i;
+    int err=0;
+    long byteOffset = *bitOffset / 8;
+    int remainder = *bitOffset % 8;
+    unsigned char c;
+    unsigned char* p;
+    unsigned char mask[] ={ 0, 0x80, 0xC0, 0xE0, 0xF0, 0xF8, 0xFC, 0xFE };
+    int remainderComplement=8-remainder;
+    char str[512]={0,};
+    char *s=str;
+
+    Assert(numberOfCharacters<512);
+
+    if (string) memcpy(s,string,strlen(string));
+
+    /* if (remainder) byteOffset++; */
+
+    if (numberOfCharacters==0) return err;
+
+    p=(unsigned char*)bitStream+byteOffset;
+
+    if ( remainder == 0 )  {
+        memcpy(p,str,numberOfCharacters);
+        *bitOffset+=numberOfCharacters*8;
+        return err;
+    }
+
+    for (i=0;i<numberOfCharacters;i++) {
+        c=((*s)>>remainder) & ~mask[remainder];
+        *p |= c;
+        p++;
+        *p = ((*s)<<remainderComplement) & mask[remainder];
+        s++;
+    }
+    *bitOffset+=numberOfCharacters*8;
+    return err;
+}
+
+char* grib_decode_string(const unsigned char* bitStream, long *bitOffset, size_t numberOfCharacters,char* string)
+{
+    size_t i;
+    long byteOffset = *bitOffset / 8;
+    int remainder = *bitOffset % 8;
+    unsigned char c;
+    unsigned char* p;
+    char* s=string;
+    unsigned char mask[] ={ 0, 0x80, 0xC0, 0xE0, 0xF0, 0xF8, 0xFC, 0xFE };
+    int remainderComplement=8-remainder;
+
+    if (numberOfCharacters==0) return string;
+
+    p=(unsigned char*)bitStream+byteOffset;
+
+    if ( remainder == 0 )  {
+        memcpy(string,bitStream+byteOffset,numberOfCharacters);
+        *bitOffset+=numberOfCharacters*8;
+        return string;
+    }
+
+    for (i=0;i<numberOfCharacters;i++) {
+        c=(*p)<<remainder;
+        p++;
+        *s = ( c | ( (*p) & mask[remainder] )>>remainderComplement );
+        s++;
+    }
+    *bitOffset+=numberOfCharacters*8;
+    return string;
+}
+
 /* A mask with x least-significant bits set, possibly 0 or >=32 */
 /* -1UL is 1111111... in every bit in binary representation */
 #define BIT_MASK(x) \
-        (((x) >= sizeof(unsigned long) * 8) ? \
+        (((x) >= max_nbits) ? \
                 (unsigned long) -1UL : (1UL << (x)) - 1)
 /**
  * decode a value consisting of nbits from an octet-bitstream to long-representation
@@ -74,7 +177,7 @@ unsigned long grib_decode_unsigned_long(const unsigned char* p, long *bitp, long
     /* read at least enough bits (byte by byte) from input */
     bitsToRead = nbits;
     while (bitsToRead > 0) {
-        ret <<= 8;
+        ret  <<= 8;
         /*   ret += p[pi];     */
         DebugAssert( (ret & p[pi]) == 0 );
         ret = ret | p[pi];
@@ -179,16 +282,9 @@ int grib_encode_unsigned_longb(unsigned char* p, unsigned long val ,long *bitp, 
 }
 
 #if OMP_PACKING
-
-#include "grib_bits_any_endian_omp.c"
-
+ #include "grib_bits_any_endian_omp.c"
 #elif VECTOR
-
-#include "grib_bits_any_endian_vector.c"
-
+ #include "grib_bits_any_endian_vector.c"
 #else
-
-#include "grib_bits_any_endian_simple.c"
-
+ #include "grib_bits_any_endian_simple.c"
 #endif
-

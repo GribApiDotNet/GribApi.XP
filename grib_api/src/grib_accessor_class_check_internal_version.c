@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2016 ECMWF.
+ * Copyright 2005-2017 ECMWF.
  *
  * This software is licensed under the terms of the Apache Licence Version 2.0
  * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -63,13 +63,15 @@ static grib_accessor_class _grib_accessor_class_check_internal_version = {
     0,            /* get native type               */
     0,                /* get sub_section                */
     0,               /* grib_pack procedures long      */
-    0,               /* grib_pack procedures long      */
+    0,                 /* grib_pack procedures long      */
     0,                  /* grib_pack procedures long      */
     0,                /* grib_unpack procedures long    */
     0,                /* grib_pack procedures double    */
     0,              /* grib_unpack procedures double  */
     0,                /* grib_pack procedures string    */
     0,              /* grib_unpack procedures string  */
+    0,          /* grib_pack array procedures string    */
+    0,        /* grib_unpack array procedures string  */
     0,                 /* grib_pack procedures bytes     */
     0,               /* grib_unpack procedures bytes   */
     0,            /* pack_expression */
@@ -82,7 +84,8 @@ static grib_accessor_class _grib_accessor_class_check_internal_version = {
     0,                    /* compare vs. another accessor   */
     0,     /* unpack only ith value          */
     0,     /* unpack a subarray         */
-    0,             		/* clear          */
+    0,              		/* clear          */
+    0,               		/* clone accessor          */
 };
 
 
@@ -105,6 +108,8 @@ static void init_class(grib_accessor_class* c)
 	c->unpack_double	=	(*(c->super))->unpack_double;
 	c->pack_string	=	(*(c->super))->pack_string;
 	c->unpack_string	=	(*(c->super))->unpack_string;
+	c->pack_string_array	=	(*(c->super))->pack_string_array;
+	c->unpack_string_array	=	(*(c->super))->unpack_string_array;
 	c->pack_bytes	=	(*(c->super))->pack_bytes;
 	c->unpack_bytes	=	(*(c->super))->unpack_bytes;
 	c->pack_expression	=	(*(c->super))->pack_expression;
@@ -118,6 +123,7 @@ static void init_class(grib_accessor_class* c)
 	c->unpack_double_element	=	(*(c->super))->unpack_double_element;
 	c->unpack_double_subarray	=	(*(c->super))->unpack_double_subarray;
 	c->clear	=	(*(c->super))->clear;
+	c->make_clone	=	(*(c->super))->make_clone;
 }
 
 /* END_CLASS_IMP */
@@ -125,14 +131,14 @@ static void init_class(grib_accessor_class* c)
 /* This is the internal engine version number */
 /* We check this against the version number found in the definitions boot.def file */
 /* See the key "internalVersion"  */
-#define LATEST_ENGINE_VERSION  23
+#define LATEST_ENGINE_VERSION 30
 
 static void init(grib_accessor* a, const long l, grib_arguments* args)
 {
     /* Check version of definition files is compatible with the engine */
     int err = 0;
     long defs_file_version = 0;
-    grib_handle* h = a->parent->h;
+    grib_handle* h = grib_handle_of_accessor(a);
     const char* s_defn_version = grib_arguments_get_name(h, args, 0);
     Assert(s_defn_version);
 
@@ -142,12 +148,7 @@ static void init(grib_accessor* a, const long l, grib_arguments* args)
             grib_context_log(h->context, GRIB_LOG_FATAL,
                     "Definition files version (%d) is greater than engine version (%d)!\n"
                     "                    " /* indent for 2nd line */
-                    "These definition files are for a later version of the grib api engine.",
-                    defs_file_version, LATEST_ENGINE_VERSION);
-        }
-        if (defs_file_version < 23) {
-            grib_context_log(h->context, GRIB_LOG_FATAL,
-                    "Definition files version (%d) does not match engine version (%d)",
+                    "These definition files are for a later version of the ecCodes engine.",
                     defs_file_version, LATEST_ENGINE_VERSION);
         }
     }

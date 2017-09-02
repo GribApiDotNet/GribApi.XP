@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2016 ECMWF.
+ * Copyright 2005-2017 ECMWF.
  *
  * This software is licensed under the terms of the Apache Licence Version 2.0
  * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -65,13 +65,15 @@ static grib_accessor_class _grib_accessor_class_data_g1shsimple_packing = {
     0,            /* get native type               */
     0,                /* get sub_section                */
     0,               /* grib_pack procedures long      */
-    0,               /* grib_pack procedures long      */
+    0,                 /* grib_pack procedures long      */
     0,                  /* grib_pack procedures long      */
     0,                /* grib_unpack procedures long    */
     0,                /* grib_pack procedures double    */
     &unpack_double,              /* grib_unpack procedures double  */
     0,                /* grib_pack procedures string    */
     0,              /* grib_unpack procedures string  */
+    0,          /* grib_pack array procedures string    */
+    0,        /* grib_unpack array procedures string  */
     0,                 /* grib_pack procedures bytes     */
     0,               /* grib_unpack procedures bytes   */
     0,            /* pack_expression */
@@ -84,7 +86,8 @@ static grib_accessor_class _grib_accessor_class_data_g1shsimple_packing = {
     0,                    /* compare vs. another accessor   */
     0,     /* unpack only ith value          */
     0,     /* unpack a subarray         */
-    0,             		/* clear          */
+    0,              		/* clear          */
+    0,               		/* clone accessor          */
 };
 
 
@@ -107,6 +110,8 @@ static void init_class(grib_accessor_class* c)
 	c->pack_double	=	(*(c->super))->pack_double;
 	c->pack_string	=	(*(c->super))->pack_string;
 	c->unpack_string	=	(*(c->super))->unpack_string;
+	c->pack_string_array	=	(*(c->super))->pack_string_array;
+	c->unpack_string_array	=	(*(c->super))->unpack_string_array;
 	c->pack_bytes	=	(*(c->super))->pack_bytes;
 	c->unpack_bytes	=	(*(c->super))->unpack_bytes;
 	c->pack_expression	=	(*(c->super))->pack_expression;
@@ -120,6 +125,7 @@ static void init_class(grib_accessor_class* c)
 	c->unpack_double_element	=	(*(c->super))->unpack_double_element;
 	c->unpack_double_subarray	=	(*(c->super))->unpack_double_subarray;
 	c->clear	=	(*(c->super))->clear;
+	c->make_clone	=	(*(c->super))->make_clone;
 }
 
 /* END_CLASS_IMP */
@@ -131,7 +137,7 @@ static int value_count(grib_accessor* a,long* count)
     size_t len = 0;
     int err=0;
 
-    err=grib_get_size(a->parent->h,self->coded_values,&len);
+    err=grib_get_size(grib_handle_of_accessor(a),self->coded_values,&len);
     len += 1;
 
     *count=len;
@@ -146,7 +152,7 @@ static int  unpack_double(grib_accessor* a, double* val, size_t *len)
     size_t coded_n_vals = 0;
     size_t n_vals = 0;
 
-    if((err = grib_get_size(a->parent->h,self->coded_values,&coded_n_vals)) != GRIB_SUCCESS)
+    if((err = grib_get_size(grib_handle_of_accessor(a),self->coded_values,&coded_n_vals)) != GRIB_SUCCESS)
         return err;
 
     n_vals = coded_n_vals + 1;
@@ -157,15 +163,15 @@ static int  unpack_double(grib_accessor* a, double* val, size_t *len)
         return GRIB_ARRAY_TOO_SMALL;
     }
 
-    if((err = grib_get_double_internal(a->parent->h,self->real_part,val)) != GRIB_SUCCESS)
+    if((err = grib_get_double_internal(grib_handle_of_accessor(a),self->real_part,val)) != GRIB_SUCCESS)
         return err;
 
     val++;
 
-    if((err = grib_get_double_array_internal(a->parent->h,self->coded_values,val,&coded_n_vals)) != GRIB_SUCCESS)
+    if((err = grib_get_double_array_internal(grib_handle_of_accessor(a),self->coded_values,val,&coded_n_vals)) != GRIB_SUCCESS)
         return err;
 
-    grib_context_log(a->parent->h->context, GRIB_LOG_DEBUG,
+    grib_context_log(a->context, GRIB_LOG_DEBUG,
             "grib_accessor_data_g1shsimple_packing_bitmap : unpack_double : creating %s, %d values",
             a->name, n_vals);
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2016 ECMWF.
+ * Copyright 2005-2017 ECMWF.
  *
  * This software is licensed under the terms of the Apache Licence Version 2.0
  * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -128,11 +128,11 @@ static int init(grib_box* box,grib_handle* h,grib_arguments* args)
 		self->lats=lats;
 	} else {
 		/*sub area (latitudes)*/
-		int l=0;
+		int ll=0;
 		double d=fabs(lats[0]-lats[1]);
-		while (fabs(lat_first-lats[l]) > d ) {l++;}
+		while (fabs(lat_first-lats[ll]) > d ) {ll++;}
 		self->lats=(double*)grib_context_malloc(h->context,sizeof(double)*self->nlats);
-		for (i=0;i<self->nlats;i++) self->lats[i]=lats[l++];
+		for (i=0;i<self->nlats;i++) self->lats[i]=lats[ll++];
 		grib_context_free(box->context,lats);
 	}
 

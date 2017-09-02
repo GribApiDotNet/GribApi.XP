@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2016 ECMWF.
+ * Copyright 2005-2017 ECMWF.
  *
  * This software is licensed under the terms of the Apache Licence Version 2.0
  * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -71,13 +71,15 @@ static grib_accessor_class _grib_accessor_class_padding = {
     0,            /* get native type               */
     0,                /* get sub_section                */
     0,               /* grib_pack procedures long      */
-    0,               /* grib_pack procedures long      */
+    0,                 /* grib_pack procedures long      */
     0,                  /* grib_pack procedures long      */
     0,                /* grib_unpack procedures long    */
     0,                /* grib_pack procedures double    */
     0,              /* grib_unpack procedures double  */
     0,                /* grib_pack procedures string    */
     0,              /* grib_unpack procedures string  */
+    0,          /* grib_pack array procedures string    */
+    0,        /* grib_unpack array procedures string  */
     0,                 /* grib_pack procedures bytes     */
     0,               /* grib_unpack procedures bytes   */
     0,            /* pack_expression */
@@ -90,7 +92,8 @@ static grib_accessor_class _grib_accessor_class_padding = {
     &compare,                    /* compare vs. another accessor   */
     0,     /* unpack only ith value          */
     0,     /* unpack a subarray         */
-    0,             		/* clear          */
+    0,              		/* clear          */
+    0,               		/* clone accessor          */
 };
 
 
@@ -112,6 +115,8 @@ static void init_class(grib_accessor_class* c)
 	c->unpack_double	=	(*(c->super))->unpack_double;
 	c->pack_string	=	(*(c->super))->pack_string;
 	c->unpack_string	=	(*(c->super))->unpack_string;
+	c->pack_string_array	=	(*(c->super))->pack_string_array;
+	c->unpack_string_array	=	(*(c->super))->unpack_string_array;
 	c->pack_bytes	=	(*(c->super))->pack_bytes;
 	c->unpack_bytes	=	(*(c->super))->unpack_bytes;
 	c->pack_expression	=	(*(c->super))->pack_expression;
@@ -122,6 +127,7 @@ static void init_class(grib_accessor_class* c)
 	c->unpack_double_element	=	(*(c->super))->unpack_double_element;
 	c->unpack_double_subarray	=	(*(c->super))->unpack_double_subarray;
 	c->clear	=	(*(c->super))->clear;
+	c->make_clone	=	(*(c->super))->make_clone;
 }
 
 /* END_CLASS_IMP */
@@ -146,15 +152,15 @@ static void update_size(grib_accessor* a,size_t new_size)
 
 static void resize(grib_accessor* a,size_t new_size)
 {
-  void* zero = grib_context_malloc_clear(a->parent->h->context,new_size);
+  void* zero = grib_context_malloc_clear(a->context,new_size);
 
   grib_buffer_replace(a,(const unsigned char*)zero,new_size,1,0);
-  grib_context_free(a->parent->h->context,zero);
-  grib_context_log(a->parent->h->context,GRIB_LOG_DEBUG,"resize: grib_accessor_class_padding.c %ld %ld %s %s\n",(long)new_size,(long)a->length,a->cclass->name,a->name);
+  grib_context_free(a->context,zero);
+  grib_context_log(a->context,GRIB_LOG_DEBUG,"resize: grib_accessor_class_padding.c %ld %ld %s %s\n",(long)new_size,(long)a->length,a->cclass->name,a->name);
   Assert(new_size == a->length);
 
 }
 
-static int value_count(grib_accessor* a,long *c){ *c=1;return 0;}
+static int value_count(grib_accessor* a,long *c){ *c=a->length; return 0;}
 static long byte_count(grib_accessor* a){ return a->length;}
 static size_t string_length(grib_accessor* a){ return (size_t)a->length;}

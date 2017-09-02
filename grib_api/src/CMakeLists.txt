@@ -1,5 +1,16 @@
+#
+# Copyright 2005-2017 ECMWF.
+#
+# This software is licensed under the terms of the Apache Licence Version 2.0
+# which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
+#
+# In applying this licence, ECMWF does not waive the privileges and immunities
+# granted to it by virtue of its status as an intergovernmental organisation
+# nor does it submit to any jurisdiction.
+#
 list( APPEND grib_api_srcs
     grib_api.h
+    eccodes.h
     action.c
     action_class_alias.c
     action_class_gen.c
@@ -14,23 +25,38 @@ list( APPEND grib_api_srcs
     action_class_put.c
     action_class_meta.c
     action_class_remove.c
+    action_class_rename.c
     action_class_assert.c
     action_class_template.c
     action_class_trigger.c
     action_class_when.c
     action_class_concept.c
+    action_class_hash_array.c
     action_class_set.c
+    action_class_set_sarray.c
     action_class_set_darray.c
     action_class_set_iarray.c
     action_class_noop.c
     action_class_write.c
     action_class_print.c
+    action_class_close.c
     action_class_variable.c
     action_class_modify.c
+    action_class_transient_darray.c
+    eccodes.c
     grib_accessor.c
     grib_concept.c
+    grib_hash_array.c
+    grib_bufr_descriptor.c
+    grib_bufr_descriptors_array.c
     grib_darray.c
+    grib_sarray.c
+    grib_oarray.c
+    grib_vdarray.c
+    grib_vsarray.c
     grib_iarray.c
+    grib_viarray.c
+    codes_memfs.c
     grib_accessor_class_array.c
     grib_accessor_class_assert.c
     grib_accessor_class_ascii.c
@@ -38,9 +64,23 @@ list( APPEND grib_api_srcs
     grib_accessor_class_bitmap.c
     grib_accessor_class_bits.c
     grib_accessor_class_bits_per_value.c
+    grib_accessor_class_bufr_clear_tables.c
+    grib_accessor_class_bufr_data.c
+    grib_accessor_class_bufr_elements_table.c
+    grib_accessor_class_bufr_data_array.c
+    grib_accessor_class_bufr_data_element.c
+    grib_accessor_class_bufr_group.c
+    grib_accessor_class_bufr_string_values.c
+    grib_accessor_class_pack_bufr_values.c
+    grib_accessor_class_unpack_bufr_values.c
+    grib_accessor_class_bufr_has_delayed_replication.c
+    grib_accessor_class_apply_operators.c
+    grib_accessor_class_group.c
+    grib_accessor_class_non_alpha.c
     grib_accessor_class_g1bitmap.c
     grib_accessor_class_g2bitmap.c
     grib_accessor_class_concept.c
+    grib_accessor_class_hash_array.c
     grib_accessor_class_decimal_precision.c
     grib_accessor_class_divdouble.c
     grib_accessor_class_budgdate.c
@@ -51,6 +91,8 @@ list( APPEND grib_api_srcs
     grib_accessor_class_change_scanning_direction.c
     grib_accessor_class_check_internal_version.c
     grib_accessor_class_codeflag.c
+    grib_accessor_class_smart_table.c
+    grib_accessor_class_smart_table_column.c
     grib_accessor_class_codetable.c
     grib_accessor_class_codetable_units.c
     grib_accessor_class_codetable_title.c
@@ -72,6 +114,8 @@ list( APPEND grib_api_srcs
     grib_accessor_class_g2step_range.c
     grib_accessor_class_data_g22order_packing.c
     grib_accessor_class_mars_step.c
+    grib_accessor_class_message_copy.c
+    grib_accessor_class_dictionary.c
     grib_accessor_class_g1param.c
     grib_accessor_class_g1p1p2.c
     grib_accessor_class_g1_increment.c
@@ -89,6 +133,7 @@ list( APPEND grib_api_srcs
     grib_accessor_class_gts_header.c
     grib_accessor_class_ifs_param.c
     grib_accessor_class_julian_day.c
+    grib_accessor_class_julian_date.c
     grib_accessor_class_latlonvalues.c
     grib_accessor_class_latitudes.c
     grib_accessor_class_longitudes.c
@@ -130,6 +175,7 @@ list( APPEND grib_api_srcs
     grib_accessor_class_g1_message_length.c
     grib_accessor_class_g1_section4_length.c
     grib_accessor_class_size.c
+    grib_accessor_class_rdbtime_guess_date.c
     grib_accessor_class_scale_values.c
     grib_accessor_class_offset_values.c
     grib_accessor_class_sprintf.c
@@ -137,6 +183,7 @@ list( APPEND grib_api_srcs
     grib_accessor_class_spectral_truncation.c
     grib_accessor_class_time.c
     grib_accessor_class_transient.c
+    grib_accessor_class_transient_darray.c
     grib_accessor_class_values.c
     grib_accessor_class_simple_packing_error.c
     grib_accessor_class_data_simple_packing.c
@@ -163,9 +210,12 @@ list( APPEND grib_api_srcs
     grib_accessor_class_data_g1second_order_general_packing.c
     grib_accessor_class_data_g1second_order_general_extended_packing.c
     grib_accessor_class_g2grid.c
+    grib_accessor_class_unexpanded_descriptors.c
+    grib_accessor_class_expanded_descriptors.c
+    grib_accessor_class_bufrdc_expanded_descriptors.c
     grib_accessor_class_data_apply_bitmap.c
     grib_accessor_class_data_apply_boustrophedonic.c
-	grib_accessor_class_data_apply_boustrophedonic_bitmap.c
+    grib_accessor_class_data_apply_boustrophedonic_bitmap.c
     grib_accessor_class_data_secondary_bitmap.c
     grib_accessor_class_data_g1secondary_bitmap.c
     grib_accessor_class_data_g2secondary_bitmap.c
@@ -200,8 +250,17 @@ list( APPEND grib_api_srcs
     grib_accessor_class_statistics_spectral.c
     grib_accessor_class_unsigned.c
     grib_accessor_class_unsigned_bits.c
+    grib_accessor_class_raw.c
+    grib_accessor_class_bufr_simple_thinning.c
+    grib_accessor_class_bufr_extract_subsets.c
+    grib_accessor_class_bufr_extract_area_subsets.c
+    grib_accessor_class_bufr_extract_datetime_subsets.c
     grib_accessor_class_spd.c
     grib_accessor_class_sum.c
+    grib_accessor_class_to_integer.c
+    grib_accessor_class_to_double.c
+    grib_accessor_class_to_string.c
+    grib_accessor_class_sexagesimal2decimal.c
     grib_accessor_class_vector.c
     grib_accessor_class_long_vector.c
     grib_gaussian_reduced.c
@@ -220,8 +279,16 @@ list( APPEND grib_api_srcs
     grib_dumper_class_debug.c
     grib_dumper_class_default.c
     grib_dumper_class_keys.c
+    grib_dumper_class_bufr_encode_C.c
+    grib_dumper_class_bufr_encode_filter.c
+    grib_dumper_class_bufr_encode_fortran.c
+    grib_dumper_class_bufr_encode_python.c
+    grib_dumper_class_bufr_decode_C.c
+    grib_dumper_class_bufr_decode_filter.c
+    grib_dumper_class_bufr_decode_fortran.c
+    grib_dumper_class_bufr_decode_python.c
     grib_dumper_class_json.c
-    grib_dumper_class_c_code.c
+    grib_dumper_class_grib_encode_C.c
     grib_dumper_class_wmo.c
     grib_dumper_class.c
     grib_context.c
@@ -234,9 +301,11 @@ list( APPEND grib_api_srcs
     grib_hash_keys.c
     grib_io.c
     grib_trie.c
+    grib_trie_with_rank.c
     grib_itrie.c
     grib_rules.c
     grib_keys_iterator.c
+    bufr_keys_iterator.c
     grib_parse_utils.c
     grib_query.c
     grib_scaling.c
@@ -245,14 +314,21 @@ list( APPEND grib_api_srcs
     grib_value.c
     grib_errors.c
     grib_expression_class_binop.c
+    grib_expression_class_logical_and.c
+    grib_expression_class_logical_or.c
+    grib_expression_class_is_in_dict.c
     grib_expression_class_true.c
     grib_expression_class_string_compare.c
     grib_expression_class_unop.c
     grib_expression_class_functor.c
     grib_expression_class_accessor.c
+    grib_expression_class_is_in_list.c
+    grib_expression_class_is_integer.c
+    grib_expression_class_length.c
     grib_expression_class_long.c
     grib_expression_class_double.c
     grib_expression_class_string.c
+    grib_expression_class_sub_string.c
     grib_box.c
     grib_box_class.c
     grib_box_class_gen.c
@@ -265,7 +341,7 @@ list( APPEND grib_api_srcs
     grib_nearest_class_reduced.c
     grib_nearest_class_latlon_reduced.c
     grib_nearest_class_sh.c
-	grib_nearest_class_lambert_conformal.c
+    grib_nearest_class_lambert_conformal.c
     grib_iterator_class_polar_stereographic.c
     grib_iterator_class_lambert_azimuthal_equal_area.c
     grib_iterator_class_lambert_conformal.c
@@ -277,9 +353,11 @@ list( APPEND grib_api_srcs
     grib_iterator_class_gen.c
     grib_iterator_class_latlon.c
     grib_iterator_class_regular.c
+    grib_iterator_class_space_view.c
     grib_expression.c
     grib_util.c
-    compile.c
+    bufr_util.c
+    string_util.c
     functions.c
     grib_accessor_class.h
     grib_accessor_factory.h
@@ -314,7 +392,8 @@ list( APPEND grib_api_srcs
     grib_accessor_class_uint64_little_endian.c
     grib_accessor_class_uint8.c
     grib_accessor_class_blob.c
-	grib_api_windef.h
+    grib_optimize_decimal_factor.c
+    eccodes_windef.h
     # We ship our own generated lex/yacc C files
     grib_yacc.c  grib_lex.c
 )
@@ -331,7 +410,7 @@ list( APPEND grib_api_extra_srcs
 )
 
 configure_file( grib_api_version.c.in grib_api_version.c @ONLY )
-configure_file( grib_api_version.h.in grib_api_version.h @ONLY )
+configure_file( eccodes_version.h.in eccodes_version.h @ONLY )
 
 # We ship our own generated lex/yacc C files
 #ecbuild_generate_yy(YYPREFIX  grib_yy
@@ -343,16 +422,20 @@ configure_file( grib_api_version.h.in grib_api_version.h @ONLY )
 #                    YACC_FLAGS  "-y"
 #                    DEPENDANT action.c )
 
-ecbuild_add_library(TARGET    grib_api
+if(HAVE_MEMFS)
+    list(APPEND ECCODES_EXTRA_LIBRARIES eccodes_memfs)
+endif()
+
+
+ecbuild_add_library(TARGET    eccodes
                     SOURCES   grib_api_version.c
                               # griby.c gribl.c
                              ${grib_api_srcs}
                     GENERATED grib_api_version.c
-                    LIBS      ${GRIB_API_EXTRA_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT}
-                    TEMPLATES ${grib_api_extra_srcs}
-                    ${CMATH_LIBRARIES}  )
+                    LIBS      ${ECCODES_EXTRA_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${CMATH_LIBRARIES}
+                    TEMPLATES ${grib_api_extra_srcs})
 
 
-install( FILES grib_api.h grib_api_windef.h  DESTINATION ${INSTALL_INCLUDE_DIR} )
-install( FILES ${CMAKE_CURRENT_BINARY_DIR}/grib_api_version.h DESTINATION ${INSTALL_INCLUDE_DIR} )
+install( FILES grib_api.h eccodes.h eccodes_windef.h DESTINATION ${INSTALL_INCLUDE_DIR} )
+install( FILES ${CMAKE_CURRENT_BINARY_DIR}/eccodes_version.h DESTINATION ${INSTALL_INCLUDE_DIR} )
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2016 ECMWF.
+ * Copyright 2005-2017 ECMWF.
  *
  * This software is licensed under the terms of the Apache Licence Version 2.0
  * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -64,13 +64,15 @@ static grib_accessor_class _grib_accessor_class_round = {
     0,            /* get native type               */
     0,                /* get sub_section                */
     0,               /* grib_pack procedures long      */
-    0,               /* grib_pack procedures long      */
+    0,                 /* grib_pack procedures long      */
     0,                  /* grib_pack procedures long      */
     0,                /* grib_unpack procedures long    */
     0,                /* grib_pack procedures double    */
     &unpack_double,              /* grib_unpack procedures double  */
     0,                /* grib_pack procedures string    */
     &unpack_string,              /* grib_unpack procedures string  */
+    0,          /* grib_pack array procedures string    */
+    0,        /* grib_unpack array procedures string  */
     0,                 /* grib_pack procedures bytes     */
     0,               /* grib_unpack procedures bytes   */
     0,            /* pack_expression */
@@ -83,7 +85,8 @@ static grib_accessor_class _grib_accessor_class_round = {
     0,                    /* compare vs. another accessor   */
     0,     /* unpack only ith value          */
     0,     /* unpack a subarray         */
-    0,             		/* clear          */
+    0,              		/* clear          */
+    0,               		/* clone accessor          */
 };
 
 
@@ -106,6 +109,8 @@ static void init_class(grib_accessor_class* c)
 	c->unpack_long	=	(*(c->super))->unpack_long;
 	c->pack_double	=	(*(c->super))->pack_double;
 	c->pack_string	=	(*(c->super))->pack_string;
+	c->pack_string_array	=	(*(c->super))->pack_string_array;
+	c->unpack_string_array	=	(*(c->super))->unpack_string_array;
 	c->pack_bytes	=	(*(c->super))->pack_bytes;
 	c->unpack_bytes	=	(*(c->super))->unpack_bytes;
 	c->pack_expression	=	(*(c->super))->pack_expression;
@@ -119,6 +124,7 @@ static void init_class(grib_accessor_class* c)
 	c->unpack_double_element	=	(*(c->super))->unpack_double_element;
 	c->unpack_double_subarray	=	(*(c->super))->unpack_double_subarray;
 	c->clear	=	(*(c->super))->clear;
+	c->make_clone	=	(*(c->super))->make_clone;
 }
 
 /* END_CLASS_IMP */
@@ -137,12 +143,12 @@ static int    unpack_double(grib_accessor* a, double* val, size_t *len)
   double toround = 0;
 
   const char* oval = NULL;
-  oval     = grib_arguments_get_name(a->parent->h,self->arg,0);
+  oval     = grib_arguments_get_name(grib_handle_of_accessor(a),self->arg,0);
 
-  if( (ret = grib_get_double_internal(a->parent->h, oval, &toround)) != 0)
+  if( (ret = grib_get_double_internal(grib_handle_of_accessor(a), oval, &toround)) != 0)
     return ret;
 
-  rounding_precision = grib_arguments_get_long(a->parent->h,self->arg,1);
+  rounding_precision = grib_arguments_get_long(grib_handle_of_accessor(a),self->arg,1);
 
   rounded = floor(rounding_precision * toround + 0.5) / rounding_precision;
 

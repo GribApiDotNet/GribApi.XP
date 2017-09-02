@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2016 ECMWF.
+ * Copyright 2005-2017 ECMWF.
  *
  * This software is licensed under the terms of the Apache Licence Version 2.0
  * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -70,6 +70,7 @@ static grib_dumper_class _grib_dumper_class_debug = {
     &dump_long,                          /* dump long         */
     &dump_double,                        /* dump double    */
     &dump_string,                        /* dump string    */
+    0,                        /* dump string array   */
     &dump_label,                         /* dump labels  */
     &dump_bytes,                         /* dump bytes  */
     &dump_bits,                          /* dump bits   */
@@ -153,6 +154,7 @@ static void dump_long(grib_dumper* d,grib_accessor* a,const char* comment)
 
     aliases(d,a);
 
+
     fprintf(self->dumper.out,"\n");
 }
 
@@ -228,13 +230,13 @@ static void dump_string(grib_dumper* d,grib_accessor* a,const char* comment)
     char *value=NULL;
     char *p=NULL ;
 
-    err = grib_get_string_length(a->parent->h, a->name, &size);
+    err = _grib_get_string_length(a,&size);
     if ( (size < 2) && grib_is_missing_internal(a) ) {
         /* GRIB-302: transients and missing keys. Need to re-adjust the size */
         size = 10; /* big enough to hold the string "missing" */
     }
 
-    value=(char*)grib_context_malloc_clear(a->parent->h->context,size);
+    value=(char*)grib_context_malloc_clear(a->context,size);
     if (!value) return;
     err=grib_unpack_string(a,value,&size);
 
@@ -242,7 +244,7 @@ static void dump_string(grib_dumper* d,grib_accessor* a,const char* comment)
 
     p=value;
 
-    if( a->length == 0  && (d->option_flags & GRIB_DUMP_FLAG_CODED) != 0)
+    if( a->length == 0 && (d->option_flags & GRIB_DUMP_FLAG_CODED) != 0)
         return;
 
     set_begin_end(d,a);
@@ -258,7 +260,7 @@ static void dump_string(grib_dumper* d,grib_accessor* a,const char* comment)
     aliases(d,a);
     fprintf(self->dumper.out,"\n");
 
-    if (value) grib_context_free(a->parent->h->context,value);
+    if (value) grib_context_free(a->context,value);
 }
 
 static void dump_bytes(grib_dumper* d,grib_accessor* a,const char* comment)
@@ -348,7 +350,7 @@ static void dump_values(grib_dumper* d,grib_accessor* a)
         dump_double(d,a,NULL);
         return ;
     }
-    buf = (double*)grib_context_malloc(d->handle->context,size * sizeof(double));
+    buf = (double*)grib_context_malloc_clear(d->handle->context,size * sizeof(double));
 
     set_begin_end(d,a);
 
@@ -357,8 +359,7 @@ static void dump_values(grib_dumper* d,grib_accessor* a)
     aliases(d,a);
     fprintf(self->dumper.out," {");
 
-    if(!buf)
-    {
+    if(!buf) {
         if(size == 0)
             fprintf(self->dumper.out,"}\n");
         else
@@ -369,7 +370,6 @@ static void dump_values(grib_dumper* d,grib_accessor* a)
     fprintf(self->dumper.out,"\n");
 
     err =  grib_unpack_double(a,buf,&size);
-
     if(err){
         grib_context_free(d->handle->context,buf);
         fprintf(self->dumper.out," *** ERR=%d (%s) [grib_dumper_debug::dump_values]\n}",err,grib_get_error_message(err));
@@ -399,10 +399,8 @@ static void dump_values(grib_dumper* d,grib_accessor* a)
         fprintf(self->dumper.out,"%d %g\n",k,buf[k]);
 
 #endif
-
     }
-    if(more)
-    {
+    if(more) {
         for(i = 0; i < d->depth + 3 ; i++) fprintf(self->dumper.out," ");
         fprintf(self->dumper.out,"... %d more values\n",more);
     }
@@ -426,6 +424,7 @@ static void dump_section(grib_dumper* d,grib_accessor* a,grib_block_of_accessors
     int i;
     /* grib_section* s = grib_get_sub_section(a); */
     grib_section* s = a->sub_section;
+
 
 #if 1
     if(a->name[0] == '_'){

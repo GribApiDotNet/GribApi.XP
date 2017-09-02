@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2016 ECMWF.
+ * Copyright 2005-2017 ECMWF.
  *
  * This software is licensed under the terms of the Apache Licence Version 2.0
  * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -38,7 +38,7 @@ int main(int argc,char* argv[])
     if (ret) {printf("error: %s\n",grib_get_error_message(ret)); exit(ret);}
 
     /* Indexes a file */
-    ret=grib_index_add_file(index, infile);
+    ret=grib_index_add_file(index,infile);
     if (ret) {printf("error: %s\n",grib_get_error_message(ret)); exit(ret);}
     printf("end indexing...\n");
 

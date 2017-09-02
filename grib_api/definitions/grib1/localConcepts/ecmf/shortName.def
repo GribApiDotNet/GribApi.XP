@@ -434,12 +434,12 @@
 	 table2Version = 128 ;
 	 indicatorOfParameter = 77 ;
 	}
-#Total column liquid water
+#Total column cloud liquid water
 'tclw' = {
 	 table2Version = 128 ;
 	 indicatorOfParameter = 78 ;
 	}
-#Total column ice water
+#Total column cloud ice water
 'tciw' = {
 	 table2Version = 128 ;
 	 indicatorOfParameter = 79 ;
@@ -3674,6 +3674,16 @@
 	 table2Version = 171 ;
 	 indicatorOfParameter = 7 ;
 	}
+#Lake mix-layer temperature anomaly
+'lmlta' = {
+	 table2Version = 171 ;
+	 indicatorOfParameter = 24 ;
+	}
+#Lake ice depth anomaly
+'licda' = {
+	 table2Version = 171 ;
+	 indicatorOfParameter = 25 ;
+	}
 #Maximum temperature at 2 metres in the last 6 hours anomaly
 'mx2t6a' = {
 	 table2Version = 171 ;
@@ -3714,8 +3724,8 @@
 	 table2Version = 174 ;
 	 indicatorOfParameter = 52 ;
 	}
-#2m specific humidity
-'~' = {
+#2 metre specific humidity
+'2sh' = {
 	 table2Version = 174 ;
 	 indicatorOfParameter = 96 ;
 	}
@@ -9279,6 +9289,11 @@
 	 table2Version = 228 ;
 	 indicatorOfParameter = 29 ;
 	}
+#2 metre relative humidity with respect to water
+'2rhw' = {
+	 table2Version = 228 ;
+	 indicatorOfParameter = 37 ;
+	}
 #Soil wetness index in layer 1
 'swi1' = {
 	 table2Version = 228 ;
@@ -9309,12 +9324,12 @@
 	 table2Version = 228 ;
 	 indicatorOfParameter = 46 ;
 	}
-#Height of Zero Deg Wet Bulb Temperature
+#Height of zero-degree wet-bulb temperature
 'hwbt0' = {
 	 table2Version = 228 ;
 	 indicatorOfParameter = 47 ;
 	}
-#Height of One Deg Wet Bulb Temperature
+#Height of one-degree wet-bulb temperature
 'hwbt1' = {
 	 table2Version = 228 ;
 	 indicatorOfParameter = 48 ;
@@ -9324,7 +9339,7 @@
 	 table2Version = 228 ;
 	 indicatorOfParameter = 50 ;
 	}
-#Averaged total lightning density
+#Averaged total lightning density since previous post-processing
 'litota' = {
 	 table2Version = 228 ;
 	 indicatorOfParameter = 51 ;
@@ -9334,7 +9349,7 @@
 	 table2Version = 228 ;
 	 indicatorOfParameter = 52 ;
 	}
-#Averaged cloud-to-ground lightning density
+#Averaged cloud-to-ground lightning density since previous post-processing
 'licga' = {
 	 table2Version = 228 ;
 	 indicatorOfParameter = 53 ;
@@ -9883,6 +9898,11 @@
 'mper' = {
 	 table2Version = 235 ;
 	 indicatorOfParameter = 70 ;
+	}
+#Total precipitation rate
+'tprate' = {
+	 table2Version = 254 ;
+	 indicatorOfParameter = 48 ;
 	}
 #Ceiling
 'ceil' = {

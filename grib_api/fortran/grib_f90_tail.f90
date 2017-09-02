@@ -10,7 +10,7 @@
   !> exit with an error message.\n Otherwise the error message can be
   !> gathered with @ref grib_get_error_string.
   !>
-  !> \b Examples: \ref set_missing.f90 "set_missing.f90"
+  !> \b Examples: \ref grib_set_missing.f90 "grib_set_missing.f90"
   !>
   !> @param  gribid     id of the grib loaded in memory
   !> @param key     key name
@@ -28,7 +28,7 @@
       if (present(status)) then
          status = iret
       else
-         call grib_check(iret,'grib_set_missing','('//key//')')
+         call grib_check(iret,'set_missing','('//key//')')
       endif
   end subroutine grib_set_missing
 
@@ -39,25 +39,25 @@
   !> exit with an error message.\n Otherwise the error message can be
   !> gathered with @ref grib_get_error_string.
   !>
-  !> \b Examples: \ref index.f90 "index.f90"
+  !> \b Examples: \ref grib_index.f90 "grib_index.f90"
   !>
   !> @param  indexid     id of the newly created index
   !> @param filename     name of the file of messages to be indexed
   !> @param keys        : comma separated list of keys for the index. The type of the key can be explicitly declared appending :l for long, :d for double, :s for string to the key name. If the type is not declared explicitly, the native type is assumed.
   !> @param status      GRIB_SUCCESS if OK, integer value on error
   subroutine grib_index_create ( indexid, filename, keys,  status )
-  integer(kind=kindOfInt),         intent(inout)  :: indexid
-  character(len=*), intent(in)                    :: filename
-  character(len=*), intent(in)                    :: keys
-  integer(kind=kindOfInt),optional, intent(out)   :: status
-  integer(kind=kindOfInt)                         :: iret
+      integer(kind=kindOfInt),         intent(inout)  :: indexid
+      character(len=*), intent(in)                    :: filename
+      character(len=*), intent(in)                    :: keys
+      integer(kind=kindOfInt),optional, intent(out)   :: status
+      integer(kind=kindOfInt)                         :: iret
 
-    iret=grib_f_index_new_from_file(filename,keys,indexid)
-    if (present(status)) then
-    status = iret
-    else
-        call grib_check(iret,'grib_index_create','('//filename//')')
-    endif
+      iret=grib_f_index_new_from_file(filename,keys,indexid)
+      if (present(status)) then
+        status = iret
+      else
+        call grib_check(iret,'index_create','('//filename//')')
+      endif
   end subroutine grib_index_create
 
   !> Add a file to an index.
@@ -67,23 +67,23 @@
   !> exit with an error message.\n Otherwise the error message can be
   !> gathered with @ref grib_get_error_string.
   !>
-  !> \b Examples: \ref index.f90 "index.f90"
+  !> \b Examples: \ref grib_index.f90 "grib_index.f90"
   !>
   !> @param indexid     id of the index I want to add a file to
   !> @param filename    name of the file I want to add to the index
   !> @param status      GRIB_SUCCESS if OK, integer value on error
   subroutine grib_index_add_file ( indexid, filename, status )
-  integer(kind=kindOfInt), intent(in)             :: indexid
-  character(len=*), intent(in)                    :: filename
-  integer(kind=kindOfInt),optional, intent(out)   :: status
-  integer(kind=kindOfInt)                         :: iret
+      integer(kind=kindOfInt), intent(in)             :: indexid
+      character(len=*), intent(in)                    :: filename
+      integer(kind=kindOfInt),optional, intent(out)   :: status
+      integer(kind=kindOfInt)                         :: iret
 
-    iret=grib_f_index_add_file(indexid,filename)
-    if (present(status)) then
-        status = iret
-    else
-        call grib_check(iret,'grib_index_add_file','('//filename//')')
-    endif
+      iret=grib_f_index_add_file(indexid,filename)
+      if (present(status)) then
+          status = iret
+      else
+          call grib_check(iret,'index_add_file','('//filename//')')
+      endif
   end subroutine grib_index_add_file
 
   !> Get the number of distinct values of the key in argument contained in the index. The key must belong to the index.
@@ -93,25 +93,25 @@
   !> exit with an error message.\n Otherwise the error message can be
   !> gathered with @ref grib_get_error_string.
   !>
-  !> \b Examples: \ref index.f90 "index.f90"
+  !> \b Examples: \ref grib_index.f90 "grib_index.f90"
   !>
   !> @param  indexid     id of an index created from a file. The index must have been created with the key in argument.
   !> @param key        key for which the number of values is computed
   !> @param size       number of distinct values of the key in the index
   !> @param status      GRIB_SUCCESS if OK, integer value on error
   subroutine grib_index_get_size_long( indexid, key, size,  status )
-  integer(kind=kindOfInt),         intent(in)     :: indexid
-  character(len=*), intent(in)                    :: key
-  integer(kind=kindOfLong),       intent(out)     :: size
-  integer(kind=kindOfInt),optional, intent(out)   :: status
-  integer(kind=kindOfInt)                         :: iret
+      integer(kind=kindOfInt),         intent(in)     :: indexid
+      character(len=*), intent(in)                    :: key
+      integer(kind=kindOfLong),       intent(out)   :: size
+      integer(kind=kindOfInt),optional, intent(out)   :: status
+      integer(kind=kindOfInt)                         :: iret
 
-    iret=grib_f_index_get_size_long(indexid,key,size)
-    if (present(status)) then
-      status = iret
-    else
-      call grib_check(iret,'grib_index_get_size','('//key//')')
-    endif
+      iret=grib_f_index_get_size_long(indexid,key,size)
+      if (present(status)) then
+        status = iret
+      else
+        call grib_check(iret,'index_get_size','('//key//')')
+      endif
   end subroutine grib_index_get_size_long
 
   !> Get the number of distinct values of the key in argument contained in the index. The key must belong to the index.
@@ -121,25 +121,25 @@
   !> exit with an error message.\n Otherwise the error message can be
   !> gathered with @ref grib_get_error_string.
   !>
-  !> \b Examples: \ref index.f90 "index.f90"
+  !> \b Examples: \ref grib_index.f90 "grib_index.f90"
   !>
   !> @param  indexid     id of an index created from a file. The index must have been created with the key in argument.
   !> @param key        key for which the number of values is computed
   !> @param size       number of distinct values of the key in the index
   !> @param status      GRIB_SUCCESS if OK, integer value on error
   subroutine grib_index_get_size_int( indexid, key, size,  status )
-  integer(kind=kindOfInt),         intent(in)     :: indexid
-  character(len=*), intent(in)                    :: key
-  integer(kind=kindOfInt),       intent(out)      :: size
-  integer(kind=kindOfInt),optional, intent(out)   :: status
-  integer(kind=kindOfInt)                         :: iret
+      integer(kind=kindOfInt),         intent(in)     :: indexid
+      character(len=*), intent(in)                    :: key
+      integer(kind=kindOfInt),       intent(out)   :: size
+      integer(kind=kindOfInt),optional, intent(out)   :: status
+      integer(kind=kindOfInt)                         :: iret
 
-    iret=grib_f_index_get_size_int(indexid,key,size)
-    if (present(status)) then
-      status = iret
-    else
-      call grib_check(iret,'grib_index_get_size','('//key//')')
-    endif
+      iret=grib_f_index_get_size_int(indexid,key,size)
+      if (present(status)) then
+        status = iret
+      else
+        call grib_check(iret,'index_get_size','('//key//')')
+      endif
   end subroutine grib_index_get_size_int
 
   !> Get the distinct values of the key in argument contained in the index. The key must belong to the index. This function is used when the type of the key was explicitly defined as long or when the native type of the key is long.
@@ -149,29 +149,29 @@
   !> exit with an error message.\n Otherwise the error message can be
   !> gathered with @ref grib_get_error_string.
   !>
-  !> \b Examples: \ref index.f90 "index.f90"
+  !> \b Examples: \ref grib_index.f90 "grib_index.f90"
   !>
   !> @param  indexid   id of an index created from a file. The index must have been created with the key in argument.
   !> @param key        key for wich the values are returned
   !> @param values     array of values. The array must be allocated before entering this function and its size must be enough to contain all the values.
   !> @param status      GRIB_SUCCESS if OK, integer value on error
   subroutine grib_index_get_int( indexid, key, values,  status )
-    integer(kind=kindOfInt),               intent(in)  :: indexid
-    character(len=*),      intent(in)                  :: key
-    integer(kind=kindOfInt), dimension(:), intent(out) :: values
-    integer(kind=kindOfInt),optional, intent(out)      :: status
-    integer(kind=kindOfInt)                            :: iret
-    integer(kind=kindOfInt)                            :: nb_values
+      integer(kind=kindOfInt),               intent(in)  :: indexid
+      character(len=*),      intent(in)  :: key
+      integer(kind=kindOfInt), dimension(:), intent(out) :: values
+      integer(kind=kindOfInt),optional, intent(out)      :: status
+      integer(kind=kindOfInt)                            :: iret
+      integer(kind=kindOfInt)                            :: nb_values
 
-    nb_values = size(values)
-    iret=grib_f_index_get_int ( indexid, key, values , nb_values )
-    if (present(status)) then
-      status = iret
-    else
-      call grib_check(iret,'grib_index_get','('//key//')')
-    endif
+      nb_values = size(values)
+      iret=grib_f_index_get_int ( indexid, key, values , nb_values )
+      if (present(status)) then
+        status = iret
+      else
+        call grib_check(iret,'index_get','('//key//')')
+      endif
   end subroutine grib_index_get_int
-      
+
   !> Get the distinct values of the key in argument contained in the index. The key must belong to the index. This function is used when the type of the key was explicitly defined as long or when the native type of the key is long.
   !>
   !>
@@ -179,27 +179,27 @@
   !> exit with an error message.\n Otherwise the error message can be
   !> gathered with @ref grib_get_error_string.
   !>
-  !> \b Examples: \ref index.f90 "index.f90"
+  !> \b Examples: \ref grib_index.f90 "grib_index.f90"
   !>
   !> @param  indexid   id of an index created from a file. The index must have been created with the key in argument.
   !> @param key        key for wich the values are returned
   !> @param values     array of values. The array must be allocated before entering this function and its size must be enough to contain all the values.
   !> @param status      GRIB_SUCCESS if OK, integer value on error
   subroutine grib_index_get_long( indexid, key, values,  status )
-    integer(kind=kindOfInt),               intent(in)   :: indexid
-    character(len=*),      intent(in)                   :: key
-    integer(kind=kindOfLong), dimension(:), intent(out) :: values
-    integer(kind=kindOfInt),optional, intent(out)       :: status
-    integer(kind=kindOfInt)                             :: iret
-    integer(kind=kindOfInt)                             :: nb_values
+      integer(kind=kindOfInt),               intent(in)  :: indexid
+      character(len=*),      intent(in)  :: key
+      integer(kind=kindOfLong), dimension(:), intent(out) :: values
+      integer(kind=kindOfInt),optional, intent(out)      :: status
+      integer(kind=kindOfInt)                            :: iret
+      integer(kind=kindOfInt)                            :: nb_values
 
-    nb_values = size(values)
-    iret=grib_f_index_get_long ( indexid, key, values , nb_values )
-    if (present(status)) then
-      status = iret
-    else
-      call grib_check(iret,'grib_index_get','('//key//')')
-    endif
+      nb_values = size(values)
+      iret=grib_f_index_get_long ( indexid, key, values , nb_values )
+      if (present(status)) then
+        status = iret
+      else
+        call grib_check(iret,'index_get','('//key//')')
+      endif
   end subroutine grib_index_get_long
 
   !> Get the distinct values of the key in argument contained in the index. The key must belong to the index. This function is used when the type of the key was explicitly defined as long or when the native type of the key is long.
@@ -209,27 +209,27 @@
   !> exit with an error message.\n Otherwise the error message can be
   !> gathered with @ref grib_get_error_string.
   !>
-  !> \b Examples: \ref index.f90 "index.f90"
+  !> \b Examples: \ref grib_index.f90 "grib_index.f90"
   !>
   !> @param  indexid   id of an index created from a file. The index must have been created with the key in argument.
   !> @param key        key for wich the values are returned
   !> @param values     array of values. The array must be allocated before entering this function and its size must be enough to contain all the values.
   !> @param status      GRIB_SUCCESS if OK, integer value on error
   subroutine grib_index_get_real8( indexid, key, values,  status )
-    integer(kind=kindOfInt),               intent(in)  :: indexid
-    character(len=*),      intent(in)                  :: key
-    real(kind=kindOfDouble), dimension(:), intent(out) :: values
-    integer(kind=kindOfInt),optional, intent(out)      :: status
-    integer(kind=kindOfInt)                            :: iret
-    integer(kind=kindOfInt)                            :: nb_values
+      integer(kind=kindOfInt),               intent(in)  :: indexid
+      character(len=*),      intent(in)  :: key
+      real(kind=kindOfDouble), dimension(:), intent(out) :: values
+      integer(kind=kindOfInt),optional, intent(out)      :: status
+      integer(kind=kindOfInt)                            :: iret
+      integer(kind=kindOfInt)                            :: nb_values
 
-    nb_values = size(values)
-    iret=grib_f_index_get_real8 ( indexid, key, values , nb_values )
-    if (present(status)) then
-      status = iret
-    else
-      call grib_check(iret,'grib_index_get','('//key//')')
-    endif
+      nb_values = size(values)
+      iret=grib_f_index_get_real8 ( indexid, key, values , nb_values )
+      if (present(status)) then
+        status = iret
+      else
+        call grib_check(iret,'index_get','('//key//')')
+      endif
   end subroutine grib_index_get_real8
 
   !> Get the distinct values of the key in argument contained in the index. 
@@ -241,7 +241,7 @@
   !> exit with an error message.\n Otherwise the error message can be
   !> gathered with @ref grib_get_error_string.
   !>
-  !> \b Examples: \ref index.f90 "index.f90"
+  !> \b Examples: \ref grib_index.f90 "grib_index.f90"
   !>
   !> @param  indexid   id of an index created from a file. The index must have been created with the key in argument.
   !> @param key        key for wich the values are returned
@@ -249,8 +249,8 @@
   !> @param status      GRIB_SUCCESS if OK, integer value on error
   subroutine grib_index_get_string( indexid, key, values,  status )
   integer(kind=kindOfInt),               intent(in)  :: indexid
-  character(len=*),      intent(in)                  :: key
-  character(len=*), dimension(:), intent(out)        :: values
+  character(len=*),      intent(in)  :: key
+  character(len=*), dimension(:), intent(out) :: values
   integer(kind=kindOfInt),optional, intent(out)      :: status
   integer(kind=kindOfInt)                            :: iret
   integer(kind=kindOfInt)                            :: nb_values
@@ -261,7 +261,7 @@
     if (present(status)) then
       status = iret
     else
-      call grib_check(iret,'grib_index_get','('//key//')')
+      call grib_check(iret,'index_get','('//key//')')
     endif
   end subroutine grib_index_get_string
 
@@ -273,7 +273,7 @@
   !> exit with an error message.\n Otherwise the error message can be
   !> gathered with @ref grib_get_error_string.
   !>
-  !> \b Examples: \ref index.f90 "index.f90"
+  !> \b Examples: \ref grib_index.f90 "grib_index.f90"
   !>
   !> @param  indexid   id of an index created from a file. The index must have been created with the key in argument.
   !> @param key        key to be selected
@@ -282,7 +282,7 @@
   subroutine grib_index_select_string( indexid, key, value,  status )
   integer(kind=kindOfInt),               intent(in)  :: indexid
   character(len=*),      intent(in)                  :: key
-  character(len=*), intent(in)                       :: value
+  character(len=*), intent(in)                :: value
   integer(kind=kindOfInt),optional, intent(out)      :: status
   integer(kind=kindOfInt)                            :: iret
 
@@ -290,10 +290,10 @@
     if (present(status)) then
       status = iret
     else
-      call grib_check(iret,'grib_index_select','('//key//')')
+      call grib_check(iret,'index_select','('//key//')')
     endif
   end subroutine grib_index_select_string
-      
+
   !> Select the message subset with key==value. The value is a integer. The key must have been created with integer type or have integer as native type if the type was not explicitly defined in the index creation.
   !>
   !>
@@ -301,27 +301,27 @@
   !> exit with an error message.\n Otherwise the error message can be
   !> gathered with @ref grib_get_error_string.
   !>
-  !> \b Examples: \ref index.f90 "index.f90"
+  !> \b Examples: \ref grib_index.f90 "grib_index.f90"
   !>
   !> @param  indexid   id of an index created from a file. The index must have been created with the key in argument.
   !> @param key        key to be selected
   !> @param value      value of the key to select
   !> @param status      GRIB_SUCCESS if OK, integer value on error
   subroutine grib_index_select_int( indexid, key, value,  status )
-  integer(kind=kindOfInt),               intent(in)  :: indexid
-  character(len=*),      intent(in)                  :: key
-  integer(kind=kindOfInt), intent(in)                :: value
-  integer(kind=kindOfInt),optional, intent(out)      :: status
-  integer(kind=kindOfInt)                            :: iret
+    integer(kind=kindOfInt),               intent(in)  :: indexid
+    character(len=*),      intent(in)                  :: key
+    integer(kind=kindOfInt), intent(in)                :: value
+    integer(kind=kindOfInt),optional, intent(out)      :: status
+    integer(kind=kindOfInt)                            :: iret
 
     iret=grib_f_index_select_int ( indexid, key, value )
     if (present(status)) then
       status = iret
     else
-      call grib_check(iret,'grib_index_select','('//key//')')
+      call grib_check(iret,'index_select','('//key//')')
     endif
   end subroutine grib_index_select_int
-      
+
   !> Select the message subset with key==value. The value is a integer. The key must have been created with integer type or have integer as native type if the type was not explicitly defined in the index creation.
   !>
   !>
@@ -329,35 +329,35 @@
   !> exit with an error message.\n Otherwise the error message can be
   !> gathered with @ref grib_get_error_string.
   !>
-  !> \b Examples: \ref index.f90 "index.f90"
+  !> \b Examples: \ref grib_index.f90 "grib_index.f90"
   !>
   !> @param  indexid   id of an index created from a file. The index must have been created with the key in argument.
   !> @param key        key to be selected
   !> @param value      value of the key to select
   !> @param status      GRIB_SUCCESS if OK, integer value on error
   subroutine grib_index_select_long( indexid, key, value,  status )
-  integer(kind=kindOfInt),               intent(in)  :: indexid
-  character(len=*),      intent(in)                  :: key
-  integer(kind=kindOfLong), intent(in)               :: value
-  integer(kind=kindOfInt),optional, intent(out)      :: status
-  integer(kind=kindOfInt)                            :: iret
+    integer(kind=kindOfInt),               intent(in)  :: indexid
+    character(len=*),      intent(in)                  :: key
+    integer(kind=kindOfLong), intent(in)               :: value
+    integer(kind=kindOfInt),optional, intent(out)      :: status
+    integer(kind=kindOfInt)                            :: iret
 
       iret=grib_f_index_select_long ( indexid, key, value )
       if (present(status)) then
         status = iret
       else
-        call grib_check(iret,'grib_index_select','('//key//')')
+        call grib_check(iret,'index_select','('//key//')')
       endif
   end subroutine grib_index_select_long
-      
-   !> Select the message subset with key==value. The value is a real. The key must have been created with real type or have real as native type if the type was not explicitly defined in the index creation.
+
+  !> Select the message subset with key==value. The value is a real. The key must have been created with real type or have real as native type if the type was not explicitly defined in the index creation.
   !>
   !>
   !> In case of error, if the status parameter (optional) is not given, the program will
   !> exit with an error message.\n Otherwise the error message can be
   !> gathered with @ref grib_get_error_string.
   !>
-  !> \b Examples: \ref index.f90 "index.f90"
+  !> \b Examples: \ref grib_index.f90 "grib_index.f90"
   !>
   !> @param  indexid   id of an index created from a file. The index must have been created with the key in argument.
   !> @param key        key to be selected
@@ -374,7 +374,7 @@
     if (present(status)) then
       status = iret
     else
-      call grib_check(iret,'grib_index_select','('//key//')')
+      call grib_check(iret,'index_select','('//key//')')
     endif
     end subroutine grib_index_select_real8
 
@@ -385,7 +385,7 @@
   !> The message can be accessed through its gribid and it will be available\n
   !> until @ref grib_release is called.\n
   !>
-  !> \b Examples: \ref index.f90 "index.f90"
+  !> \b Examples: \ref grib_index.f90 "grib_index.f90"
   !>
   !> @param indexid   id of an index created from a file.
   !> @param gribid    id of the grib loaded in memory
@@ -400,7 +400,7 @@
     if (present(status)) then
       status = iret
     else
-      call grib_check(iret,'grib_new_from_index','')
+      call grib_check(iret,'new_from_index','')
     endif
   end subroutine grib_new_from_index
 
@@ -411,7 +411,7 @@
   !> exit with an error message.\n Otherwise the error message can be
   !> gathered with @ref grib_get_error_string.
   !>
-  !> \b Examples: \ref index.f90 "index.f90"
+  !> \b Examples: \ref grib_index.f90 "grib_index.f90"
   !>
   !> @param indexid      id of loaded index
   !> @param filename     name of the index file to load
@@ -426,7 +426,7 @@
     if (present(status)) then
         status = iret
     else
-        call grib_check(iret,'grib_index_read','('//filename//')')
+        call grib_check(iret,'index_read','('//filename//')')
     endif
       
   end subroutine grib_index_read
@@ -439,7 +439,7 @@
   !> exit with an error message.\n Otherwise the error message can be
   !> gathered with @ref grib_get_error_string.
   !>
-  !> \b Examples: \ref index.f90 "index.f90"
+  !> \b Examples: \ref grib_index.f90 "grib_index.f90"
   !>
   !> @param indexid      id of the index to save to file
   !> @param filename     name of file to save the index to
@@ -454,7 +454,7 @@
     if (present(status)) then
         status = iret
     else
-        call grib_check(iret,'grib_index_write','('//filename//')')
+        call grib_check(iret,'index_write','('//filename//')')
     endif
       
   end subroutine grib_index_write
@@ -469,16 +469,16 @@
   !> @param indexid   id of an index created from a file.
   !> @param status      GRIB_SUCCESS if OK, integer value on error
   subroutine grib_index_release ( indexid, status )
-      integer(kind=kindOfInt),          intent(in)  :: indexid
-      integer(kind=kindOfInt),optional, intent(out) :: status
-      integer(kind=kindOfInt)                       :: iret
+  integer(kind=kindOfInt),          intent(in)  :: indexid
+  integer(kind=kindOfInt),optional, intent(out) :: status
+  integer(kind=kindOfInt)                       :: iret
 
-      iret=grib_f_index_release ( indexid )
-      if (present(status)) then
-        status = iret
-      else
-        call grib_check(iret,'grib_index_release','')
-      endif
+          iret=grib_f_index_release ( indexid )
+          if (present(status)) then
+            status = iret
+          else
+            call grib_check(iret,'index_release','')
+          endif
   end subroutine grib_index_release
 
   !> Open a file according to a mode.
@@ -488,7 +488,7 @@
   !> exit with an error message.\n Otherwise the error message can be
   !> gathered with @ref grib_get_error_string.
   !>
-  !> \b Examples: \ref get.f90 "get.f90"
+  !> \b Examples: \ref grib_get_keys.f90 "grib_get_keys.f90"
   !>
   !> @param ifile       id of the opened file to be used in all the file functions.
   !> @param filename    name of the file to be open
@@ -505,7 +505,7 @@
         if (present(status)) then
            status = iret
         else
-           call grib_check(iret,'grib_open_file','('//filename//')')
+           call grib_check(iret,'open_file','('//filename//')')
         endif
   end subroutine grib_open_file
 
@@ -534,7 +534,7 @@
         if (present(status)) then
            status = iret
         else
-           call grib_check(iret,'grib_read_bytes','')
+           call grib_check(iret,'read_bytes','')
         endif
   end subroutine grib_read_bytes_char
 
@@ -561,7 +561,7 @@
         if (present(status)) then
            status = iret
         else
-           call grib_check(iret,'grib_read_bytes','')
+           call grib_check(iret,'read_bytes','')
         endif
   end subroutine grib_read_bytes_char_size_t
 
@@ -590,7 +590,7 @@
         if (present(status)) then
            status = iret
         else
-           call grib_check(iret,'grib_read_bytes','')
+           call grib_check(iret,'read_bytes','')
         endif
   end subroutine grib_read_bytes_int4
 
@@ -617,7 +617,7 @@
         if (present(status)) then
            status = iret
         else
-           call grib_check(iret,'grib_read_bytes','')
+           call grib_check(iret,'read_bytes','')
         endif
   end subroutine grib_read_bytes_int4_size_t
 
@@ -634,20 +634,20 @@
   !> @param nbytes      number of bytes to be read
   !> @param status      GRIB_SUCCESS if OK, integer value on error
   subroutine grib_read_bytes_real4 ( ifile, buffer, nbytes, status )
-        integer(kind=kindOfInt),intent(in)               :: ifile
-        real(kind=4),dimension(:), intent(out)           :: buffer
-        integer(kind=kindOfInt), intent(in)              :: nbytes
-        integer(kind=kindOfInt),optional, intent(out)    :: status
-        integer(kind=kindOfSize_t)                       :: ibytes
-        integer(kind=kindOfInt)                          :: iret
+      integer(kind=kindOfInt),intent(in)               :: ifile
+      real(kind=4),dimension(:), intent(out)           :: buffer
+      integer(kind=kindOfInt), intent(in)              :: nbytes
+      integer(kind=kindOfInt),optional, intent(out)    :: status
+      integer(kind=kindOfSize_t)                       :: ibytes
+      integer(kind=kindOfInt)                          :: iret
 
-        ibytes=nbytes
-        iret=grib_f_read_file(ifile,buffer,ibytes)
-        if (present(status)) then
-           status = iret
-        else
-           call grib_check(iret,'grib_read_bytes','')
-        endif
+      ibytes=nbytes
+      iret=grib_f_read_file(ifile,buffer,ibytes)
+      if (present(status)) then
+        status = iret
+      else
+        call grib_check(iret,'read_bytes','')
+      endif
   end subroutine grib_read_bytes_real4
 
   !> Reads nbytes bytes into the buffer from a file opened with grib_open_file.
@@ -663,18 +663,18 @@
   !> @param nbytes      number of bytes to be read
   !> @param status      GRIB_SUCCESS if OK, integer value on error
   subroutine grib_read_bytes_real4_size_t ( ifile, buffer, nbytes, status )
-        integer(kind=kindOfInt),intent(in)               :: ifile
-        real(kind=4),dimension(:), intent(out)           :: buffer
-        integer(kind=kindOfSize_t), intent(inout)        :: nbytes
-        integer(kind=kindOfInt),optional, intent(out)    :: status
-        integer(kind=kindOfInt)                          :: iret
+      integer(kind=kindOfInt),intent(in)               :: ifile
+      real(kind=4),dimension(:), intent(out)           :: buffer
+      integer(kind=kindOfSize_t), intent(inout)        :: nbytes
+      integer(kind=kindOfInt),optional, intent(out)    :: status
+      integer(kind=kindOfInt)                          :: iret
 
-        iret=grib_f_read_file(ifile,buffer,nbytes)
-        if (present(status)) then
-           status = iret
-        else
-           call grib_check(iret,'grib_read_bytes','')
-        endif
+      iret=grib_f_read_file(ifile,buffer,nbytes)
+      if (present(status)) then
+        status = iret
+      else
+        call grib_check(iret,'read_bytes','')
+      endif
   end subroutine grib_read_bytes_real4_size_t
 
   !> Reads nbytes bytes into the buffer from a file opened with grib_open_file.
@@ -702,7 +702,7 @@
         if (present(status)) then
            status = iret
         else
-           call grib_check(iret,'grib_read_bytes','')
+           call grib_check(iret,'read_bytes','')
         endif
   end subroutine grib_read_bytes_real8
 
@@ -729,7 +729,7 @@
         if (present(status)) then
            status = iret
         else
-           call grib_check(iret,'grib_read_bytes','')
+           call grib_check(iret,'read_bytes','')
         endif
   end subroutine grib_read_bytes_real8_size_t
 
@@ -762,7 +762,7 @@
         if (present(status)) then
            status = iret
         else
-           call grib_check(iret,'grib_read_from_file','')
+           call grib_check(iret,'read_from_file','')
         endif
   end subroutine grib_read_from_file_int4
 
@@ -789,7 +789,7 @@
         if (present(status)) then
            status = iret
         else
-           call grib_check(iret,'grib_read_from_file','')
+           call grib_check(iret,'read_from_file','')
         endif
   end subroutine grib_read_from_file_int4_size_t
 
@@ -822,7 +822,7 @@
         if (present(status)) then
            status = iret
         else
-           call grib_check(iret,'grib_read_from_file','')
+           call grib_check(iret,'read_from_file','')
         endif
   end subroutine grib_read_from_file_real4
 
@@ -849,7 +849,7 @@
         if (present(status)) then
            status = iret
         else
-           call grib_check(iret,'grib_read_from_file','')
+           call grib_check(iret,'read_from_file','')
         endif
   end subroutine grib_read_from_file_real4_size_t
 
@@ -882,7 +882,7 @@
         if (present(status)) then
            status = iret
         else
-           call grib_check(iret,'grib_read_from_file','')
+           call grib_check(iret,'read_from_file','')
         endif
   end subroutine grib_read_from_file_real8
 
@@ -909,7 +909,7 @@
         if (present(status)) then
            status = iret
         else
-           call grib_check(iret,'grib_read_from_file','')
+           call grib_check(iret,'read_from_file','')
         endif
   end subroutine grib_read_from_file_real8_size_t
 
@@ -942,7 +942,7 @@
         if (present(status)) then
            status = iret
         else
-           call grib_check(iret,'grib_read_from_file','')
+           call grib_check(iret,'read_from_file','')
         endif
   end subroutine grib_read_from_file_char
 
@@ -969,7 +969,7 @@
         if (present(status)) then
            status = iret
         else
-           call grib_check(iret,'grib_read_from_file','')
+           call grib_check(iret,'read_from_file','')
         endif
   end subroutine grib_read_from_file_char_size_t
 
@@ -998,7 +998,7 @@
         if (present(status)) then
            status = iret
         else
-           call grib_check(iret,'grib_write_bytes','')
+           call grib_check(iret,'write_bytes','')
         endif
   end subroutine grib_write_bytes_char
 
@@ -1025,7 +1025,7 @@
         if (present(status)) then
            status = iret
         else
-           call grib_check(iret,'grib_write_bytes','')
+           call grib_check(iret,'write_bytes','')
         endif
   end subroutine grib_write_bytes_char_size_t
 
@@ -1054,7 +1054,7 @@
         if (present(status)) then
            status = iret
         else
-           call grib_check(iret,'grib_write_bytes','')
+           call grib_check(iret,'write_bytes','')
         endif
   end subroutine grib_write_bytes_int4
 
@@ -1081,7 +1081,7 @@
         if (present(status)) then
            status = iret
         else
-           call grib_check(iret,'grib_write_bytes','')
+           call grib_check(iret,'write_bytes','')
         endif
   end subroutine grib_write_bytes_int4_size_t
 
@@ -1110,7 +1110,7 @@
         if (present(status)) then
            status = iret
         else
-           call grib_check(iret,'grib_write_bytes','')
+           call grib_check(iret,'write_bytes','')
         endif
   end subroutine grib_write_bytes_real4
 
@@ -1137,7 +1137,7 @@
         if (present(status)) then
            status = iret
         else
-           call grib_check(iret,'grib_write_bytes','')
+           call grib_check(iret,'write_bytes','')
         endif
   end subroutine grib_write_bytes_real4_size_t
 
@@ -1166,7 +1166,7 @@
         if (present(status)) then
            status = iret
         else
-           call grib_check(iret,'grib_write_bytes','')
+           call grib_check(iret,'write_bytes','')
         endif
   end subroutine grib_write_bytes_real8
 
@@ -1193,7 +1193,7 @@
         if (present(status)) then
            status = iret
         else
-           call grib_check(iret,'grib_write_bytes','')
+           call grib_check(iret,'write_bytes','')
         endif
   end subroutine grib_write_bytes_real8_size_t
 
@@ -1202,7 +1202,7 @@
   !> If the \em fileid does not refer to an opened file an error code
   !> is returned in status.\n
   !>
-  !> \b Examples: \ref get.f90 "get.f90"
+  !> \b Examples: \ref grib_get_keys.f90 "grib_get_keys.f90"
   !>
   !> In case of error, if the status parameter (optional) is not given, the program will
   !> exit with an error message.\n Otherwise the error message can be
@@ -1219,7 +1219,7 @@
         if (present(status)) then
            status = iret
         else
-           call grib_check(iret,'grib_close_file','')
+           call grib_check(iret,'close_file','')
         endif
   end subroutine grib_close_file
 
@@ -1240,7 +1240,7 @@
       if (present(status)) then
          status = iret
       else
-          call grib_check(iret,'grib_count_in_file','')
+          call grib_check(iret,'count_in_file','')
       endif
   end subroutine grib_count_in_file
 
@@ -1249,7 +1249,7 @@
   !> The message can be accessed through its gribid and it will be available\n
   !> until @ref grib_release is called.\n
   !>
-  !> \b Examples: \ref get.f90 "get.f90"
+  !> \b Examples: \ref grib_get_keys.f90 "grib_get_keys.f90"
   !>
   !> @param ifile     id of the file opened with @ref grib_open_file
   !> @param gribid    id of the grib loaded in memory
@@ -1264,7 +1264,7 @@
       if (present(status)) then
          status = iret
       else
-         call grib_check(iret,'grib_headers_only_new_from_file','')
+         call grib_check(iret,'headers_only_new_from_file','')
       endif
   end subroutine grib_headers_only_new_from_file
 
@@ -1273,7 +1273,7 @@
   !> The message can be accessed through its gribid and it will be available\n
   !> until @ref grib_release is called.\n
   !>
-  !> \b Examples: \ref get.f90 "get.f90"
+  !> \b Examples: \ref grib_get_keys.f90 "grib_get_keys.f90"
   !>
   !> @param ifile     id of the file opened with @ref grib_open_file
   !> @param gribid    id of the grib loaded in memory
@@ -1292,6 +1292,53 @@
       endif
   end subroutine grib_new_from_file
 
+  !> Load in memory a BUFR message from a file.
+  !>
+  !> The message can be accessed through its bufrid and it will be available\n
+  !> until @ref codes_release is called.\n
+  !>
+  !> \b Examples: \ref grib_get_keys.f90 "grib_get_keys.f90"
+  !>
+  !> @param ifile     id of the file opened with @ref codes_open_file
+  !> @param bufrid    id of the BUFR loaded in memory
+  !> @param status    GRIB_SUCCESS if OK, GRIB_END_OF_FILE at the end of file, or error code
+  subroutine bufr_new_from_file ( ifile, bufrid , status)
+      integer(kind=kindOfInt),intent(in)              :: ifile
+      integer(kind=kindOfInt),intent(out)             :: bufrid
+      integer(kind=kindOfInt),optional,intent(out)    :: status
+      integer(kind=kindOfInt)                         :: iret
+
+      iret=bufr_f_new_from_file( ifile, bufrid )
+      if (present(status)) then
+         status = iret
+      else
+         call grib_check(iret,'bufr_new_from_file','')
+      endif
+  end subroutine bufr_new_from_file
+
+  !> Load in memory a message from a file.
+  !>
+  !> The message can be accessed through its msgid and it will be available\n
+  !> until @ref codes_release is called.\n
+  !>
+  !> @param ifile     id of the file opened with @ref codes_open_file
+  !> @param msgid     id of the message loaded in memory
+  !> @param status    GRIB_SUCCESS if OK, GRIB_END_OF_FILE at the end of file, or error code
+  subroutine any_new_from_file ( ifile, msgid , status)
+      integer(kind=kindOfInt),intent(in)              :: ifile
+      integer(kind=kindOfInt),intent(out)             :: msgid
+      integer(kind=kindOfInt),optional,intent(out)    :: status
+      integer(kind=kindOfInt)                         :: iret
+
+      iret=any_f_new_from_file( ifile, msgid )
+      if (present(status)) then
+         status = iret
+      else
+         call grib_check(iret,'any_new_from_file','')
+      endif
+  end subroutine any_new_from_file
+
+
   !> Create a new message in memory from a character array containting the coded message.
   !>
   !> The message can be accessed through its gribid and it will be available\n
@@ -1302,8 +1349,7 @@
   !> exit with an error message.\n Otherwise the error message can be
   !> gathered with @ref grib_get_error_string.
   !>
-  !>
-  !> \b Examples: \ref copy_message.f90 "copy_message.f90"
+  !> \b Examples: \ref grib_copy_message.f90 "grib_copy_message.f90"
   !>
   !> @param gribid      id of the grib loaded in memory
   !> @param message     character array containing the coded message
@@ -1320,7 +1366,7 @@
       if (present(status)) then
          status = iret
       else
-         call grib_check(iret,'grib_new_from_message','')
+         call grib_check(iret,'new_from_message','')
       endif
 
   end subroutine grib_new_from_message_char
@@ -1336,38 +1382,38 @@
   !> gathered with @ref grib_get_error_string.
   !>
   !>
-  !> \b Examples: \ref copy_message.f90 "copy_message.f90"
+  !> \b Examples: \ref grib_copy_message.f90 "grib_copy_message.f90"
   !>
   !> @param gribid      id of the grib loaded in memory
   !> @param message     integer array containing the coded message
   !> @param status      GRIB_SUCCESS if OK, integer value on error
   subroutine grib_new_from_message_int4 ( gribid, message, status )
-      integer(kind=kindOfInt),intent(out)               :: gribid
-      integer(kind=4), dimension(:),intent(in)          :: message
-      integer(kind=kindOfInt),optional, intent(out)     :: status
-      integer(kind=kindOfSize_t)                        :: size_bytes
-      integer(kind=kindOfInt)                           :: iret
+      integer(kind=kindOfInt),intent(out)             :: gribid
+      integer(kind=4), dimension(:),intent(in)        :: message
+      integer(kind=kindOfInt),optional, intent(out)   :: status
+      integer(kind=kindOfSize_t)                      :: size_bytes
+      integer(kind=kindOfInt)                         :: iret
 
       size_bytes=size(message,dim=1)*sizeOfInteger4
       iret = grib_f_new_from_message ( gribid, message, size_bytes )
       if (present(status)) then
          status = iret
       else
-         call grib_check(iret,'grib_new_from_message','')
+         call grib_check(iret,'new_from_message','')
       endif
 
   end subroutine grib_new_from_message_int4
 
   !> Create a new valid gribid from a sample contained in a samples directory pointed
-  !> by the environment variable GRIB_SAMPLES_PATH.
-  !> To know where the samples directory is run the grib_info tool.\n
+  !> by the environment variable ECCODES_SAMPLES_PATH.
+  !> To know where the samples directory is run the codes_info tool.\n
   !>
   !> In case of error, if the status parameter (optional) is not given, the program will
   !> exit with an error message.\n Otherwise the error message can be
   !> gathered with @ref grib_get_error_string.
   !>
   !>
-  !> \b Examples: \ref samples.f90 "samples.f90"
+  !> \b Examples: \ref grib_samples.f90 "grib_samples.f90"
   !>
   !> @param gribid       id of the grib loaded in memory
   !> @param samplename name of the sample to be used
@@ -1386,37 +1432,6 @@
       endif
   end subroutine grib_new_from_samples
 
-  !> THIS FUNCTION IS DEPRECATED! PLEASE USE grib_new_from_samples
-  !> Create a new valid gribid from a template.
-  !>
-  !> Valid templates are stored in the directory pointed by the\n
-  !> environment variable GRIB_TEMPLATES_PATH or in a templates\n
-  !> default directory if this variable is not defined.\n
-  !> To know where the templates directory is run the grib_info tool.\n
-  !>
-  !> In case of error, if the status parameter (optional) is not given, the program will
-  !> exit with an error message.\n Otherwise the error message can be
-  !> gathered with @ref grib_get_error_string.
-  !>
-  !>
-  !> \b Examples: \ref template.f90 "template.f90"
-  !>
-  !> @param gribid       id of the grib loaded in memory
-  !> @param templatename name of the template to be used
-  !> @param status       GRIB_SUCCESS if OK, integer value on error
-  subroutine grib_new_from_template  ( gribid, templatename, status )
-      integer(kind=kindOfInt),          intent(out) :: gribid
-      character(len=*), intent(in)                  :: templatename
-      integer(kind=kindOfInt),optional, intent(out) :: status
-      integer(kind=kindOfInt)                       :: iret
-
-      iret=grib_f_new_from_template ( gribid, templatename )
-      if (present(status)) then
-         status = iret
-      else
-         call grib_check(iret,'grib_new_from_template','('//templatename//')')
-      endif
-  end subroutine grib_new_from_template
 
   !> Free the memory for the message referred as gribid.
   !>
@@ -1424,7 +1439,7 @@
   !> exit with an error message.\n Otherwise the error message can be
   !> gathered with @ref grib_get_error_string.
   !>
-  !> \b Examples: \ref get.f90 "get.f90"
+  !> \b Examples: \ref grib_get_keys.f90 "grib_get_keys.f90"
   !>
   !> @param gribid      id of the grib loaded in memory
   !> @param status      GRIB_SUCCESS if OK, integer value on error
@@ -1440,7 +1455,7 @@
       if (present(status)) then
          status = iret
       else
-         call grib_check(iret,'grib_release','')
+         call grib_check(iret,'release','')
       endif
   end subroutine grib_release
 
@@ -1454,7 +1469,7 @@
   !> gathered with @ref grib_get_error_string.
   !>
   !>
-  !> \b Examples: \ref clone.f90 "clone.f90"
+  !> \b Examples: \ref grib_clone.f90 "grib_clone.f90"
   !>
   !> @param gribid_src     grib to be cloned
   !> @param gribid_dest    new grib returned
@@ -1467,26 +1482,26 @@
 
       iret=grib_f_clone(gribid_src,gribid_dest)
       if (iret /= 0) then
-         call grib_f_write_on_fail(gribid_src)
+        call grib_f_write_on_fail(gribid_src)
       endif
       if (present(status)) then
          status = iret
       else
-         call grib_check(iret,'grib_clone','')
+         call grib_check(iret,'clone','')
       endif
   end subroutine grib_clone
 
   subroutine grib_util_sections_copy ( gribid_from, gribid_to, what, gribid_out,status )
       integer(kind=kindOfInt),          intent(in)  :: gribid_from
-      integer(kind=kindOfInt),          intent(in)  :: gribid_to
+      integer(kind=kindOfInt),          intent(in) :: gribid_to
       integer(kind=kindOfInt),          intent(out) :: gribid_out
-      integer(kind=kindOfInt),          intent(in)  :: what
+      integer(kind=kindOfInt),          intent(in) :: what
       integer(kind=kindOfInt),optional, intent(out) :: status
       integer(kind=kindOfInt)                       :: iret
 
       iret=grib_f_util_sections_copy(gribid_from,gribid_to,what,gribid_out)
       if (iret /= 0) then
-         call grib_f_write_on_fail(gribid_from)
+        call grib_f_write_on_fail(gribid_from)
       endif
       if (present(status)) then
          status = iret
@@ -1502,7 +1517,6 @@
   !> In case of error, if the status parameter (optional) is not given, the program will
   !> exit with an error message.\n Otherwise the error message can be
   !> gathered with @ref grib_get_error_string.
-  !>
   !>
   !>
   !> @param gribid_src     source message
@@ -1568,7 +1582,7 @@
       npoints=size(lats)
       iret = grib_f_get_data_real4 ( gribid, lats, lons, values,npoints )
       if (iret /= 0) then
-         call grib_f_write_on_fail(gribid)
+        call grib_f_write_on_fail(gribid)
       endif
       if (present(status)) then
          status = iret
@@ -1604,7 +1618,7 @@
       npoints=size(lats)
       iret = grib_f_get_data_real8 ( gribid, lats, lons, values,npoints )
       if (iret /= 0) then
-         call grib_f_write_on_fail(gribid)
+        call grib_f_write_on_fail(gribid)
       endif
       if (present(status)) then
          status = iret
@@ -1636,34 +1650,34 @@
   !> @param namespace   the namespace of the keys to search for (all the keys if empty)
   !> @param status      GRIB_SUCCESS if OK, integer value on error
   subroutine grib_keys_iterator_new ( gribid, iterid, namespace, status )
-      integer(kind=kindOfInt),          intent(in)    :: gribid
-      integer(kind=kindOfInt),          intent(inout) :: iterid
-      character(LEN=*), intent(in)                    :: namespace
-      integer(kind=kindOfInt),optional, intent(out)   :: status
-      integer(kind=kindOfInt)                         :: iret
+      integer(kind=kindOfInt),          intent(in)   :: gribid
+      integer(kind=kindOfInt),          intent(inout)  :: iterid
+      character(LEN=*), intent(in)                   :: namespace
+      integer(kind=kindOfInt),optional, intent(out)  :: status
+      integer(kind=kindOfInt)                        :: iret
 
       iret = grib_f_keys_iterator_new ( gribid, iterid, namespace )
       if (present(status)) then
          status = iret
       else
-         call grib_check(iret,'grib_keys_iterator_new',namespace)
+         call grib_check(iret,'keys_iterator_new',namespace)
       endif
   end subroutine grib_keys_iterator_new
 
   !> Advance to the next keys iterator value.
   !>
-  !> @param iterid      keys iterator id created with @ref grib_keys_iterator_new
-  !> @param status      1 if next iterator exists, 0 if no more elements to iterate on
+  !> @param iterid   keys iterator id created with @ref grib_keys_iterator_new
+  !> @param status   GRIB_SUCCESS if next iterator exists, integer value if no more elements to iterate on
   subroutine grib_keys_iterator_next ( iterid , status)
       integer(kind=kindOfInt),          intent(in)  :: iterid
-      integer(kind=kindOfInt),optional, intent(out) :: status
+      integer(kind=kindOfInt),          intent(out) :: status
       integer(kind=kindOfInt)                       :: iret
 
-      iret  =  grib_f_keys_iterator_next ( iterid )
-      if (present(status)) then
-         status = iret
-      else
-         call grib_check(iret,'grib_keys_iterator_next','')
+      status = GRIB_SUCCESS
+      iret = grib_f_keys_iterator_next ( iterid )
+      if (iret == 0) then
+          ! no more elements
+          status = GRIB_END
       endif
   end subroutine grib_keys_iterator_next
 
@@ -1684,7 +1698,7 @@
       if (present(status)) then
          status = iret
       else
-         call grib_check(iret,'grib_keys_iterator_delete','')
+         call grib_check(iret,'keys_iterator_delete','')
       endif
   end subroutine grib_keys_iterator_delete
 
@@ -1706,7 +1720,7 @@
       if (present(status)) then
          status = iret
       else
-         call grib_check(iret,'grib_keys_iterator_get_name',name)
+         call grib_check(iret,'keys_iterator_get_name',name)
       endif
   end subroutine grib_keys_iterator_get_name
 
@@ -1727,7 +1741,7 @@
       if (present(status)) then
          status = iret
       else
-         call grib_check(iret,'grib_keys_iterator_rewind','')
+         call grib_check(iret,'keys_iterator_rewind','')
       endif
   end subroutine grib_keys_iterator_rewind
 
@@ -1748,7 +1762,7 @@
       if (present(status)) then
          status = iret
       else
-         call grib_check(iret,'grib_dump','')
+         call grib_check(iret,'dump','')
       endif
   end subroutine grib_dump
 
@@ -1767,7 +1781,7 @@
       if (present(status)) then
          status = iret
       else
-         call grib_check(iret,'grib_get_error_string','')
+         call grib_check(iret,'get_error_string','')
       endif
   end subroutine grib_get_error_string
 
@@ -1792,12 +1806,12 @@
 
       iret=grib_f_get_size_int ( gribid, key, size )
       if (iret /= 0) then
-         call grib_f_write_on_fail(gribid)
+        call grib_f_write_on_fail(gribid)
       endif
       if (present(status)) then
          status = iret
       else
-         call grib_check(iret,'grib_get_size',key)
+         call grib_check(iret,'get_size',key)
       endif
   end subroutine grib_get_size_int
 
@@ -1814,21 +1828,21 @@
   !> @param size        size of the array key
   !> @param status      GRIB_SUCCESS if OK, integer value on error
   subroutine grib_get_size_long ( gribid, key, size , status)
-    integer(kind=kindOfInt),          intent(in)   :: gribid
-    character(len=*), intent(in)                   :: key
-    integer(kind=kindOfLong),          intent(out) :: size
-    integer(kind=kindOfInt),optional, intent(out)  :: status
-    integer(kind=kindOfInt)                        :: iret
+  integer(kind=kindOfInt),          intent(in)  :: gribid
+  character(len=*), intent(in)                  :: key
+  integer(kind=kindOfLong),          intent(out) :: size
+  integer(kind=kindOfInt),optional, intent(out) :: status
+  integer(kind=kindOfInt)                       :: iret
 
-    iret=grib_f_get_size_long ( gribid, key, size )
-    if (iret /= 0) then
-      call grib_f_write_on_fail(gribid)
-    endif
-    if (present(status)) then
-      status = iret
-    else
-      call grib_check(iret,'grib_get_size',key)
-    endif
+  iret=grib_f_get_size_long ( gribid, key, size )
+  if (iret /= 0) then
+    call grib_f_write_on_fail(gribid)
+  endif
+  if (present(status)) then
+    status = iret
+  else
+    call grib_check(iret,'get_size',key)
+  endif
   end subroutine grib_get_size_long
 
   !> Get the integer value of a key from a grib message.
@@ -1850,12 +1864,12 @@
 
       iret=grib_f_get_int ( gribid, key, value )
       if (iret /= 0) then
-         call grib_f_write_on_fail(gribid)
+        call grib_f_write_on_fail(gribid)
       endif
       if (present(status)) then
          status = iret
       else
-         call grib_check(iret,'grib_get',key)
+         call grib_check(iret,'get',key)
       endif
   end subroutine grib_get_int
 
@@ -1870,21 +1884,21 @@
   !> @param value       the integer(4) value
   !> @param status      GRIB_SUCCESS if OK, integer value on error
   subroutine grib_get_long(gribid,key,value,status)
-      integer(kind=kindOfInt),          intent(in)  :: gribid
-      character(len=*), intent(in)                  :: key
-      integer(kind = kindOfLong),     intent(out)   :: value
-      integer(kind=kindOfInt),optional, intent(out) :: status
-      integer(kind=kindOfInt)                       :: iret
+    integer(kind=kindOfInt),          intent(in)  :: gribid
+    character(len=*), intent(in)                  :: key
+    integer(kind = kindOfLong),     intent(out)    :: value
+    integer(kind=kindOfInt),optional, intent(out) :: status
+    integer(kind=kindOfInt)                       :: iret
 
-      iret=grib_f_get_long ( gribid, key, value )
-      if (iret /= 0) then
-        call grib_f_write_on_fail(gribid)
-      endif
-      if (present(status)) then
-        status = iret
-      else
-        call grib_check(iret,'grib_get',key)
-      endif
+    iret=grib_f_get_long ( gribid, key, value )
+    if (iret /= 0) then
+       call grib_f_write_on_fail(gribid)
+    endif
+    if (present(status)) then
+      status = iret
+    else
+      call grib_check(iret,'get',key)
+    endif
   end subroutine grib_get_long
 
   !> Check if the value of a key is MISSING.
@@ -1898,22 +1912,22 @@
   !> @param is_missing  0->not missing, 1->missing
   !> @param status      GRIB_SUCCESS if OK, integer value on error
   subroutine grib_is_missing(gribid,key,is_missing,status)
-  integer(kind=kindOfInt),          intent(in)  :: gribid
-  character(len=*), intent(in)                  :: key
-  integer(kind = kindOfInt),     intent(out)    :: is_missing
-  integer(kind=kindOfInt),optional, intent(out) :: status
-  integer(kind=kindOfInt)                       :: iret
+    integer(kind=kindOfInt),          intent(in)  :: gribid
+    character(len=*), intent(in)                  :: key
+    integer(kind = kindOfInt),     intent(out)    :: is_missing
+    integer(kind=kindOfInt),optional, intent(out) :: status
+    integer(kind=kindOfInt)                       :: iret
 
     iret=grib_f_is_missing ( gribid, key, is_missing )
     if (iret /= 0) then
       call grib_f_write_on_fail(gribid)
     endif
     if (present(status)) then
-      status = iret
+    status = iret
     else
-      call grib_check(iret,'grib_is_missing',key)
+    call grib_check(iret,'is_missing',key)
     endif
-    end subroutine grib_is_missing
+  end subroutine grib_is_missing
 
   !> Check if a key is DEFINED.
   !>
@@ -1926,21 +1940,21 @@
   !> @param is_defined  0->not defined, 1->defined
   !> @param status      GRIB_SUCCESS if OK, integer value on error
   subroutine grib_is_defined(gribid,key,is_defined,status)
-      integer(kind=kindOfInt),          intent(in)  :: gribid
-      character(len=*), intent(in)                  :: key
-      integer(kind = kindOfInt),     intent(out)    :: is_defined
-      integer(kind=kindOfInt),optional, intent(out) :: status
-      integer(kind=kindOfInt)                       :: iret
+  integer(kind=kindOfInt),          intent(in)  :: gribid
+  character(len=*), intent(in)                  :: key
+  integer(kind = kindOfInt),     intent(out)    :: is_defined
+  integer(kind=kindOfInt),optional, intent(out) :: status
+  integer(kind=kindOfInt)                       :: iret
 
-      iret=grib_f_is_defined( gribid, key, is_defined )
-      if (iret /= 0) then
-        call grib_f_write_on_fail(gribid)
-      endif
-      if (present(status)) then
-        status = iret
-      else
-        call grib_check(iret,'grib_is_defined',key)
-      endif
+    iret=grib_f_is_defined( gribid, key, is_defined )
+    if (iret /= 0) then
+      call grib_f_write_on_fail(gribid)
+    endif
+    if (present(status)) then
+    status = iret
+    else
+    call grib_check(iret,'is_defined',key)
+    endif
   end subroutine grib_is_defined
 
   !> Get the real(4) value of a key from a grib message.
@@ -1967,7 +1981,7 @@
       if (present(status)) then
          status = iret
       else
-         call grib_check(iret,'grib_get',key)
+         call grib_check(iret,'get',key)
       endif
   end subroutine grib_get_real4
 
@@ -1995,7 +2009,7 @@
       if (present(status)) then
          status = iret
       else
-         call grib_check(iret,'grib_get',key)
+         call grib_check(iret,'get',key)
       endif
   end subroutine grib_get_real8
 
@@ -2023,7 +2037,7 @@
       if (present(status)) then
          status = iret
       else
-         call grib_check(iret,'grib_get',key)
+         call grib_check(iret,'get',key)
       endif
   end subroutine grib_get_string
 
@@ -2043,6 +2057,7 @@
       character(len=*),      intent(in)                  :: key
       integer(kind=kindOfInt), dimension(:), intent(out) :: value
       integer(kind=kindOfInt),optional, intent(out)      :: status
+
       integer(kind=kindOfInt)                            :: iret
       integer(kind=kindOfInt)                            :: nb_values
 
@@ -2054,7 +2069,7 @@
       if (present(status)) then
          status = iret
       else
-         call grib_check(iret,'grib_get',key)
+         call grib_check(iret,'get',key)
       endif
   end subroutine grib_get_int_array
 
@@ -2069,22 +2084,22 @@
   !> @param value       integer(4) array value
   !> @param status       GRIB_SUCCESS if OK, integer value on error
   subroutine grib_get_long_array ( gribid, key, value, status )
-    integer(kind=kindOfInt),               intent(in)   :: gribid
-    character(len=*),      intent(in)                   :: key
-    integer(kind=kindOfLong), dimension(:), intent(out) :: value
-    integer(kind=kindOfInt),optional, intent(out)       :: status
-    integer(kind=kindOfInt)                             :: iret
-    integer(kind=kindOfInt)                             :: nb_values
+    integer(kind=kindOfInt),               intent(in)  :: gribid
+    character(len=*),      intent(in)  :: key
+    integer(kind = kindOfLong),dimension(:), intent(out) :: value
+    integer(kind=kindOfInt),optional, intent(out)      :: status
+    integer(kind=kindOfInt)                            :: iret
+    integer(kind=kindOfInt)                            :: nb_values
 
     nb_values = size(value)
     iret=grib_f_get_long_array ( gribid, key, value , nb_values )
     if (iret /= 0) then
-       call grib_f_write_on_fail(gribid)
+      call grib_f_write_on_fail(gribid)
     endif
     if (present(status)) then
       status = iret
     else
-      call grib_check(iret,'grib_get',key)
+      call grib_check(iret,'get',key)
     endif
   end subroutine grib_get_long_array
 
@@ -2102,7 +2117,7 @@
   subroutine grib_get_byte_array ( gribid, key, value, length, status )
     integer(kind=kindOfInt),               intent(in)  :: gribid
     character(len=*),                      intent(in)  :: key
-    character(len=1),        dimension(:), intent(out) :: value
+    character(len=1),dimension(:),intent(out) :: value
     integer(kind=kindOfInt), optional,     intent(out) :: length
     integer(kind=kindOfInt), optional,     intent(out) :: status
     integer(kind=kindOfInt)                            :: iret
@@ -2122,7 +2137,7 @@
     if (present(status)) then
        status = iret
     else
-       call grib_check(iret,'grib_get',key)
+       call grib_check(iret,'get',key)
     endif
   end subroutine grib_get_byte_array
 
@@ -2136,10 +2151,10 @@
   !> @param key     key name
   !> @param value       real(4) array value
   !> @param status       GRIB_SUCCESS if OK, integer value on error
-  subroutine grib_get_real4_array ( gribid, key, value, status)
+  subroutine grib_get_real4_array ( gribid, key, value, status )
       integer(kind=kindOfInt),                 intent(in)  :: gribid
       character(len=*),                        intent(in)  :: key
-      real(kind = kindOfFloat), dimension(:),  intent(out) :: value
+      real(kind = kindOfFloat), dimension(:), intent(out)  :: value
       integer(kind=kindOfInt),optional,        intent(out) :: status
       integer(kind=kindOfInt)                              :: iret
       integer(kind=kindOfInt)                              :: nb_values
@@ -2150,9 +2165,9 @@
         call grib_f_write_on_fail(gribid)
       endif
       if (present(status)) then
-         status = iret
+        status = iret
       else
-         call grib_check(iret,'grib_get',key)
+        call grib_check(iret,'get',key)
       endif
   end subroutine grib_get_real4_array
 
@@ -2169,7 +2184,7 @@
   subroutine grib_get_real8_array ( gribid, key, value, status )
       integer(kind=kindOfInt),                   intent(in)  :: gribid
       character(len=*),                          intent(in)  :: key
-      real(kind = kindOfDouble), dimension(:),   intent(out) :: value
+      real(kind = kindOfDouble),dimension(:), intent(out) :: value
       integer(kind=kindOfInt),optional,          intent(out) :: status
       integer(kind=kindOfInt)                                :: iret
       integer(kind=kindOfInt)                                :: nb_values
@@ -2182,7 +2197,7 @@
       if (present(status)) then
          status = iret
       else
-         call grib_check(iret,'grib_get',key)
+         call grib_check(iret,'get',key)
       endif
   end subroutine grib_get_real8_array
 
@@ -2193,26 +2208,26 @@
   !> gathered with @ref grib_get_error_string.
   !>
   !> @param gribid      id of the grib loaded in memory
-  !> @param key     key name
-  !> @param index       integer(4) index
+  !> @param key         key name
+  !> @param kindex      integer(4) index
   !> @param value       real(4) value
-  !> @param status       GRIB_SUCCESS if OK, integer value on error
-  subroutine grib_get_real4_element ( gribid, key, index,value, status )
+  !> @param status      GRIB_SUCCESS if OK, integer value on error
+  subroutine grib_get_real4_element ( gribid, key, kindex,value, status )
       integer(kind=kindOfInt),                     intent(in)  :: gribid
       character(len=*),                            intent(in)  :: key
-      integer(kind=kindOfInt),                     intent(in)  :: index
-      real(kind = kindOfFloat),                    intent(out) :: value
+      integer(kind=kindOfInt),                     intent(in)  :: kindex
+      real(kind = kindOfFloat),intent(out)                     :: value
       integer(kind=kindOfInt),optional,            intent(out) :: status
       integer(kind=kindOfInt)                                  :: iret
 
-      iret=grib_f_get_real4_element ( gribid, key, index,value )
+      iret=grib_f_get_real4_element ( gribid, key, kindex,value )
       if (iret /= 0) then
         call grib_f_write_on_fail(gribid)
       endif
       if (present(status)) then
          status = iret
       else
-         call grib_check(iret,'grib_get',key)
+         call grib_check(iret,'get',key)
       endif
   end subroutine grib_get_real4_element
 
@@ -2222,27 +2237,27 @@
   !> exit with an error message.\n Otherwise the error message can be
   !> gathered with @ref grib_get_error_string.
   !>
-  !> @param gribid      id of the grib loaded in memory
-  !> @param key     key name
-  !> @param index       integer(4) index
-  !> @param value       real(8) value
-  !> @param status       GRIB_SUCCESS if OK, integer value on error
-  subroutine grib_get_real8_element ( gribid, key, index,value, status )
+  !> @param gribid    id of the grib loaded in memory
+  !> @param key       key name
+  !> @param kindex    integer(4) index
+  !> @param value     real(8) value
+  !> @param status    GRIB_SUCCESS if OK, integer value on error
+  subroutine grib_get_real8_element ( gribid, key, kindex,value, status )
       integer(kind=kindOfInt),                     intent(in)  :: gribid
       character(len=*),                            intent(in)  :: key
-      integer(kind=kindOfInt),                     intent(in)  :: index
+      integer(kind=kindOfInt),                     intent(in)  :: kindex
       real(kind = kindOfDouble),                   intent(out) :: value
       integer(kind=kindOfInt),optional,            intent(out) :: status
       integer(kind=kindOfInt)                                  :: iret
 
-      iret=grib_f_get_real8_element ( gribid, key, index,value )
+      iret=grib_f_get_real8_element ( gribid, key, kindex,value )
       if (iret /= 0) then
         call grib_f_write_on_fail(gribid)
       endif
       if (present(status)) then
          status = iret
       else
-         call grib_check(iret,'grib_get',key)
+         call grib_check(iret,'get',key)
       endif
   end subroutine grib_get_real8_element
 
@@ -2252,29 +2267,29 @@
   !> exit with an error message.\n Otherwise the error message can be
   !> gathered with @ref grib_get_error_string.
   !>
-  !> @param gribid      id of the grib loaded in memory
-  !> @param key     key name
-  !> @param index       integer(4) array indexes
-  !> @param value       real(4) array value
-  !> @param status       GRIB_SUCCESS if OK, integer value on error
-  subroutine grib_get_real4_elements ( gribid, key, index,value, status )
+  !> @param gribid   id of the grib loaded in memory
+  !> @param key      key name
+  !> @param kindex   integer(4) array indexes
+  !> @param value    real(4) array value
+  !> @param status   GRIB_SUCCESS if OK, integer value on error
+  subroutine grib_get_real4_elements ( gribid, key, kindex, value, status )
       integer(kind=kindOfInt),                  intent(in)  :: gribid
       character(len=*),                         intent(in)  :: key
-      integer(kind=kindOfInt),dimension(:),     intent(in)  :: index
+      integer(kind=kindOfInt),dimension(:),     intent(in)  :: kindex
       real(kind = kindOfFloat), dimension(:),   intent(out) :: value
       integer(kind=kindOfInt),optional,         intent(out) :: status
       integer(kind=kindOfInt)                               :: iret
       integer(kind=kindOfInt)                               ::npoints
 
       npoints=size(value)
-      iret=grib_f_get_real4_elements ( gribid, key, index,value,npoints )
+      iret=grib_f_get_real4_elements ( gribid, key, kindex,value,npoints )
       if (iret /= 0) then
         call grib_f_write_on_fail(gribid)
       endif
       if (present(status)) then
          status = iret
       else
-         call grib_check(iret,'grib_get',key)
+         call grib_check(iret,'get',key)
       endif
   end subroutine grib_get_real4_elements
 
@@ -2284,29 +2299,29 @@
   !> exit with an error message.\n Otherwise the error message can be
   !> gathered with @ref grib_get_error_string.
   !>
-  !> @param gribid      id of the grib loaded in memory
-  !> @param key     key name
-  !> @param index       integer(4) array index
-  !> @param value       real(8) array value
-  !> @param status       GRIB_SUCCESS if OK, integer value on error
-  subroutine grib_get_real8_elements ( gribid, key, index,value, status )
+  !> @param gribid   id of the grib loaded in memory
+  !> @param key      key name
+  !> @param kindex   integer(4) array index
+  !> @param value    real(8) array value
+  !> @param status   GRIB_SUCCESS if OK, integer value on error
+  subroutine grib_get_real8_elements ( gribid, key, kindex, value, status )
       integer(kind=kindOfInt),                   intent(in)  :: gribid
       character(len=*),                          intent(in)  :: key
-      integer(kind=kindOfInt),dimension(:),      intent(in)  :: index
+      integer(kind=kindOfInt),dimension(:),      intent(in)  :: kindex
       real(kind = kindOfDouble), dimension(:),   intent(out) :: value
       integer(kind=kindOfInt),optional,          intent(out) :: status
       integer(kind=kindOfInt)                                :: iret
       integer(kind=kindOfInt)                                :: npoints
 
       npoints=size(value)
-      iret=grib_f_get_real8_elements ( gribid, key, index,value,npoints )
+      iret=grib_f_get_real8_elements ( gribid, key, kindex,value,npoints )
       if (iret /= 0) then
         call grib_f_write_on_fail(gribid)
       endif
       if (present(status)) then
          status = iret
       else
-         call grib_check(iret,'grib_get',key)
+         call grib_check(iret,'get',key)
       endif
   end subroutine grib_get_real8_elements
 
@@ -2334,7 +2349,7 @@
       if (present(status)) then
          status = iret
       else
-         call grib_check(iret,'grib_set',key)
+         call grib_check(iret,'set',key)
       endif
   end subroutine grib_set_int
 
@@ -2349,21 +2364,21 @@
   !> @param value       integer(4) value
   !> @param status       GRIB_SUCCESS if OK, integer value on error
   subroutine grib_set_long ( gribid, key, value, status )
-      integer(kind=kindOfInt),          intent(in)  :: gribid
-      character(len=*), intent(in)                  :: key
-      integer(kind=kindOfLong),         intent(in)  :: value
-      integer(kind=kindOfInt),optional, intent(out) :: status
-      integer(kind=kindOfInt)                       :: iret
+    integer(kind=kindOfInt),          intent(in)  :: gribid
+    character(len=*), intent(in)                  :: key
+    integer(kind=kindOfLong),         intent(in)  :: value
+    integer(kind=kindOfInt),optional, intent(out) :: status
+    integer(kind=kindOfInt)                       :: iret
 
-      iret=grib_f_set_long ( gribid, key, value )
-      if (iret /= 0) then
-        call grib_f_write_on_fail(gribid)
-      endif
-      if (present(status)) then
-        status = iret
-      else
-        call grib_check(iret,'grib_set',key)
-      endif
+    iret=grib_f_set_long ( gribid, key, value )
+    if (iret /= 0) then
+      call grib_f_write_on_fail(gribid)
+    endif
+    if (present(status)) then
+      status = iret
+    else
+      call grib_check(iret,'set',key)
+    endif
   end subroutine grib_set_long
 
   !> Set the real(4) value for a key in a grib message.
@@ -2390,7 +2405,7 @@
       if (present(status)) then
          status = iret
       else
-         call grib_check(iret,'grib_set',key)
+         call grib_check(iret,'set',key)
       endif
   end subroutine grib_set_real4
 
@@ -2418,7 +2433,7 @@
       if (present(status)) then
          status = iret
       else
-         call grib_check(iret,'grib_set',key)
+         call grib_check(iret,'set',key)
       endif
   end subroutine grib_set_real8
 
@@ -2448,7 +2463,7 @@
       if (present(status)) then
          status = iret
       else
-         call grib_check(iret,'grib_set',key)
+         call grib_check(iret,'set',key)
       endif
   end subroutine grib_set_int_array
 
@@ -2463,23 +2478,24 @@
   !> @param value       integer(4) array value
   !> @param status       GRIB_SUCCESS if OK, integer value on error
   subroutine grib_set_long_array ( gribid, key, value, status)
-      integer(kind=kindOfInt),                intent(in)  :: gribid
-      character(len=*),                       intent(in)  :: key
-      integer(kind=kindOfLong), dimension(:), intent(in)  :: value
-      integer(kind=kindOfInt),optional,       intent(out) :: status
-      integer(kind=kindOfInt)                             :: iret
-      integer(kind=kindOfInt)                             :: nb_values
+    integer(kind=kindOfInt),                intent(in)  :: gribid
+    character(len=*),                       intent(in)  :: key
+    integer(kind=kindOfLong), dimension(:),  intent(in)  :: value
+    integer(kind=kindOfInt),optional,       intent(out) :: status
+    integer(kind=kindOfInt)                             :: iret
+    integer(kind=kindOfInt)                             :: nb_values
 
-      nb_values = size(value)
-      iret=grib_f_set_long_array ( gribid, key, value, nb_values )
-      if (iret /= 0) then
-         call grib_f_write_on_fail(gribid)
-      endif
-      if (present(status)) then
-        status = iret
-      else
-        call grib_check(iret,'grib_set',key)
-      endif
+    nb_values = size(value)
+    iret=grib_f_set_long_array ( gribid, key, value, nb_values )
+    if (iret /= 0) then
+      call grib_f_write_on_fail(gribid)
+    endif
+    if (present(status)) then
+      status = iret
+    else
+      call grib_check(iret,'set',key)
+    endif
+      
   end subroutine grib_set_long_array
 
   !> Set the array of bytes (character) for a key in a grib message.
@@ -2494,29 +2510,29 @@
   !> @param length      (optional) output: number of values written
   !> @param status      (optional) GRIB_SUCCESS if OK, integer value on error
   subroutine grib_set_byte_array ( gribid, key, value, length, status )
-      integer(kind=kindOfInt),               intent(in)  :: gribid
-      character(len=*),                      intent(in)  :: key
-      character(len=1),        dimension(:), intent(in)  :: value
-      integer(kind=kindOfInt), optional,     intent(out) :: length
-      integer(kind=kindOfInt), optional,     intent(out) :: status
-      integer(kind=kindOfInt)                            :: iret
-      integer(kind=kindOfInt)                            :: nb_values
-      character                                          :: bytes(size(value))
+    integer(kind=kindOfInt),               intent(in)  :: gribid
+    character(len=*),                      intent(in)  :: key
+    character(len=1),        dimension(:), intent(in)  :: value
+    integer(kind=kindOfInt), optional,     intent(out) :: length
+    integer(kind=kindOfInt), optional,     intent(out) :: status
+    integer(kind=kindOfInt)                            :: iret
+    integer(kind=kindOfInt)                            :: nb_values
+    character                                          :: bytes(size(value))
 
-      nb_values = size (value)
-      bytes = transfer (value, bytes)
-      iret = grib_f_set_byte_array ( gribid, key, bytes, nb_values )
-      if (iret /= 0) then
-         call grib_f_write_on_fail(gribid)
-      endif
-      if (present(length)) then
-         length = nb_values
-      end if
-      if (present(status)) then
-         status = iret
-      else
-         call grib_check(iret,'grib_set',key)
-      endif
+    nb_values = size (value)
+    bytes = transfer (value, bytes)
+    iret = grib_f_set_byte_array ( gribid, key, bytes, nb_values )
+    if (iret /= 0) then
+       call grib_f_write_on_fail(gribid)
+    endif
+    if (present(length)) then
+       length = nb_values
+    end if
+    if (present(status)) then
+       status = iret
+    else
+       call grib_check(iret,'set',key)
+    endif
   end subroutine grib_set_byte_array
 
   !> Set the real(4) values for an array key in a grib message.
@@ -2545,7 +2561,7 @@
       if (present(status)) then
          status = iret
       else
-         call grib_check(iret,'grib_set',key)
+         call grib_check(iret,'set',key)
       endif
   end subroutine grib_set_real4_array
 
@@ -2575,7 +2591,7 @@
       if (present(status)) then
          status = iret
       else
-         call grib_check(iret,'grib_set',key)
+         call grib_check(iret,'set',key)
       endif
   end subroutine grib_set_real8_array
 
@@ -2606,7 +2622,7 @@
       if (present(status)) then
          status = iret
       else
-         call grib_check(iret,'grib_set',key)
+         call grib_check(iret,'set',key)
       endif
   end subroutine grib_set_force_real4_array
 
@@ -2637,7 +2653,7 @@
       if (present(status)) then
          status = iret
       else
-         call grib_check(iret,'grib_set',key)
+         call grib_check(iret,'set',key)
       endif
   end subroutine grib_set_force_real8_array
 
@@ -2665,7 +2681,7 @@
       if (present(status)) then
          status = iret
       else
-         call grib_check(iret,'grib_set',key)
+         call grib_check(iret,'set',key)
       endif
   end subroutine grib_set_string
 
@@ -2696,7 +2712,7 @@
       if (present(status)) then
          status = iret
       else
-         call grib_check(iret,'grib_get_message_size','')
+         call grib_check(iret,'get_message_size','')
       endif
   end subroutine grib_get_message_size_int
 
@@ -2722,7 +2738,7 @@
       if (present(status)) then
          status = iret
       else
-         call grib_check(iret,'grib_get_message_size','')
+         call grib_check(iret,'get_message_size','')
       endif
   end subroutine grib_get_message_size_size_t
 
@@ -2750,7 +2766,7 @@
       if (present(status)) then
          status = iret
       else
-         call grib_check(iret,'grib_copy_message','')
+         call grib_check(iret,'copy_message','')
       endif
   end subroutine grib_copy_message
 
@@ -2767,16 +2783,17 @@
       integer(kind=kindOfInt),          intent(in)  :: gribid
       integer(kind=kindOfInt),          intent(in)  :: ifile
       integer(kind=kindOfInt),optional, intent(out) :: status
+
       integer(kind=kindOfInt)               :: iret
 
       iret = grib_f_write( gribid, ifile )
       if (present(status)) then
          status = iret
       else
-         call grib_check(iret,'grib_write','')
+         call grib_check(iret,'write','')
       endif
   end subroutine grib_write
-          
+
   !> Write a multi field message to a file.
   !>
   !> In case of error, if the status parameter (optional) is not given, the program will
@@ -2798,8 +2815,8 @@
     else
       call grib_check(iret,'grib_multi_write','')
     endif
-  end subroutine grib_multi_write
-                      
+    end subroutine grib_multi_write
+
   !> Append a single field grib message to a multi field grib message.
   !> Only the sections with section number greather or equal "startsection" are copied from the input single message to the multi field output grib.
   !>
@@ -2809,24 +2826,26 @@
   !>
   !> @param ingribid      id of the input single grib 
   !> @param startsection  starting from startsection (included) all the sections are copied from the input single grib to the output multi grib
-  !> @param multigribid    id of the output multi filed grib
+  !> @param multigribid    id of the output multi field grib
   !> @param status      GRIB_SUCCESS if OK, integer value on error
   subroutine grib_multi_append ( ingribid, startsection, multigribid  , status)
-  integer(kind=kindOfInt),          intent(in)  :: ingribid
-  integer(kind=kindOfInt),          intent(in)  :: startsection
-  integer(kind=kindOfInt),          intent(out) :: multigribid
-  integer(kind=kindOfInt),optional, intent(out) :: status
-  integer(kind=kindOfInt)               :: iret
+    integer(kind=kindOfInt),          intent(in)  :: ingribid
+    integer(kind=kindOfInt),          intent(in)  :: startsection
+    integer(kind=kindOfInt),          intent(out) :: multigribid
+    integer(kind=kindOfInt),optional, intent(out) :: status
 
-  iret = grib_f_multi_append( ingribid, startsection, multigribid )
-  if (present(status)) then
-    status = iret
-  else
-    call grib_check(iret,'grib_multi_append','')
-  endif
+    integer(kind=kindOfInt)               :: iret
+
+    iret = grib_f_multi_append( ingribid, startsection, multigribid )
+    if (present(status)) then
+      status = iret
+    else
+      call grib_check(iret,'grib_multi_append','')
+    endif
   end subroutine grib_multi_append
 
-  !> Find the nearest point of a given latitude/longitude point.
+  !> Find the nearest point of a set of points whose latitudes and longitudes
+  !> are given in the inlats, inlons arrays respectively.
   !>
   !> In case of error, if the status parameter (optional) is not given, the program will
   !> exit with an error message.\n Otherwise the error message can be
@@ -2845,17 +2864,17 @@
   subroutine grib_find_nearest_multiple(gribid,is_lsm,       &
                  inlats,inlons,outlats,outlons,              &
                  values,distances, indexes,status)
-    integer(kind=kindOfInt),                 intent(in)    :: gribid
-    logical,                                 intent(in)    :: is_lsm
+    integer(kind=kindOfInt),                                  intent(in)    :: gribid
+    logical,                                  intent(in)    :: is_lsm
     real(kind = kindOfDouble), dimension(:), intent(in)    :: inlats
     real(kind = kindOfDouble), dimension(:), intent(in)    :: inlons
     real(kind = kindOfDouble), dimension(:), intent(out)   :: outlats
     real(kind = kindOfDouble), dimension(:), intent(out)   :: outlons
     real(kind = kindOfDouble), dimension(:), intent(out)   :: distances
     real(kind = kindOfDouble), dimension(:), intent(out)   :: values
-    integer(kind = kindOfInt), dimension(:), intent(out)   :: indexes
-    integer(kind=kindOfInt),optional, intent(out)          :: status
-    integer(kind=kindOfInt)                                :: iret
+    integer(kind = kindOfInt), dimension(:), intent(out)  :: indexes
+    integer(kind=kindOfInt),optional, intent(out)                           :: status
+    integer(kind=kindOfInt)                                                 :: iret
     integer(kind=kindOfInt) :: npoints
     integer(kind=kindOfInt) :: intis_lsm
 
@@ -2885,37 +2904,37 @@
   !> @param outlat     latitude of the nearest point
   !> @param outlon     longitude of the nearest point
   !> @param distance   distance between the given point and its nearest
-  !> @param index      zero based index
+  !> @param kindex     zero based index
   !> @param value      value of the field in the nearest point
   !> @param status     GRIB_SUCCESS if OK, integer value on error
-  subroutine grib_find_nearest_single(gribid,is_lsm,     &
-                 inlat,inlon,outlat,outlon,              &
-                 value,distance, index,status)
-    integer(kind=kindOfInt),   intent(in)    :: gribid
-    logical,                   intent(in)    :: is_lsm
+  subroutine grib_find_nearest_single(gribid, is_lsm,       &
+                 inlat, inlon, outlat, outlon,              &
+                 value, distance, kindex, status)
+    integer(kind=kindOfInt),                                  intent(in)    :: gribid
+    logical,                                  intent(in)    :: is_lsm
     real(kind = kindOfDouble), intent(in)    :: inlat
     real(kind = kindOfDouble), intent(in)    :: inlon
     real(kind = kindOfDouble), intent(out)   :: outlat
     real(kind = kindOfDouble), intent(out)   :: outlon
     real(kind = kindOfDouble), intent(out)   :: distance
     real(kind = kindOfDouble), intent(out)   :: value
-    integer(kind = kindOfInt), intent(out)   :: index
-    integer(kind=kindOfInt),optional, intent(out) :: status
-    integer(kind=kindOfInt)                       :: iret
+    integer(kind = kindOfInt), intent(out)   :: kindex
+    integer(kind=kindOfInt),optional, intent(out)                           :: status
+    integer(kind=kindOfInt)                                                 :: iret
     integer(kind=kindOfInt) :: intis_lsm =0
 
     if (is_lsm) intis_lsm=1
     iret=grib_f_find_nearest_single(gribid,intis_lsm,inlat,inlon,outlat,outlon, &
-      value,distance,index)
+      value,distance,kindex)
 
     if (present(status)) then
-       status = iret
+         status = iret
     else
-       call grib_check(iret,'grib_find_nearest_single','')
+         call grib_check(iret,'grib_find_nearest_single','')
     endif
   end subroutine grib_find_nearest_single
 
-  !> Find the nearest point of a given latitude/longitude point.
+  !> Find the 4 nearest points of a latitude longitude point.
   !>
   !> In case of error, if the status parameter (optional) is not given, the program will
   !> exit with an error message.\n Otherwise the error message can be
@@ -2928,34 +2947,34 @@
   !> @param outlat     latitude of the nearest point
   !> @param outlon     longitude of the nearest point
   !> @param distance   distance between the given point and its nearest
-  !> @param index      zero based index
+  !> @param kindex     zero based index
   !> @param value      value of the field in the nearest point
   !> @param status     GRIB_SUCCESS if OK, integer value on error
   subroutine grib_find_nearest_four_single(gribid,is_lsm, &
                  inlat,inlon,outlat,outlon,               &
-                 value,distance, index,status)
-    integer(kind=kindOfInt),                 intent(in)    :: gribid
-    logical,                                 intent(in)    :: is_lsm
+                 value,distance, kindex,status)
+    integer(kind=kindOfInt),                                  intent(in)    :: gribid
+    logical,                                  intent(in)   :: is_lsm
     real(kind = kindOfDouble), intent(in)                  :: inlat
     real(kind = kindOfDouble), intent(in)                  :: inlon
     real(kind = kindOfDouble), dimension(4), intent(out)   :: outlat
     real(kind = kindOfDouble), dimension(4), intent(out)   :: outlon
     real(kind = kindOfDouble), dimension(4), intent(out)   :: distance
     real(kind = kindOfDouble), dimension(4), intent(out)   :: value
-    integer(kind = kindOfInt), dimension(4), intent(out)   :: index
-    integer(kind=kindOfInt),optional, intent(out)          :: status
-    integer(kind=kindOfInt)                                :: iret
+    integer(kind = kindOfInt), dimension(4), intent(out)   :: kindex
+    integer(kind=kindOfInt),optional, intent(out)                           :: status
+    integer(kind=kindOfInt)                                                 :: iret
     integer(kind=kindOfInt) :: intis_lsm =0
 
     if (is_lsm) intis_lsm=1
 
     iret=grib_f_find_nearest_four_single(gribid,intis_lsm,inlat,inlon,outlat,outlon, &
-      value,distance,index)
+      value,distance,kindex)
 
     if (present(status)) then
-         status = iret
+       status = iret
     else
-         call grib_check(iret,'grib_find_nearest_four_single','')
+       call grib_check(iret,'grib_find_nearest_four_single','')
     endif
   end subroutine grib_find_nearest_four_single
 
@@ -2966,9 +2985,9 @@
   !> gathered with @ref grib_get_error_string.
   !>
   !> @param status      GRIB_SUCCESS if OK, integer value on error
-  subroutine grib_multi_support_on (status)
+  subroutine grib_multi_support_on (status  )
       integer(kind=kindOfInt),optional, intent(out) :: status
-      integer(kind=kindOfInt)                       :: iret
+      integer(kind=kindOfInt)               :: iret
 
       iret = grib_f_multi_support_on ( )
       if (present(status)) then
@@ -2985,9 +3004,9 @@
   !> gathered with @ref grib_get_error_string.
   !>
   !> @param status      GRIB_SUCCESS if OK, integer value on error
-  subroutine grib_multi_support_off (status)
+  subroutine grib_multi_support_off ( status  )
       integer(kind=kindOfInt),optional, intent(out) :: status
-      integer(kind=kindOfInt)                       :: iret
+      integer(kind=kindOfInt)               :: iret
 
       iret = grib_f_multi_support_off ( )
       if (present(status)) then
@@ -3004,9 +3023,9 @@
   !> gathered with @ref grib_get_error_string.
   !>
   !> @param status      GRIB_SUCCESS if OK, integer value on error
-  subroutine grib_gribex_mode_on (status)
+  subroutine grib_gribex_mode_on (status )
       integer(kind=kindOfInt),optional, intent(out) :: status
-      integer(kind=kindOfInt)                       :: iret
+      integer(kind=kindOfInt)               :: iret
 
       iret=grib_f_gribex_mode_on()
       if (present(status)) then
@@ -3014,6 +3033,7 @@
       else
          call grib_check(iret,'grib_gribex_mode_on','')
       endif
+
   end subroutine grib_gribex_mode_on
 
   !> Turn off the compatibility mode with gribex.
@@ -3023,9 +3043,9 @@
   !> gathered with @ref grib_get_error_string.
   !>
   !> @param status      GRIB_SUCCESS if OK, integer value on error
-  subroutine grib_gribex_mode_off (status)
+  subroutine grib_gribex_mode_off (status )
       integer(kind=kindOfInt),optional, intent(out) :: status
-      integer(kind=kindOfInt)                       :: iret
+      integer(kind=kindOfInt)               :: iret
 
       iret=grib_f_gribex_mode_off()
       if (present(status)) then
@@ -3033,6 +3053,7 @@
       else
          call grib_check(iret,'grib_gribex_mode_off','')
       endif
+
   end subroutine grib_gribex_mode_off
 
   !> Skip the computed keys in a keys iterator.
@@ -3051,13 +3072,13 @@
   subroutine grib_skip_computed ( iterid , status)
       integer(kind=kindOfInt),          intent(in)  :: iterid
       integer(kind=kindOfInt),optional, intent(out) :: status
-      integer(kind=kindOfInt)                       :: iret
+      integer(kind=kindOfInt)   :: iret
 
       iret = grib_f_skip_computed ( iterid )
       if (present(status)) then
          status = iret
       else
-         call grib_check(iret,'grib_skip_computed','')
+         call grib_check(iret,'skip_computed','')
       endif
   end subroutine grib_skip_computed
 
@@ -3076,13 +3097,13 @@
   subroutine grib_skip_coded  ( iterid, status )
       integer(kind=kindOfInt),          intent(in)  :: iterid
       integer(kind=kindOfInt),optional, intent(out) :: status
-      integer(kind=kindOfInt)                       :: iret
+      integer(kind=kindOfInt)   :: iret
 
       iret  = grib_f_skip_coded  ( iterid )
       if (present(status)) then
          status = iret
       else
-         call grib_check(iret,'grib_skip_coded','')
+         call grib_check(iret,'skip_coded','')
       endif
   end subroutine grib_skip_coded
 
@@ -3106,7 +3127,7 @@
       if (present(status)) then
          status = iret
       else
-         call grib_check(iret,'grib_skip_duplicates','')
+         call grib_check(iret,'skip_duplicates','')
       endif
   end subroutine grib_skip_duplicates
 
@@ -3122,15 +3143,57 @@
   subroutine grib_skip_read_only  ( iterid, status )
       integer(kind=kindOfInt),          intent(in)  :: iterid
       integer(kind=kindOfInt),optional, intent(out) :: status
-      integer(kind=kindOfInt)                       :: iret
+      integer(kind=kindOfInt)  :: iret
 
       iret = grib_f_skip_read_only  ( iterid )
       if (present(status)) then
          status = iret
       else
-         call grib_check(iret,'grib_skip_read_only','')
+         call grib_check(iret,'skip_read_only','')
       endif
   end subroutine grib_skip_read_only
+
+  !> Set the definition path
+  !>
+  !> In case of error, if the status parameter (optional) is not given, the program will
+  !> exit with an error message.\n Otherwise the error message can be
+  !> gathered with @ref grib_get_error_string.
+  !>
+  !> @param path       definitions path
+  !> @param status     GRIB_SUCCESS if OK, integer value on error
+  subroutine grib_set_definitions_path ( path,  status )
+      character(len=*),                        intent(in)  :: path
+      integer(kind=kindOfInt),optional, intent(out)        :: status
+      integer(kind=kindOfInt)                              :: iret
+
+      iret=grib_f_set_definitions_path ( path )
+      if (present(status)) then
+         status = iret
+      else
+         call grib_check(iret,'set_definitions_path','('//path//')')
+      endif
+  end subroutine grib_set_definitions_path
+
+  !> Set the samples path
+  !>
+  !> In case of error, if the status parameter (optional) is not given, the program will
+  !> exit with an error message.\n Otherwise the error message can be
+  !> gathered with @ref grib_get_error_string.
+  !>
+  !> @param path       samples path
+  !> @param status     GRIB_SUCCESS if OK, integer value on error
+  subroutine grib_set_samples_path ( path,  status )
+      character(len=*),                        intent(in)  :: path
+      integer(kind=kindOfInt),optional, intent(out)        :: status
+      integer(kind=kindOfInt)                              :: iret
+
+      iret=grib_f_set_samples_path ( path )
+      if (present(status)) then
+         status = iret
+      else
+         call grib_check(iret,'set_samples_path','('//path//')')
+      endif
+  end subroutine grib_set_samples_path
 
 end module grib_api
 

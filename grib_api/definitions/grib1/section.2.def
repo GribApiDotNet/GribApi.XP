@@ -1,4 +1,4 @@
-# Copyright 2005-2016 ECMWF.
+# Copyright 2005-2017 ECMWF.
 #
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
@@ -7,14 +7,13 @@
 # virtue of its status as an intergovernmental organisation nor does it submit to any jurisdiction.
 #
 
-# label    Grib_section_2;
 # START grib1::section
 # SECTION 2, Grid description section
 #  Length of section
 # (octets)
 
 position offsetSection2;
-length[3] section2Length ;
+section_length[3] section2Length ;
 meta section2Pointer section_pointer(offsetSection2,section2Length,2);
 transient radius=6367470;
 alias radiusOfTheEarth=radius;

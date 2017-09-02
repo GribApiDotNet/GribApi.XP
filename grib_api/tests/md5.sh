@@ -10,10 +10,10 @@
 
 test_md5()
 {
-    file=$GRIB_SAMPLES_PATH/$1
+    file=$ECCODES_SAMPLES_PATH/$1
     expected=$2
 
-    result=`${tools_dir}grib_get -p md5GridSection:s $file`
+    result=`${tools_dir}/grib_get -p md5GridSection:s $file`
     [ "$result" = "$expected" ]
 }
 

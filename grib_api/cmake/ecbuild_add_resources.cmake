@@ -1,4 +1,4 @@
-# (C) Copyright 1996-2016 ECMWF.
+# (C) Copyright 1996-2017 ECMWF.
 # 
 # This software is licensed under the terms of the Apache Licence Version 2.0
 # which can be obtained at http://www.apache.org/licenses/LICENSE-2.0. 
@@ -50,6 +50,13 @@
 # DONT_PACK_REGEX : optional
 #   list of regular expressions to match files and directories to exclude when
 #   packaging
+#
+# Note
+# ----
+#
+# All file and directory names are also *partially matched*. To ensure that
+# only the exact file or directory name is matched at the end of the path add
+# a ``$`` at the end and quote the name.
 #
 ##############################################################################
 

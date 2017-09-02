@@ -48,7 +48,7 @@ if exist "%SystemRoot%\Microsoft.NET\Framework64" (
 
 :::::::::: X64
 
-"%FrameworkDir%\%FrameworkVersion%\msbuild.exe" "%~dp0GribApi.XP.sln"  /property:Configuration="%CONFIG%" /property:Platform="x64" %TV% /property:VCTargetsPath=%CRT% %REBUILD%
+"%FrameworkDir%\%FrameworkVersion%\msbuild.exe" "%~dp0..\..\grib_api\windows\msvc\grib_api_lib\grib_api_lib.vcxproj"  /property:Configuration="%CONFIG%" /property:Platform="x64" %TV% /property:VCTargetsPath=%CRT% %REBUILD%
 
 @ECHO OFF
 if ERRORLEVEL 1 (
@@ -60,7 +60,7 @@ if ERRORLEVEL 1 (
 :::::::::: X86
 
 @ECHO ON
-"%FrameworkDir%\%FrameworkVersion%\msbuild.exe" "%~dp0GribApi.XP.sln"  /property:Configuration="%CONFIG%" /property:Platform="Win32" %TV% /property:VCTargetsPath=%CRT% %REBUILD%
+"%FrameworkDir%\%FrameworkVersion%\msbuild.exe" "%~dp0..\..\grib_api\windows\msvc\grib_api_lib\grib_api_lib.vcxproj"  /property:Configuration="%CONFIG%" /property:Platform="Win32" %TV% /property:VCTargetsPath=%CRT% %REBUILD%
 
 @ECHO OFF
 if ERRORLEVEL 1 (

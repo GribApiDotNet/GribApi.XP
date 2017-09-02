@@ -6,76 +6,128 @@ configure_file( include.ctest.sh.in  include.ctest.sh  @ONLY )
 execute_process( COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_SOURCE_DIR}/include.sh ${CMAKE_CURRENT_BINARY_DIR} )
 
 # Build the executables used by test scripts
-################################################
+########################################################################
 list( APPEND test_bins
-      nearest
-      set_bitmap
-      iterator
-      get
-      print_data
-      set
+      grib_nearest
+      grib_set_bitmap
+      grib_iterator
+      grib_get_keys
+      grib_print_data
+      grib_set_keys
+      grib_index
       set_missing
-      keys_iterator
-      set_data
+      grib_keys_iterator
+      grib_set_data
       mars_param
       values_check
       box
-      multi
+      grib_multi
       multi2
-      multi_write
-      precision
-      set_pv
-      list
-      get_data
+      grib_multi_write
+      grib_precision
+      grib_set_pv
+      grib_list
+      grib_get_data
       sections_copy
-      iterator_bitmap
+      grib_iterator_bitmap
       large_grib1
-      clone
-      ensemble_index
+      grib_clone
+      grib_copy_message
+      grib_ensemble_index
+      get_product_kind
+      bufr_copy_data
+      bufr_attributes
+      bufr_clone
+      bufr_expanded
+      bufr_get_keys
+      bufr_keys_iterator
+      bufr_missing
+      bufr_read_header
+      bufr_read_scatterometer
+      bufr_read_synop
+      bufr_read_temp
+      bufr_set_keys
+      bufr_subset
 )
 foreach( tool ${test_bins} )
-    ecbuild_add_executable( TARGET    ${tool}
+    ecbuild_add_executable( TARGET    c_${tool}
                             NOINSTALL
                             SOURCES   ${tool}.c
-                            LIBS      grib_api
+                            LIBS      eccodes
     )
 endforeach()
 
 # Now add each test (shell scripts)
-#################################################
+########################################################################
 list( APPEND tests
-   iterator
-   get
-   print_data
-   set
-   keys_iterator
-   multi
-   multi_write
-   precision
-   list
+   grib_iterator
+   grib_get_keys
+   grib_print_data
+   grib_set_keys
+   grib_keys_iterator
+   grib_multi
+   grib_multi_write
+   grib_precision
+   grib_clone
+   grib_copy_message
+   grib_ensemble_index
+   grib_set_pv
+   grib_set_data
+   grib_set_bitmap
+   grib_list
+   grib_get_data
    large_grib1
-   get_data
    set_missing
-   clone
    sections_copy
-   set_pv
-   set_bitmap
+   bufr_attributes
+   bufr_copy_data
+   bufr_clone
+   bufr_expanded
+   bufr_get_keys
+   bufr_keys_iterator
+   bufr_missing
+   bufr_read_header
+   bufr_read_scatterometer
+   bufr_read_synop
+   bufr_read_temp
+   bufr_set_keys
+   bufr_subset
+   get_product_kind
 )
 foreach( test ${tests} )
-    ecbuild_add_test( TARGET grib_api_c_${test}
-                  TYPE       SCRIPT
-                  COMMAND    ${CMAKE_CURRENT_SOURCE_DIR}/${test}.sh
-                  TEST_DEPENDS grib_api_download_gribs
+    ecbuild_add_test( TARGET eccodes_c_${test}
+                      TYPE       SCRIPT
+                      COMMAND    ${CMAKE_CURRENT_SOURCE_DIR}/${test}.sh
+                      TEST_DEPENDS eccodes_download_gribs eccodes_download_bufrs
     )
 endforeach()
 
+########################################################################
+# Tests which are conditional
+if( ENABLE_EXTRA_TESTS AND HAVE_ECCODES_THREADS )
+    # For POSIX threads
+    LIST(APPEND pthread_tests grib_pthreads bufr_pthreads)
+    foreach( test ${pthread_tests} )
+        ecbuild_add_executable( TARGET    c_${test}
+                                NOINSTALL
+                                SOURCES   ${test}.c
+                                LIBS      eccodes
+        )
+        ecbuild_add_test( TARGET       eccodes_c_${test}
+                          TYPE         SCRIPT
+                          COMMAND      ${CMAKE_CURRENT_SOURCE_DIR}/${test}.sh
+                          TEST_DEPENDS eccodes_download_gribs eccodes_download_bufrs
+        )
+    endforeach()
+endif()
 
-#############################################
+
+########################################################################
 # Tests with no script
-ecbuild_add_test( TARGET    grib_api_c_new_sample
-                  SOURCES   new_sample.c
-                  LIBS      grib_api
-                  ARGS      "out.new_sample.grib"
-                  ENVIRONMENT "GRIB_SAMPLES_PATH=${PROJECT_SOURCE_DIR}/samples" "GRIB_DEFINITION_PATH=${PROJECT_SOURCE_DIR}/definitions"
+ecbuild_add_test(
+    TARGET    eccodes_c_new_sample
+    SOURCES   new_sample.c
+    LIBS      eccodes
+    ARGS      "out.grib"
+    ENVIRONMENT "ECCODES_SAMPLES_PATH=${PROJECT_SOURCE_DIR}/samples" "ECCODES_DEFINITION_PATH=${PROJECT_SOURCE_DIR}/definitions"
 )
-
